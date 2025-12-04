@@ -1,0 +1,559 @@
+{% extends 'base.html' %}
+
+{% block title %}Enhanced Dashboard - Sahayog Route Optimizer{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-widget {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease;
+    }
+    .dashboard-widget:hover {
+        transform: translateY(-2px);
+    }
+    .metric-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease;
+    }
+    .metric-card:hover {
+        transform: translateY(-5px);
+    }
+    .metric-value {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+    .metric-label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+    }
+    .trend-up { color: #28a745; }
+    .trend-down { color: #dc3545; }
+    .weather-widget {
+        background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+    }
+    .quick-action-btn {
+        background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+        border: none;
+        border-radius: 25px;
+        padding: 0.75rem 1.5rem;
+        color: white;
+        transition: all 0.3s ease;
+    }
+    .quick-action-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        color: white;
+    }
+    .activity-item {
+        padding: 1rem;
+        border-left: 4px solid #667eea;
+        margin-bottom: 1rem;
+        background: #f8f9fa;
+        border-radius: 0 10px 10px 0;
+        transition: all 0.3s ease;
+    }
+    .activity-item:hover {
+        background: #e9ecef;
+        transform: translateX(5px);
+    }
+    .map-container {
+        height: 300px;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    .chart-container {
+        height: 250px;
+        position: relative;
+    }
+    .status-indicator {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 8px;
+    }
+    .status-active { background-color: #28a745; }
+    .status-warning { background-color: #ffc107; }
+    .status-danger { background-color: #dc3545; }
+    .status-idle { background-color: #6c757d; }
+    .notification-badge {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        background: #dc3545;
+        color: white;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        font-size: 0.7rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .ai-suggestion {
+        background: linear-gradient(135deg, #fd79a8 0%, #e84393 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    .efficiency-gauge {
+        position: relative;
+        width: 120px;
+        height: 120px;
+    }
+    .gauge-circle {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        background: conic-gradient(#28a745 0deg, #28a745 270deg, #e9ecef 270deg, #e9ecef 360deg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+    .gauge-inner {
+        width: 80px;
+        height: 80px;
+        background: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1.2rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="fas fa-tachometer-alt me-2"></i>
+        Enhanced Dashboard
+        <span class="badge bg-success ms-2">Live</span>
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="refreshDashboard()">
+                <i class="fas fa-sync-alt me-1"></i>Refresh
+            </button>
+        </div>
+        <div class="btn-group">
+            <button type="button" class="btn btn-sm btn-primary" onclick="exportDashboard()">
+                <i class="fas fa-download me-1"></i>Export
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Key Metrics Row -->
+<div class="row mb-4">
+    <div class="col-lg-3 col-md-6">
+        <div class="metric-card">
+            <div class="metric-value" id="totalRoutes">{{ total_routes }}</div>
+            <div class="metric-label">Total Routes</div>
+            <div class="mt-2">
+                <small class="trend-up">
+                    <i class="fas fa-arrow-up"></i> +12% this month
+                </small>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="metric-card">
+            <div class="metric-value" id="totalDistance">{{ total_distance|floatformat:1 }} km</div>
+            <div class="metric-label">Total Distance</div>
+            <div class="mt-2">
+                <small class="trend-down">
+                    <i class="fas fa-arrow-down"></i> -8% more efficient
+                </small>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="metric-card">
+            <div class="metric-value" id="avgEfficiency">{{ avg_efficiency|floatformat:1 }}%</div>
+            <div class="metric-label">Avg Efficiency</div>
+            <div class="mt-2">
+                <small class="trend-up">
+                    <i class="fas fa-arrow-up"></i> +5% improvement
+                </small>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="metric-card">
+            <div class="metric-value" id="fuelSaved">{{ fuel_saved|floatformat:1 }} L</div>
+            <div class="metric-label">Fuel Saved</div>
+            <div class="mt-2">
+                <small class="trend-up">
+                    <i class="fas fa-leaf"></i> Eco-friendly
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions and AI Suggestions Row -->
+<div class="row mb-4">
+    <div class="col-lg-8">
+        <div class="dashboard-widget">
+            <h5 class="mb-3">
+                <i class="fas fa-bolt me-2"></i>
+                Quick Actions
+            </h5>
+            <div class="row">
+                <div class="col-md-3 mb-2">
+                    <a href="{% url 'route_optimizer:optimize_route' %}" class="btn quick-action-btn w-100">
+                        <i class="fas fa-route d-block mb-2"></i>
+                        Optimize Route
+                    </a>
+                </div>
+                <div class="col-md-3 mb-2">
+                    <a href="{% url 'route_optimizer:add_location' %}" class="btn quick-action-btn w-100">
+                        <i class="fas fa-map-marker-alt d-block mb-2"></i>
+                        Add Location
+                    </a>
+                </div>
+                <div class="col-md-3 mb-2">
+                    <a href="{% url 'route_optimizer:add_vehicle' %}" class="btn quick-action-btn w-100">
+                        <i class="fas fa-truck d-block mb-2"></i>
+                        Add Vehicle
+                    </a>
+                </div>
+                <div class="col-md-3 mb-2">
+                    <a href="{% url 'route_optimizer:import_locations' %}" class="btn quick-action-btn w-100">
+                        <i class="fas fa-upload d-block mb-2"></i>
+                        Import Data
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="ai-suggestion">
+            <h6 class="mb-2">
+                <i class="fas fa-robot me-2"></i>
+                AI Suggestion
+            </h6>
+            <p class="mb-2">Consider optimizing Route #3 - potential 15% efficiency gain detected.</p>
+            <button class="btn btn-sm btn-light" onclick="applyAISuggestion()">
+                <i class="fas fa-magic me-1"></i>Apply
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Charts and Analytics Row -->
+<div class="row mb-4">
+    <div class="col-lg-6">
+        <div class="dashboard-widget">
+            <h5 class="mb-3">
+                <i class="fas fa-chart-line me-2"></i>
+                Performance Trends
+            </h5>
+            <div class="chart-container">
+                <canvas id="performanceChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="dashboard-widget">
+            <h5 class="mb-3">
+                <i class="fas fa-truck me-2"></i>
+                Fleet Status
+            </h5>
+            <div class="table-responsive">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Vehicle</th>
+                            <th>Status</th>
+                            <th>Route</th>
+                            <th>Efficiency</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for vehicle in fleet_status %}
+                        <tr>
+                            <td>{{ vehicle.name }}</td>
+                            <td>
+                                <span class="status-indicator status-{{ vehicle.status }}"></span>
+                                {{ vehicle.status|title }}
+                            </td>
+                            <td>{{ vehicle.current_route|default:"Idle" }}</td>
+                            <td>
+                                <div class="efficiency-gauge">
+                                    <div class="gauge-circle">
+                                        <div class="gauge-inner">{{ vehicle.efficiency }}%</div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Map and Weather Row -->
+<div class="row mb-4">
+    <div class="col-lg-8">
+        <div class="dashboard-widget">
+            <h5 class="mb-3">
+                <i class="fas fa-map me-2"></i>
+                Live Operations Map
+            </h5>
+            <div id="dashboardMap" class="map-container"></div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="weather-widget">
+            <h6 class="mb-3">
+                <i class="fas fa-cloud-sun me-2"></i>
+                Weather & Conditions
+            </h6>
+            <div class="row text-center">
+                <div class="col-6">
+                    <div class="mb-3">
+                        <i class="fas fa-thermometer-half fa-2x mb-2"></i>
+                        <h6>Temperature</h6>
+                        <p class="mb-0" id="currentTemp">25°C</p>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="mb-3">
+                        <i class="fas fa-cloud-rain fa-2x mb-2"></i>
+                        <h6>Precipitation</h6>
+                        <p class="mb-0" id="precipitation">10%</p>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="mb-3">
+                        <i class="fas fa-wind fa-2x mb-2"></i>
+                        <h6>Wind Speed</h6>
+                        <p class="mb-0" id="windSpeed">12 km/h</p>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="mb-3">
+                        <i class="fas fa-eye fa-2x mb-2"></i>
+                        <h6>Visibility</h6>
+                        <p class="mb-0" id="visibility">Good</p>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-3">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Impact:</strong> Current conditions may increase travel time by 5-10%.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity and Notifications Row -->
+<div class="row">
+    <div class="col-lg-6">
+        <div class="dashboard-widget">
+            <h5 class="mb-3">
+                <i class="fas fa-history me-2"></i>
+                Recent Activity
+            </h5>
+            <div style="max-height: 400px; overflow-y: auto;">
+                {% for activity in recent_activities %}
+                <div class="activity-item">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <strong>{{ activity.title }}</strong>
+                            <p class="mb-1 text-muted small">{{ activity.description }}</p>
+                        </div>
+                        <small class="text-muted">{{ activity.timestamp }}</small>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="dashboard-widget">
+            <h5 class="mb-3">
+                <i class="fas fa-bell me-2"></i>
+                Live Notifications
+                <span class="notification-badge">3</span>
+            </h5>
+            <div style="max-height: 400px; overflow-y: auto;">
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <strong>Route Completed:</strong> Morning Collection finished successfully
+                </div>
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Maintenance Due:</strong> Truck Alpha needs service in 2 days
+                </div>
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Weather Alert:</strong> Heavy rain expected tomorrow
+                </div>
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    <strong>Route Delay:</strong> Evening Collection running 30 min late
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+let dashboardMap;
+let performanceChart;
+
+$(document).ready(function() {
+    initializeDashboard();
+    loadWeatherData();
+    startRealTimeUpdates();
+});
+
+function initializeDashboard() {
+    // Initialize performance chart
+    const ctx = document.getElementById('performanceChart').getContext('2d');
+    performanceChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+            datasets: [{
+                label: 'Efficiency %',
+                data: [85, 88, 87, 92, 89, 94, 91],
+                borderColor: '#667eea',
+                backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                tension: 0.4,
+                fill: true
+            }, {
+                label: 'Distance (km)',
+                data: [120, 135, 128, 142, 138, 145, 140],
+                borderColor: '#28a745',
+                backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                tension: 0.4,
+                yAxisID: 'y1'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                },
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    grid: {
+                        drawOnChartArea: false,
+                    },
+                }
+            }
+        }
+    });
+
+    // Initialize dashboard map
+    dashboardMap = L.map('dashboardMap').setView([20.5937, 78.9629], 10);
+    
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(dashboardMap);
+
+    // Add sample markers
+    const sampleLocations = [
+        {lat: 20.5937, lng: 78.9629, name: 'Central Market', type: 'active'},
+        {lat: 20.6037, lng: 78.9729, name: 'Residential Area', type: 'pending'},
+        {lat: 20.6137, lng: 78.9829, name: 'Industrial Zone', type: 'completed'}
+    ];
+
+    sampleLocations.forEach(location => {
+        const color = location.type === 'active' ? '#28a745' : 
+                     location.type === 'pending' ? '#ffc107' : '#6c757d';
+        
+        L.circleMarker([location.lat, location.lng], {
+            radius: 8,
+            fillColor: color,
+            color: 'white',
+            weight: 2,
+            opacity: 1,
+            fillOpacity: 0.8
+        }).addTo(dashboardMap).bindPopup(location.name);
+    });
+}
+
+function loadWeatherData() {
+    // Simulate weather data
+    const weatherData = {
+        temperature: 25 + Math.random() * 10,
+        precipitation: Math.random() * 30,
+        windSpeed: 10 + Math.random() * 20,
+        visibility: ['Poor', 'Fair', 'Good', 'Excellent'][Math.floor(Math.random() * 4)]
+    };
+    
+    $('#currentTemp').text(Math.round(weatherData.temperature) + '°C');
+    $('#precipitation').text(Math.round(weatherData.precipitation) + '%');
+    $('#windSpeed').text(Math.round(weatherData.windSpeed) + ' km/h');
+    $('#visibility').text(weatherData.visibility);
+}
+
+function startRealTimeUpdates() {
+    // Update metrics every 30 seconds
+    setInterval(function() {
+        updateMetrics();
+    }, 30000);
+}
+
+function updateMetrics() {
+    // Simulate real-time updates
+    const routes = parseInt($('#totalRoutes').text()) + Math.floor(Math.random() * 3);
+    const distance = parseFloat($('#totalDistance').text()) + Math.random() * 10;
+    const efficiency = parseFloat($('#avgEfficiency').text()) + Math.random() * 2;
+    const fuel = parseFloat($('#fuelSaved').text()) + Math.random() * 5;
+    
+    $('#totalRoutes').text(routes);
+    $('#totalDistance').text(distance.toFixed(1) + ' km');
+    $('#avgEfficiency').text(efficiency.toFixed(1) + '%');
+    $('#fuelSaved').text(fuel.toFixed(1) + ' L');
+}
+
+function refreshDashboard() {
+    location.reload();
+}
+
+function exportDashboard() {
+    // In real implementation, this would generate a PDF/Excel report
+    alert('Dashboard export functionality would be implemented here');
+}
+
+function applyAISuggestion() {
+    // In real implementation, this would apply AI recommendations
+    alert('AI suggestion applied! Route optimization in progress...');
+}
+</script>
+{% endblock %}

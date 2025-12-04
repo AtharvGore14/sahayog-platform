@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% block title %}Locations - Sahayog Route Optimizer{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-map-marker-alt me-2"></i>Locations</h1>
+    <a class="btn btn-primary" href="{% url 'route_optimizer:add_location' %}"><i class="fas fa-plus me-2"></i>Add Location</a>
+</div>
+<form class="row g-2 mb-3">
+    <div class="col-md-6">
+        <input class="form-control" name="search" value="{{ search_query }}" placeholder="Search by name or address" />
+    </div>
+    <div class="col-md-3">
+        <select class="form-select" name="type">
+            <option value="">All Types</option>
+            {% for value,label in location_types %}
+            <option value="{{ value }}" {% if value == location_type %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-3">
+        <button class="btn btn-outline-primary w-100" type="submit">Filter</button>
+    </div>
+</form>
+<div class="card">
+  <div class="card-body">
+    {% if page_obj.object_list %}
+    <div class="table-responsive">
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>Name</th><th>Type</th><th>Priority</th><th>Address</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for loc in page_obj.object_list %}
+          <tr>
+            <td>{{ loc.name }}</td>
+            <td><span class="badge bg-secondary">{{ loc.get_location_type_display }}</span></td>
+            <td><span class="badge bg-info">{{ loc.get_priority_display }}</span></td>
+            <td>{{ loc.address }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <nav>
+      <ul class="pagination mb-0">
+        {% if page_obj.has_previous %}
+          <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&search={{ search_query }}&type={{ location_type }}">Prev</a></li>
+        {% endif %}
+        <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
+        {% if page_obj.has_next %}
+          <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&search={{ search_query }}&type={{ location_type }}">Next</a></li>
+        {% endif %}
+      </ul>
+    </nav>
+    {% else %}
+      <p class="mb-0 text-muted">No locations found.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

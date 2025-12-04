@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Waste Analytics - Real-Time Insights</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding-bottom: 40px;
+        }
+
+        .navbar {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(10px);
+            padding: 15px 30px;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 25px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #2c3e50;
+            font-weight: 600;
+            padding: 8px 20px;
+            border-radius: 25px;
+            transition: all 0.3s;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+            padding: 20px;
+        }
+
+        header h1 {
+            font-size: 48px;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            font-weight: 700;
+        }
+
+        header .subtitle {
+            font-size: 18px;
+            opacity: 0.95;
+            font-weight: 300;
+        }
+
+        .controls {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            margin-bottom: 30px;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            align-items: end;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .control-group label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #2c3e50;
+            font-size: 14px;
+        }
+
+        .control-group input, .control-group select {
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 15px;
+            transition: all 0.3s;
+        }
+
+        .control-group input:focus, .control-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .control-group button {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .control-group button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .control-group button:active {
+            transform: translateY(0);
+        }
+
+        .error {
+            background: #ff4444;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        #loadingIndicator {
+            text-align: center;
+            padding: 60px;
+            color: white;
+        }
+
+        #loadingIndicator .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        #analyticsContent {
+            display: block;
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card .label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .stat-card .value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .stat-card .change {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .stat-card .change.positive {
+            color: #27ae60;
+        }
+
+        .stat-card .change.negative {
+            color: #e74c3c;
+        }
+
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .analytics-card {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+
+        .analytics-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+        }
+
+        .analytics-card h3 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 22px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .analytics-card .icon {
+            font-size: 28px;
+        }
+
+        .analytics-card .content {
+            color: #555;
+            line-height: 1.8;
+        }
+
+        .analytics-card .content p {
+            margin-bottom: 12px;
+        }
+
+        .analytics-card .content strong {
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .chart-container {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .chart-container h3 {
+            color: #2c3e50;
+            margin-bottom: 25px;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        #trendChartContainer {
+            position: relative;
+            height: 400px;
+        }
+
+        .info-box {
+            background: #f0f7ff;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        .info-box p {
+            margin: 0;
+            color: #2c3e50;
+            font-size: 14px;
+        }
+
+        .info-box a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .info-box a:hover {
+            text-decoration: underline;
+        }
+
+        .recommendation-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .recommendation-list li {
+            padding: 15px;
+            margin-bottom: 12px;
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .recommendation-list li:hover {
+            background: #f0f7ff;
+            transform: translateX(5px);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .badge.success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .badge.warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .badge.info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        /* Prevent analytics content from being hidden */
+        #analyticsContent.visible {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
+        
+        /* AGGRESSIVE CSS PROTECTION - prevent any hiding */
+        #analyticsContent[style*="display: none"],
+        #analyticsContent[style*="display:none"],
+        #analyticsContent.hidden {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
+        
+        /* Force visibility after content is loaded */
+        #analyticsContent {
+            display: block !important;
+        }
+        
+        /* Protect individual content divs */
+        #trendAnalysis, #forecastAnalysis, #optimizationAnalysis {
+            min-height: 50px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">♻️ Waste Financial Ledger</div>
+            <ul class="nav-links">
+                <li><a href="/">🏠 Master Portal</a></li>
+                <li><a href="home.html">🏠 Home</a></li>
+                <li><a href="index.html">Dashboard</a></li>
+                <li><a href="waste_entry.html">Data Entry</a></li>
+                <li><a href="analytics.html" class="active">Analytics</a></li>
+                <li><a href="companies.html">Companies</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <header>
+            <h1>📊 Advanced Analytics & Insights</h1>
+            <p class="subtitle">Real-time waste financial analysis, forecasting, and optimization recommendations</p>
+        </header>
+
+        <div class="controls">
+            <div class="control-group">
+                <label>Company ID</label>
+                <input type="text" id="companyId" value="C1234" placeholder="e.g., C1234">
+            </div>
+            <div class="control-group">
+                <label>Analysis Period (Days)</label>
+                <select id="periodDays">
+                    <option value="7">Last 7 Days</option>
+                    <option value="30" selected>Last 30 Days</option>
+                    <option value="90">Last 90 Days</option>
+                    <option value="180">Last 6 Months</option>
+                </select>
+            </div>
+            <div class="control-group" style="justify-content: flex-end;">
+                <label>&nbsp;</label>
+                <button id="loadAnalyticsBtn" type="button" onclick="window.loadAnalytics()">🔍 Load Analytics</button>
+            </div>
+        </div>
+
+        <div id="errorMessage" class="error" style="display: none;"></div>
+
+        <div id="loadingIndicator" style="display: none;">
+            <div class="spinner"></div>
+            <p style="font-size: 18px; font-weight: 600;">Loading analytics data...</p>
+        </div>
+
+        <div id="analyticsContent" style="display: block !important; visibility: visible !important; opacity: 1 !important;">
+            <!-- Key Statistics -->
+            <div class="stats-grid" id="statsGrid" style="display: none;"></div>
+
+            <!-- Main Analytics Cards -->
+            <div class="analytics-grid">
+                <div class="analytics-card">
+                    <h3><span class="icon">📈</span> Trend Analysis</h3>
+                    <div id="trendAnalysis" class="content">
+                        <p style="color: #999; text-align: center; padding: 20px;">Click "Load Analytics" to view trends</p>
+                    </div>
+                </div>
+                <div class="analytics-card">
+                    <h3><span class="icon">🔮</span> Financial Forecast</h3>
+                    <div id="forecastAnalysis" class="content">
+                        <p style="color: #999; text-align: center; padding: 20px;">Click "Load Analytics" to view forecast</p>
+                    </div>
+                </div>
+                <div class="analytics-card">
+                    <h3><span class="icon">💰</span> Cost Optimization</h3>
+                    <div id="optimizationAnalysis" class="content">
+                        <p style="color: #999; text-align: center; padding: 20px;">Click "Load Analytics" to view optimizations</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trend Chart -->
+            <div class="chart-container">
+                <h3>📊 Net Waste Value Trend</h3>
+                <div id="trendChartContainer">
+                    <p style="text-align: center; color: #999; padding: 40px;">Click "Load Analytics" to view trend chart</p>
+                    <canvas id="trendChart" style="display: none;"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const pathSegments = window.location.pathname.split('/').filter(Boolean);
+        let basePrefix = '';
+        if (pathSegments.length > 0 && !pathSegments[0].includes('.')) {
+            basePrefix = '/' + pathSegments[0];
+        }
+        const API_BASE_URL = window.location.origin + basePrefix;
+        let trendChart = null;
+        let contentObserver = null;
+        
+        // Store the HTML content to restore if cleared - use object to make it persistent
+        const contentStore = {
+            trendsHtml: '',
+            forecastHtml: '',
+            optHtml: '',
+            isProtected: false
+        };
+        
+        // Observers to protect content from being cleared
+        let trendsObserver = null;
+        let forecastObserver = null;
+        let optObserver = null;
+        let contentWatchdog = null;
+
+        // Simple function to keep content visible - no observer needed
+        function ensureContentVisible() {
+            const contentEl = document.getElementById('analyticsContent');
+            if (contentEl) {
+                contentEl.style.setProperty('display', 'block', 'important');
+                contentEl.style.setProperty('visibility', 'visible', 'important');
+                contentEl.style.setProperty('opacity', '1', 'important');
+                contentEl.classList.add('visible');
+            }
+        }
+        
+        // Continuous watchdog that monitors and restores content
+        function startContentWatchdog() {
+            if (contentWatchdog) {
+                clearInterval(contentWatchdog);
+            }
+            
+            contentWatchdog = setInterval(() => {
+                // Check and restore trends
+                if (contentStore.trendsHtml) {
+                    const trendEl = document.getElementById('trendAnalysis');
+                    if (trendEl) {
+                        const currentHtml = trendEl.innerHTML.trim();
+                        if (currentHtml === '' || currentHtml.length < 20 || 
+                            (currentHtml.length < contentStore.trendsHtml.length * 0.5)) {
+                            console.warn('Watchdog: Restoring trends content');
+                            try {
+                                trendEl.innerHTML = contentStore.trendsHtml;
+                            } catch(e) {
+                                console.error('Error restoring trends:', e);
+                            }
+                        }
+                    }
+                }
+                
+                // Check and restore forecast
+                if (contentStore.forecastHtml) {
+                    const forecastEl = document.getElementById('forecastAnalysis');
+                    if (forecastEl) {
+                        const currentHtml = forecastEl.innerHTML.trim();
+                        if (currentHtml === '' || currentHtml.length < 20 ||
+                            (currentHtml.length < contentStore.forecastHtml.length * 0.5)) {
+                            console.warn('Watchdog: Restoring forecast content');
+                            try {
+                                forecastEl.innerHTML = contentStore.forecastHtml;
+                            } catch(e) {
+                                console.error('Error restoring forecast:', e);
+                            }
+                        }
+                    }
+                }
+                
+                // Check and restore optimizations
+                if (contentStore.optHtml) {
+                    const optEl = document.getElementById('optimizationAnalysis');
+                    if (optEl) {
+                        const currentHtml = optEl.innerHTML.trim();
+                        if (currentHtml === '' || currentHtml.length < 20 ||
+                            (currentHtml.length < contentStore.optHtml.length * 0.5)) {
+                            console.warn('Watchdog: Restoring optimization content');
+                            try {
+                                optEl.innerHTML = contentStore.optHtml;
+                            } catch(e) {
+                                console.error('Error restoring optimizations:', e);
+                            }
+                        }
+                    }
+                }
+            }, 200); // Check every 200ms
+        }
+        
+        // Stop watchdog (only if needed)
+        function stopContentWatchdog() {
+            if (contentWatchdog) {
+                clearInterval(contentWatchdog);
+                contentWatchdog = null;
+            }
+        }
+        
+        // AGGRESSIVE protection - override innerHTML setter to prevent clearing
+        function protectContentFromClearing(elementId, storedHtml) {
+            const element = document.getElementById(elementId);
+            if (!element || !storedHtml) return;
+            
+            // Store original innerHTML descriptor
+            const originalDescriptor = Object.getOwnPropertyDescriptor(Element.prototype, 'innerHTML') || 
+                                      Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'innerHTML');
+            
+            // Override innerHTML setter for THIS specific element
+            let isUpdating = false;
+            Object.defineProperty(element, 'innerHTML', {
+                set: function(newValue) {
+                    // If trying to set empty or very short content, and we have stored content, block it
+                    if (!isUpdating && storedHtml && (newValue.trim().length < 20)) {
+                        console.warn(`Blocked attempt to clear ${elementId}, restoring content`);
+                        isUpdating = true;
+                        if (originalDescriptor && originalDescriptor.set) {
+                            originalDescriptor.set.call(this, storedHtml);
+                        } else {
+                            this.textContent = storedHtml;
+                        }
+                        isUpdating = false;
+                        return;
+                    }
+                    // Otherwise allow the update
+                    isUpdating = true;
+                    if (originalDescriptor && originalDescriptor.set) {
+                        originalDescriptor.set.call(this, newValue);
+                    } else {
+                        this.textContent = newValue;
+                    }
+                    isUpdating = false;
+                },
+                get: function() {
+                    if (originalDescriptor && originalDescriptor.get) {
+                        return originalDescriptor.get.call(this);
+                    }
+                    return this.textContent;
+                },
+                configurable: true
+            });
+            
+            // Also set up a MutationObserver as backup
+            let isRestoring = false;
+            const observer = new MutationObserver((mutations) => {
+                if (isRestoring || isUpdating) return;
+                
+                const currentHtml = element.innerHTML.trim();
+                // If content was cleared, restore immediately
+                if ((currentHtml === '' || currentHtml.length < 20) && storedHtml) {
+                    isRestoring = true;
+                    console.warn(`${elementId}: MutationObserver detected clearing! Restoring...`);
+                    setTimeout(() => {
+                        isUpdating = true;
+                        element.innerHTML = storedHtml;
+                        isUpdating = false;
+                        isRestoring = false;
+                    }, 0);
+                }
+            });
+            
+            // Start observing
+            observer.observe(element, {
+                childList: true,
+                subtree: true,
+                characterData: true
+            });
+            
+            // Store observer reference
+            if (elementId === 'trendAnalysis') {
+                trendsObserver = observer;
+            } else if (elementId === 'forecastAnalysis') {
+                forecastObserver = observer;
+            } else if (elementId === 'optimizationAnalysis') {
+                optObserver = observer;
+            }
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            if (errorDiv) {
+                errorDiv.textContent = message;
+                errorDiv.style.display = 'block';
+            }
+        }
+
+        // Make function globally accessible
+        window.loadAnalytics = async function() {
+            const companyId = document.getElementById('companyId').value.trim();
+            const periodDays = parseInt(document.getElementById('periodDays').value) || 30;
+
+            if (!companyId) {
+                showError('Please enter a Company ID');
+                return;
+            }
+
+            // Get elements
+            const errorEl = document.getElementById('errorMessage');
+            const loadingEl = document.getElementById('loadingIndicator');
+            const contentEl = document.getElementById('analyticsContent');
+            const trendEl = document.getElementById('trendAnalysis');
+            const forecastEl = document.getElementById('forecastAnalysis');
+            const optEl = document.getElementById('optimizationAnalysis');
+
+            // Show loading
+            if (loadingEl) loadingEl.style.display = 'block';
+            if (errorEl) errorEl.style.display = 'none';
+            
+            // FORCE content visible - use multiple methods
+            if (contentEl) {
+                contentEl.style.display = 'block';
+                contentEl.style.visibility = 'visible';
+                contentEl.style.opacity = '1';
+                contentEl.removeAttribute('hidden');
+                contentEl.classList.remove('hidden');
+            }
+
+            // Show a test message FIRST to verify display works
+            if (trendEl) {
+                trendEl.innerHTML = '<p style="color: green; font-weight: bold;">🔄 Loading trends...</p>';
+            }
+            if (forecastEl) {
+                forecastEl.innerHTML = '<p style="color: green; font-weight: bold;">🔄 Loading forecast...</p>';
+            }
+            if (optEl) {
+                optEl.innerHTML = '<p style="color: green; font-weight: bold;">🔄 Loading optimizations...</p>';
+            }
+
+            let trends = { error: null, daily_data: [] };
+            let forecast = { error: null };
+            let optimizations = { optimizations: [], recommendations: [] };
+
+            // Load trends
+            try {
+                const url = `${API_BASE_URL}/api/v1/waste/analytics/trends/${companyId}?days=${periodDays}`;
+                console.log('Fetching:', url);
+                const trendsResponse = await fetch(url);
+                
+                if (trendsResponse.ok) {
+                    trends = await trendsResponse.json();
+                    console.log('Trends received:', trends);
+                } else {
+                    const errorData = await trendsResponse.json().catch(() => ({ detail: 'Failed to load trends' }));
+                    trends.error = errorData.detail || 'Failed to load trends';
+                }
+            } catch (error) {
+                console.error('Trends error:', error);
+                trends.error = `Connection error: ${error.message}. Is backend running?`;
+            }
+
+            // Load forecast
+            try {
+                const forecastResponse = await fetch(`${API_BASE_URL}/api/v1/waste/analytics/forecast/${companyId}?days=30`);
+                if (forecastResponse.ok) {
+                    forecast = await forecastResponse.json();
+                } else {
+                    forecast.error = 'Failed to load forecast';
+                }
+            } catch (error) {
+                forecast.error = `Connection error: ${error.message}`;
+            }
+
+            // Load optimizations
+            try {
+                const optResponse = await fetch(`${API_BASE_URL}/api/v1/waste/analytics/optimizations/${companyId}`);
+                if (optResponse.ok) {
+                    optimizations = await optResponse.json();
+                }
+            } catch (error) {
+                console.error('Optimizations error:', error);
+            }
+
+            // Hide loading
+            if (loadingEl) loadingEl.style.display = 'none';
+
+            // Display data
+            displayAnalytics(trends, forecast, optimizations);
+
+            // Force content visible again after display - do this multiple times to ensure it sticks
+            if (contentEl) {
+                contentEl.style.display = 'block';
+                contentEl.style.visibility = 'visible';
+                contentEl.style.opacity = '1';
+                contentEl.removeAttribute('hidden');
+            }
+            
+            // Keep content visible - use setTimeout to ensure it happens after any other code
+            setTimeout(() => {
+                if (contentEl) {
+                    contentEl.style.display = 'block';
+                    contentEl.style.visibility = 'visible';
+                    contentEl.style.opacity = '1';
+                }
+                
+                // Also ensure individual card content is still there
+                const trendEl = document.getElementById('trendAnalysis');
+                const forecastEl = document.getElementById('forecastAnalysis');
+                const optEl = document.getElementById('optimizationAnalysis');
+                
+                if (trendEl && contentStore.trendsHtml && trendEl.innerHTML.trim().length < 10) {
+                    trendEl.innerHTML = contentStore.trendsHtml;
+                }
+                if (forecastEl && contentStore.forecastHtml && forecastEl.innerHTML.trim().length < 10) {
+                    forecastEl.innerHTML = contentStore.forecastHtml;
+                }
+                if (optEl && contentStore.optHtml && optEl.innerHTML.trim().length < 10) {
+                    optEl.innerHTML = contentStore.optHtml;
+                }
+            }, 100);
+            
+            // And again after a longer delay
+            setTimeout(() => {
+                if (contentEl) {
+                    contentEl.style.display = 'block';
+                    contentEl.style.visibility = 'visible';
+                    contentEl.style.opacity = '1';
+                }
+            }, 500);
+        }
+
+        function displayAnalytics(trends, forecast, optimizations) {
+            console.log('Display Analytics called with:', { trends, forecast, optimizations });
+            
+            // Get elements
+            const contentEl = document.getElementById('analyticsContent');
+            const trendEl = document.getElementById('trendAnalysis');
+            const forecastEl = document.getElementById('forecastAnalysis');
+            const optEl = document.getElementById('optimizationAnalysis');
+
+            if (!contentEl) {
+                console.error('ERROR: analyticsContent not found!');
+                return;
+            }
+
+            // Force visible
+            contentEl.style.display = 'block';
+            contentEl.style.visibility = 'visible';
+            contentEl.style.opacity = '1';
+
+            // Display stats
+            try {
+                displayStats(trends, forecast);
+            } catch (e) {
+                console.error('Stats error:', e);
+            }
+
+            // Display trends
+            if (!trendEl) {
+                console.error('ERROR: trendAnalysis element not found!');
+            } else {
+                try {
+                    let trendsHtml = '';
+                    if (trends.error && !trends.daily_data?.length) {
+                        trendsHtml = `
+                            <p style="color: #666;">${trends.error}</p>
+                            <div class="info-box">
+                                <p><strong>💡 Tip:</strong> Submit waste transactions using the <a href="waste_entry.html">Data Entry</a> page to see analytics.</p>
+                            </div>
+                        `;
+                    } else {
+                        const hasData = trends.average_nwv !== undefined || trends.daily_data?.length > 0;
+                        if (hasData) {
+                            const avgNwv = trends.average_nwv || (trends.daily_data?.length > 0 
+                                ? trends.daily_data.reduce((sum, d) => sum + (d.nwv || 0), 0) / trends.daily_data.length 
+                                : 0);
+                            const peakNwv = trends.peak_nwv || (trends.daily_data?.length > 0 
+                                ? Math.max(...trends.daily_data.map(d => d.nwv || 0)) 
+                                : 0);
+                            const lowestNwv = trends.lowest_nwv || (trends.daily_data?.length > 0 
+                                ? Math.min(...trends.daily_data.map(d => d.nwv || 0)) 
+                                : 0);
+
+                            trendsHtml = `
+                                <p><strong>Status:</strong> <span class="badge success">Data Available</span></p>
+                                ${trends.trend_direction && trends.trend_direction !== 'stable' ? `
+                                    <p><strong>Trend:</strong> <span style="color: ${trends.trend_direction === 'improving' ? '#27ae60' : '#e74c3c'}; font-weight: 700;">${trends.trend_direction.toUpperCase()}</span></p>
+                                    <p><strong>Change:</strong> <span style="color: ${trends.trend_percentage > 0 ? '#27ae60' : '#e74c3c'};">${trends.trend_percentage > 0 ? '+' : ''}${trends.trend_percentage.toFixed(2)}%</span></p>
+                                ` : ''}
+                                <p><strong>Average NWV:</strong> ₹${avgNwv.toLocaleString('en-IN', {minimumFractionDigits: 2})}</p>
+                                <p><strong>Peak NWV:</strong> ₹${peakNwv.toLocaleString('en-IN', {minimumFractionDigits: 2})}</p>
+                                <p><strong>Lowest NWV:</strong> ₹${lowestNwv.toLocaleString('en-IN', {minimumFractionDigits: 2})}</p>
+                                <p><strong>Data Points:</strong> ${trends.daily_data?.length || 1} day(s)</p>
+                                ${trends.error ? `<p style="color: #856404; font-size: 13px; margin-top: 10px;"><em>${trends.error}</em></p>` : ''}
+                            `;
+                        } else {
+                            trendsHtml = `
+                                <p style="color: #666;">No trend data available.</p>
+                                <div class="info-box">
+                                    <p><strong>💡 Tip:</strong> Submit waste transactions using the <a href="waste_entry.html">Data Entry</a> page to see analytics.</p>
+                                </div>
+                            `;
+                        }
+                    }
+                    
+                    // SET THE HTML - store first, then set
+                    contentStore.trendsHtml = trendsHtml;
+                    
+                    // Set up protection BEFORE setting content
+                    protectContentFromClearing('trendAnalysis', contentStore.trendsHtml);
+                    
+                    // Now set the content
+                    trendEl.innerHTML = trendsHtml;
+                    console.log('Trend HTML set, length:', trendEl.innerHTML.length);
+                    
+                    // Start watchdog if not running
+                    if (!contentWatchdog) {
+                        startContentWatchdog();
+                    }
+                    
+                    // Verify multiple times
+                    [50, 100, 200, 500].forEach(delay => {
+                        setTimeout(() => {
+                            if (trendEl.innerHTML.trim().length < 20) {
+                                console.warn(`Trend content cleared at ${delay}ms, restoring...`);
+                                trendEl.innerHTML = contentStore.trendsHtml;
+                            }
+                        }, delay);
+                    });
+                } catch (e) {
+                    console.error('Trend error:', e);
+                    trendEl.innerHTML = `<p style="color: red;">Error: ${e.message}</p>`;
+                }
+            }
+
+            // Display forecast
+            if (!forecastEl) {
+                console.error('ERROR: forecastAnalysis element not found!');
+            } else {
+                try {
+                    let forecastHtml = '';
+                    if (forecast.error) {
+                        forecastHtml = `
+                            <p style="color: #666;">${forecast.error}</p>
+                            <div class="info-box">
+                                <p>Need at least 7 days of historical data for accurate forecasting.</p>
+                            </div>
+                        `;
+                    } else if (forecast.predicted_nwv || forecast.forecasted_nwv) {
+                        const predictedNwv = forecast.predicted_nwv || forecast.forecasted_nwv || 0;
+                        const confidence = Math.round((forecast.confidence_level || 0.7) * 100);
+                        const predictedRevenue = forecast.predicted_revenue || 0;
+                        const predictedCost = forecast.predicted_cost || 0;
+
+                        forecastHtml = `
+                            <p><strong>Forecast Period:</strong> ${forecast.forecast_period_days || 30} days</p>
+                            <p><strong>Predicted NWV:</strong> <span style="font-size: 24px; font-weight: 700; color: #667eea;">₹${predictedNwv.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span></p>
+                            <p><strong>Predicted Revenue:</strong> ₹${predictedRevenue.toLocaleString('en-IN', {minimumFractionDigits: 2})}</p>
+                            <p><strong>Predicted Cost:</strong> ₹${predictedCost.toLocaleString('en-IN', {minimumFractionDigits: 2})}</p>
+                            <p><strong>Confidence Level:</strong> <span class="badge ${confidence >= 80 ? 'success' : confidence >= 60 ? 'warning' : 'info'}">${confidence}%</span></p>
+                            <p><strong>Model:</strong> ${forecast.method || forecast.model_version || 'Moving Average'}</p>
+                        `;
+                    } else {
+                        forecastHtml = `
+                            <p style="color: #666;">Forecast data not available.</p>
+                            <div class="info-box">
+                                <p>Need at least 7 days of historical data for accurate forecasting.</p>
+                            </div>
+                        `;
+                    }
+                    
+                    // SET THE HTML - store first, then set
+                    contentStore.forecastHtml = forecastHtml;
+                    
+                    // Set up protection BEFORE setting content
+                    protectContentFromClearing('forecastAnalysis', contentStore.forecastHtml);
+                    
+                    // Now set the content
+                    forecastEl.innerHTML = forecastHtml;
+                    console.log('Forecast HTML set, length:', forecastEl.innerHTML.length);
+                    
+                    // Start watchdog if not running
+                    if (!contentWatchdog) {
+                        startContentWatchdog();
+                    }
+                    
+                    // Verify multiple times
+                    [50, 100, 200, 500].forEach(delay => {
+                        setTimeout(() => {
+                            if (forecastEl.innerHTML.trim().length < 20) {
+                                console.warn(`Forecast content cleared at ${delay}ms, restoring...`);
+                                forecastEl.innerHTML = contentStore.forecastHtml;
+                            }
+                        }, delay);
+                    });
+                } catch (e) {
+                    console.error('Forecast error:', e);
+                    forecastEl.innerHTML = `<p style="color: red;">Error: ${e.message}</p>`;
+                }
+            }
+
+            // Display optimizations
+            if (!optEl) {
+                console.error('ERROR: optimizationAnalysis element not found!');
+            } else {
+                try {
+                    let optHtml = '';
+                    const optList = optimizations.optimizations || optimizations.recommendations || [];
+                    if (optList.length > 0) {
+                        optHtml = '<ul class="recommendation-list">';
+                        optList.forEach(opt => {
+                            const rec = typeof opt === 'string' ? opt : (opt.recommendation || JSON.stringify(opt));
+                            optHtml += `<li>${rec}</li>`;
+                        });
+                        optHtml += '</ul>';
+                    } else {
+                        optHtml = `
+                            <p style="color: #666;">No optimization opportunities found.</p>
+                            <div class="info-box">
+                                <p>Submit more transactions with quality scores and volumes to get personalized recommendations.</p>
+                            </div>
+                        `;
+                    }
+                    
+                    // SET THE HTML - store first, then set
+                    contentStore.optHtml = optHtml;
+                    
+                    // Set up protection BEFORE setting content
+                    protectContentFromClearing('optimizationAnalysis', contentStore.optHtml);
+                    
+                    // Now set the content
+                    optEl.innerHTML = optHtml;
+                    console.log('Optimization HTML set, length:', optEl.innerHTML.length);
+                    
+                    // Start watchdog if not running
+                    if (!contentWatchdog) {
+                        startContentWatchdog();
+                    }
+                    
+                    // Verify multiple times
+                    [50, 100, 200, 500].forEach(delay => {
+                        setTimeout(() => {
+                            if (optEl.innerHTML.trim().length < 20) {
+                                console.warn(`Optimization content cleared at ${delay}ms, restoring...`);
+                                optEl.innerHTML = contentStore.optHtml;
+                            }
+                        }, delay);
+                    });
+                } catch (e) {
+                    console.error('Optimization error:', e);
+                    optEl.innerHTML = `<p style="color: red;">Error: ${e.message}</p>`;
+                }
+            }
+
+            // Update chart
+            try {
+                if (trends.daily_data && trends.daily_data.length > 0) {
+                    updateTrendChart(trends.daily_data);
+                }
+            } catch (e) {
+                console.error('Chart error:', e);
+            }
+
+            // Final visibility check
+            if (contentEl) {
+                contentEl.style.display = 'block';
+                contentEl.style.visibility = 'visible';
+                contentEl.style.opacity = '1';
+            }
+            
+            console.log('DISPLAY COMPLETE');
+        }
+
+        function displayStats(trends, forecast) {
+            const statsGrid = document.getElementById('statsGrid');
+            if (!statsGrid) return;
+
+            const avgNwv = trends.average_nwv !== undefined && trends.average_nwv !== null
+                ? trends.average_nwv
+                : (trends.daily_data?.length > 0 
+                    ? trends.daily_data.reduce((sum, d) => sum + (d.nwv || 0), 0) / trends.daily_data.length 
+                    : 0);
+            
+            const peakNwv = trends.peak_nwv !== undefined && trends.peak_nwv !== null
+                ? trends.peak_nwv
+                : (trends.daily_data?.length > 0 
+                    ? Math.max(...trends.daily_data.map(d => d.nwv || 0)) 
+                    : 0);
+            
+            const predictedNwv = forecast.predicted_nwv || forecast.forecasted_nwv || 0;
+            const trendDirection = trends.trend_direction || 'stable';
+            const dataPoints = trends.daily_data?.length || 0;
+
+            // Always show stats if we have any data, even if limited
+            const hasAnyData = dataPoints > 0 || avgNwv > 0 || predictedNwv > 0;
+            
+            if (hasAnyData) {
+                statsGrid.innerHTML = `
+                    <div class="stat-card">
+                        <div class="label">Average NWV</div>
+                        <div class="value">₹${avgNwv.toLocaleString('en-IN', {minimumFractionDigits: 2})}</div>
+                        <div class="change ${trendDirection === 'improving' ? 'positive' : trendDirection === 'declining' ? 'negative' : ''}">
+                            ${trendDirection === 'improving' ? '↗ Improving' : trendDirection === 'declining' ? '↘ Declining' : '→ Stable'}
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">Peak NWV</div>
+                        <div class="value">₹${peakNwv.toLocaleString('en-IN', {minimumFractionDigits: 2})}</div>
+                        <div class="change positive">Best Performance</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">30-Day Forecast</div>
+                        <div class="value">₹${predictedNwv.toLocaleString('en-IN', {minimumFractionDigits: 2})}</div>
+                        <div class="change info">Projected Value</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">Data Points</div>
+                        <div class="value">${dataPoints}</div>
+                        <div class="change">Days Analyzed</div>
+                    </div>
+                `;
+                statsGrid.style.display = 'grid';
+            } else {
+                // Hide stats grid if no data at all
+                statsGrid.style.display = 'none';
+            }
+            
+            // Ensure main content stays visible
+            const contentEl = document.getElementById('analyticsContent');
+            if (contentEl) {
+                contentEl.style.display = 'block';
+                contentEl.style.visibility = 'visible';
+            }
+        }
+
+        function updateTrendChart(dailyData) {
+            if (!dailyData || dailyData.length === 0) {
+                const chartContainer = document.getElementById('trendChartContainer');
+                if (chartContainer) {
+                    chartContainer.innerHTML = 
+                        '<p style="text-align: center; color: #666; padding: 40px;">No trend data available. Submit transactions to see trends.</p>';
+                }
+                if (trendChart) {
+                    trendChart.destroy();
+                    trendChart = null;
+                }
+                return;
+            }
+
+            // Ensure container exists and has canvas
+            const chartContainer = document.getElementById('trendChartContainer');
+            if (!chartContainer) return;
+
+            // Destroy existing chart first
+            if (trendChart) {
+                try {
+                    trendChart.destroy();
+                } catch (e) {
+                    console.warn('Error destroying chart:', e);
+                }
+                trendChart = null;
+            }
+
+            // Recreate canvas element
+            chartContainer.innerHTML = '<canvas id="trendChart"></canvas>';
+            const ctx = document.getElementById('trendChart');
+            if (!ctx) {
+                console.error('Failed to create chart canvas');
+                return;
+            }
+
+            const labels = dailyData.map(d => {
+                const date = new Date(d.date);
+                return date.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' });
+            });
+            const nwvData = dailyData.map(d => d.nwv || 0);
+            const revenueData = dailyData.map(d => d.revenue || 0);
+            const costData = dailyData.map(d => d.cost || 0);
+
+            trendChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Net Waste Value (NWV)',
+                            data: nwvData,
+                            borderColor: '#667eea',
+                            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: 5,
+                            pointHoverRadius: 8
+                        },
+                        {
+                            label: 'Revenue',
+                            data: revenueData,
+                            borderColor: '#27ae60',
+                            backgroundColor: 'rgba(39, 174, 96, 0.1)',
+                            borderWidth: 2,
+                            fill: false,
+                            tension: 0.4,
+                            pointRadius: 4
+                        },
+                        {
+                            label: 'Cost',
+                            data: costData,
+                            borderColor: '#e74c3c',
+                            backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                            borderWidth: 2,
+                            fill: false,
+                            tension: 0.4,
+                            pointRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                font: { size: 14, weight: '600' },
+                                padding: 15
+                            }
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            backgroundColor: 'rgba(0,0,0,0.8)',
+                            padding: 12,
+                            titleFont: { size: 14, weight: '600' },
+                            bodyFont: { size: 13 }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '₹' + value.toLocaleString('en-IN');
+                                },
+                                font: { size: 12 }
+                            },
+                            grid: {
+                                color: 'rgba(0,0,0,0.05)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                font: { size: 12 }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Set up event listener when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Page loaded, setting up button listener');
+            const btn = document.getElementById('loadAnalyticsBtn');
+            if (btn) {
+                btn.addEventListener('click', window.loadAnalytics);
+                console.log('✅ Button event listener attached to loadAnalyticsBtn');
+            } else {
+                console.error('❌ Load Analytics button not found!');
+            }
+            
+            // Test: Try to call function directly
+            console.log('Testing: window.loadAnalytics is', typeof window.loadAnalytics);
+        });
+    </script>
+</body>
+</html>

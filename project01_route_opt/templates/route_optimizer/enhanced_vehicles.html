@@ -1,0 +1,593 @@
+{% extends 'base.html' %}
+
+{% block title %}Enhanced Vehicles - Sahayog Route Optimizer{% endblock %}
+
+{% block extra_css %}
+<style>
+    .vehicle-card {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+        border-left: 4px solid #667eea;
+    }
+    .vehicle-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    .vehicle-card.active { border-left-color: #28a745; }
+    .vehicle-card.maintenance { border-left-color: #ffc107; }
+    .vehicle-card.idle { border-left-color: #6c757d; }
+    .vehicle-card.offline { border-left-color: #dc3545; }
+    
+    .stats-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        text-align: center;
+    }
+    .maintenance-widget {
+        background: linear-gradient(135deg, #ffc107 0%, #ff8c00 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    .tracking-widget {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    .efficiency-gauge {
+        position: relative;
+        width: 100px;
+        height: 100px;
+        margin: 0 auto;
+    }
+    .gauge-circle {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        background: conic-gradient(#28a745 0deg, #28a745 270deg, #e9ecef 270deg, #e9ecef 360deg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+    .gauge-inner {
+        width: 70px;
+        height: 70px;
+        background: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1rem;
+        color: #333;
+    }
+    .status-indicator {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 8px;
+        animation: pulse 2s infinite;
+    }
+    .status-active { background-color: #28a745; }
+    .status-maintenance { background-color: #ffc107; }
+    .status-idle { background-color: #6c757d; }
+    .status-offline { background-color: #dc3545; }
+    
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.5; }
+        100% { opacity: 1; }
+    }
+    
+    .maintenance-progress {
+        height: 8px;
+        background: rgba(255,255,255,0.3);
+        border-radius: 4px;
+        overflow: hidden;
+    }
+    .progress-bar {
+        height: 100%;
+        background: white;
+        transition: width 0.3s ease;
+    }
+    
+    .filter-panel {
+        background: #f8f9fa;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .analytics-widget {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        margin-bottom: 1.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="fas fa-truck me-2"></i>
+        Enhanced Vehicles
+        <span class="badge bg-primary ms-2">{{ total_vehicles }} Total</span>
+    </h1>
+    <div class="btn-toolbar">
+        <div class="btn-group me-2">
+            <button class="btn btn-outline-secondary" onclick="refreshFleet()">
+                <i class="fas fa-sync-alt me-2"></i>Refresh
+            </button>
+        </div>
+        <div class="btn-group">
+            <a class="btn btn-primary" href="{% url 'route_optimizer:add_vehicle' %}">
+                <i class="fas fa-plus me-2"></i>Add Vehicle
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Row -->
+<div class="row mb-4">
+    <div class="col-lg-3 col-md-6">
+        <div class="stats-card">
+            <h3>{{ total_vehicles }}</h3>
+            <p class="mb-0">Total Vehicles</p>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="stats-card">
+            <h3>{{ active_vehicles }}</h3>
+            <p class="mb-0">Active</p>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="stats-card">
+            <h3>{{ maintenance_vehicles }}</h3>
+            <p class="mb-0">Maintenance</p>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="stats-card">
+            <h3>{{ avg_efficiency|floatformat:1 }}%</h3>
+            <p class="mb-0">Avg Efficiency</p>
+        </div>
+    </div>
+</div>
+
+<!-- Filter Panel -->
+<div class="filter-panel">
+    <div class="row">
+        <div class="col-lg-3 col-md-6 mb-2">
+            <input class="form-control" id="searchInput" placeholder="Search vehicles..." onkeyup="filterVehicles()">
+        </div>
+        <div class="col-lg-2 col-md-6 mb-2">
+            <select class="form-select" id="typeFilter" onchange="filterVehicles()">
+                <option value="">All Types</option>
+                <option value="truck">Truck</option>
+                <option value="van">Van</option>
+                <option value="tractor">Tractor</option>
+                <option value="compactor">Compactor</option>
+            </select>
+        </div>
+        <div class="col-lg-2 col-md-6 mb-2">
+            <select class="form-select" id="statusFilter" onchange="filterVehicles()">
+                <option value="">All Status</option>
+                <option value="active">Active</option>
+                <option value="maintenance">Maintenance</option>
+                <option value="idle">Idle</option>
+                <option value="offline">Offline</option>
+            </select>
+        </div>
+        <div class="col-lg-2 col-md-6 mb-2">
+            <select class="form-select" id="sortFilter" onchange="sortVehicles()">
+                <option value="name">Sort by Name</option>
+                <option value="efficiency">Sort by Efficiency</option>
+                <option value="capacity">Sort by Capacity</option>
+                <option value="fuel_efficiency">Sort by Fuel Efficiency</option>
+            </select>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-2">
+            <div class="btn-group w-100">
+                <button class="btn btn-outline-primary" onclick="clearFilters()">
+                    <i class="fas fa-times me-1"></i>Clear
+                </button>
+                <button class="btn btn-primary" onclick="exportVehicles()">
+                    <i class="fas fa-download me-1"></i>Export
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Content Row -->
+<div class="row">
+    <!-- Vehicles List -->
+    <div class="col-lg-8">
+        <div class="analytics-widget">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0">
+                    <i class="fas fa-truck me-2"></i>
+                    Fleet Overview
+                </h5>
+                <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-primary active" onclick="setViewMode('grid')" id="gridViewBtn">
+                        <i class="fas fa-th"></i>
+                    </button>
+                    <button class="btn btn-outline-primary" onclick="setViewMode('list')" id="listViewBtn">
+                        <i class="fas fa-list"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Grid View -->
+            <div id="gridView" class="row">
+                {% for vehicle in vehicles %}
+                <div class="col-lg-6 col-xl-4">
+                    <div class="vehicle-card {{ vehicle.status }}" data-vehicle-id="{{ vehicle.id }}">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <h6 class="mb-1">{{ vehicle.name }}</h6>
+                                <span class="badge bg-secondary">{{ vehicle.get_vehicle_type_display }}</span>
+                            </div>
+                            <div class="text-end">
+                                <span class="status-indicator status-{{ vehicle.status }}"></span>
+                                <small class="text-muted">{{ vehicle.status|title }}</small>
+                            </div>
+                        </div>
+                        
+                        <div class="row text-center mb-3">
+                            <div class="col-4">
+                                <div class="small text-muted">Capacity</div>
+                                <strong>{{ vehicle.capacity }}L</strong>
+                            </div>
+                            <div class="col-4">
+                                <div class="small text-muted">Fuel Eff.</div>
+                                <strong>{{ vehicle.fuel_efficiency }} km/L</strong>
+                            </div>
+                            <div class="col-4">
+                                <div class="small text-muted">Efficiency</div>
+                                <div class="efficiency-gauge">
+                                    <div class="gauge-circle">
+                                        <div class="gauge-inner">{{ vehicle.efficiency }}%</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {% if vehicle.status == 'maintenance' %}
+                        <div class="maintenance-progress mb-3">
+                            <div class="progress-bar" style="width: {{ vehicle.maintenance_progress }}%"></div>
+                        </div>
+                        <small class="text-muted">Maintenance Progress: {{ vehicle.maintenance_progress }}%</small>
+                        {% endif %}
+                        
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <small class="text-muted">
+                                <i class="fas fa-route me-1"></i>
+                                {{ vehicle.current_route|default:"No active route" }}
+                            </small>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary" onclick="viewVehicle({{ vehicle.id }})">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-outline-secondary" onclick="editVehicle({{ vehicle.id }})">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-outline-info" onclick="trackVehicle({{ vehicle.id }})">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- List View -->
+            <div id="listView" class="d-none">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Vehicle</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                                <th>Capacity</th>
+                                <th>Fuel Efficiency</th>
+                                <th>Efficiency</th>
+                                <th>Current Route</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for vehicle in vehicles %}
+                            <tr>
+                                <td>
+                                    <strong>{{ vehicle.name }}</strong>
+                                    {% if vehicle.status == 'maintenance' %}
+                                    <br><small class="text-warning">Maintenance: {{ vehicle.maintenance_progress }}%</small>
+                                    {% endif %}
+                                </td>
+                                <td><span class="badge bg-secondary">{{ vehicle.get_vehicle_type_display }}</span></td>
+                                <td>
+                                    <span class="status-indicator status-{{ vehicle.status }}"></span>
+                                    {{ vehicle.status|title }}
+                                </td>
+                                <td>{{ vehicle.capacity }}L</td>
+                                <td>{{ vehicle.fuel_efficiency }} km/L</td>
+                                <td>
+                                    <div class="efficiency-gauge" style="width: 50px; height: 50px;">
+                                        <div class="gauge-circle">
+                                            <div class="gauge-inner" style="width: 35px; height: 35px; font-size: 0.8rem;">{{ vehicle.efficiency }}%</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>{{ vehicle.current_route|default:"No active route" }}</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-primary" onclick="viewVehicle({{ vehicle.id }})">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="btn btn-outline-secondary" onclick="editVehicle({{ vehicle.id }})">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-outline-info" onclick="trackVehicle({{ vehicle.id }})">
+                                            <i class="fas fa-map-marker-alt"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Maintenance Alerts -->
+        <div class="maintenance-widget">
+            <h6 class="mb-3">
+                <i class="fas fa-wrench me-2"></i>
+                Maintenance Alerts
+            </h6>
+            <div class="mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <small>Truck Alpha</small>
+                    <small>2 days</small>
+                </div>
+                <div class="maintenance-progress">
+                    <div class="progress-bar" style="width: 85%"></div>
+                </div>
+            </div>
+            <div class="mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <small>Van Beta</small>
+                    <small>5 days</small>
+                </div>
+                <div class="maintenance-progress">
+                    <div class="progress-bar" style="width: 60%"></div>
+                </div>
+            </div>
+            <button class="btn btn-light btn-sm w-100">
+                <i class="fas fa-calendar me-1"></i>Schedule Maintenance
+            </button>
+        </div>
+        
+        <!-- Live Tracking -->
+        <div class="tracking-widget">
+            <h6 class="mb-3">
+                <i class="fas fa-satellite-dish me-2"></i>
+                Live Tracking
+            </h6>
+            <div class="row text-center">
+                <div class="col-6">
+                    <div class="mb-2">
+                        <i class="fas fa-truck fa-2x mb-2"></i>
+                        <div class="small">Active Routes</div>
+                        <strong>{{ active_routes_count }}</strong>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="mb-2">
+                        <i class="fas fa-map-marker-alt fa-2x mb-2"></i>
+                        <div class="small">Tracked</div>
+                        <strong>{{ tracked_vehicles }}</strong>
+                    </div>
+                </div>
+            </div>
+            <button class="btn btn-light btn-sm w-100 mt-2">
+                <i class="fas fa-map me-1"></i>View Live Map
+            </button>
+        </div>
+        
+        <!-- Fleet Analytics -->
+        <div class="analytics-widget">
+            <h6 class="mb-3">
+                <i class="fas fa-chart-bar me-2"></i>
+                Fleet Analytics
+            </h6>
+            <canvas id="fleetChart" height="200"></canvas>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="analytics-widget">
+            <h6 class="mb-3">
+                <i class="fas fa-bolt me-2"></i>
+                Quick Actions
+            </h6>
+            <div class="d-grid gap-2">
+                <button class="btn btn-outline-primary btn-sm" onclick="scheduleMaintenance()">
+                    <i class="fas fa-wrench me-1"></i>Schedule Maintenance
+                </button>
+                <button class="btn btn-outline-success btn-sm" onclick="assignRoute()">
+                    <i class="fas fa-route me-1"></i>Assign Route
+                </button>
+                <button class="btn btn-outline-info btn-sm" onclick="viewFleetReport()">
+                    <i class="fas fa-chart-line me-1"></i>Fleet Report
+                </button>
+                <button class="btn btn-outline-warning btn-sm" onclick="fuelReport()">
+                    <i class="fas fa-gas-pump me-1"></i>Fuel Report
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+let fleetChart;
+let currentViewMode = 'grid';
+
+// Vehicle data
+const vehicles = {{ vehicles|safe }};
+
+$(document).ready(function() {
+    initializeChart();
+    setupEventListeners();
+});
+
+function initializeChart() {
+    const ctx = document.getElementById('fleetChart').getContext('2d');
+    fleetChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Active', 'Maintenance', 'Idle', 'Offline'],
+            datasets: [{
+                data: [60, 20, 15, 5],
+                backgroundColor: ['#28a745', '#ffc107', '#6c757d', '#dc3545']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+}
+
+function setupEventListeners() {
+    // Add any event listeners here
+}
+
+function filterVehicles() {
+    const searchTerm = $('#searchInput').val().toLowerCase();
+    const typeFilter = $('#typeFilter').val();
+    const statusFilter = $('#statusFilter').val();
+    
+    $('.vehicle-card').each(function() {
+        const card = $(this);
+        const name = card.find('h6').text().toLowerCase();
+        const type = card.find('.badge.bg-secondary').text().toLowerCase();
+        const status = card.data('status') || card.attr('class').match(/status-(\w+)/)?.[1];
+        
+        let show = true;
+        
+        if (searchTerm && !name.includes(searchTerm)) show = false;
+        if (typeFilter && !type.includes(typeFilter)) show = false;
+        if (statusFilter && status !== statusFilter) show = false;
+        
+        if (show) {
+            card.closest('.col-lg-6, .col-xl-4').show();
+        } else {
+            card.closest('.col-lg-6, .col-xl-4').hide();
+        }
+    });
+}
+
+function sortVehicles() {
+    const sortBy = $('#sortFilter').val();
+    // In real implementation, this would sort the vehicles
+    console.log('Sorting by:', sortBy);
+}
+
+function clearFilters() {
+    $('#searchInput').val('');
+    $('#typeFilter').val('');
+    $('#statusFilter').val('');
+    filterVehicles();
+}
+
+function setViewMode(mode) {
+    currentViewMode = mode;
+    
+    if (mode === 'grid') {
+        $('#gridView').removeClass('d-none');
+        $('#listView').addClass('d-none');
+        $('#gridViewBtn').addClass('active');
+        $('#listViewBtn').removeClass('active');
+    } else {
+        $('#gridView').addClass('d-none');
+        $('#listView').removeClass('d-none');
+        $('#gridViewBtn').removeClass('active');
+        $('#listViewBtn').addClass('active');
+    }
+}
+
+function viewVehicle(id) {
+    // In real implementation, this would open a vehicle details modal
+    alert(`View vehicle ${id}`);
+}
+
+function editVehicle(id) {
+    // In real implementation, this would open an edit form
+    alert(`Edit vehicle ${id}`);
+}
+
+function trackVehicle(id) {
+    // In real implementation, this would open tracking view
+    window.location.href = `{% url 'route_optimizer:real_time_tracking' %}?vehicle=${id}`;
+}
+
+function refreshFleet() {
+    location.reload();
+}
+
+function exportVehicles() {
+    // In real implementation, this would export vehicles to CSV/Excel
+    alert('Exporting vehicles...');
+}
+
+function scheduleMaintenance() {
+    // In real implementation, this would open maintenance scheduling
+    alert('Opening maintenance scheduler...');
+}
+
+function assignRoute() {
+    // In real implementation, this would open route assignment
+    alert('Opening route assignment...');
+}
+
+function viewFleetReport() {
+    // In real implementation, this would open fleet report
+    alert('Opening fleet report...');
+}
+
+function fuelReport() {
+    // In real implementation, this would open fuel report
+    alert('Opening fuel report...');
+}
+</script>
+{% endblock %}

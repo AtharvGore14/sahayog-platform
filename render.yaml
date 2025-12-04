@@ -1,0 +1,90 @@
+services:
+  # Main Web Service
+  - type: web
+    name: sahayog-platform
+    env: python
+    plan: starter
+    buildCommand: chmod +x build.sh && ./build.sh
+    startCommand: gunicorn master_server:application --bind 0.0.0.0:$PORT --workers 2 --threads 4 --timeout 120
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: PORT
+        value: 10000
+      - key: DEBUG
+        value: False
+      - key: DJANGO_SETTINGS_MODULE
+        value: sahayog.settings
+      - key: FASTAPI_ROOT_PATH
+        value: /ledger
+      - key: DATABASE_URL
+        fromDatabase:
+          name: sahayog-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: sahayog-redis
+          type: redis
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALLOWED_HOSTS
+        value: sahayog-platform.onrender.com,*.onrender.com
+
+  # PostgreSQL Database
+  - type: pspg
+    name: sahayog-db
+    plan: starter
+    databaseName: sahayog
+    user: sahayog_user
+
+  # Redis for Celery and Channels
+  - type: redis
+    name: sahayog-redis
+    plan: starter
+    maxmemoryPolicy: allkeys-lru
+
+  # Celery Worker (Optional - for background tasks)
+  - type: worker
+    name: sahayog-celery-worker
+    env: python
+    plan: starter
+    buildCommand: chmod +x build.sh && ./build.sh
+    startCommand: celery -A sahayog_marketplace.celery worker --loglevel=info
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: DJANGO_SETTINGS_MODULE
+        value: sahayog_marketplace.settings
+      - key: DATABASE_URL
+        fromDatabase:
+          name: sahayog-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: sahayog-redis
+          type: redis
+          property: connectionString
+
+  # Celery Beat (Optional - for scheduled tasks)
+  - type: worker
+    name: sahayog-celery-beat
+    env: python
+    plan: starter
+    buildCommand: chmod +x build.sh && ./build.sh
+    startCommand: celery -A sahayog_marketplace.celery beat --loglevel=info
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: DJANGO_SETTINGS_MODULE
+        value: sahayog_marketplace.settings
+      - key: DATABASE_URL
+        fromDatabase:
+          name: sahayog-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: sahayog-redis
+          type: redis
+          property: connectionString
+

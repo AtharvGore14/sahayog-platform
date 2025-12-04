@@ -1,0 +1,12 @@
+django
+djangorestframework
+psycopg2-binary
+celery
+redis
+channels
+channels-redis
+beautifulsoup4
+requests
+daphne
+Pillow
+django-cors-headers

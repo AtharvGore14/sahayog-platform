@@ -1,0 +1,215 @@
+{% extends 'base.html' %}
+{% block title %}Route Details - {{ route.route_name }}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-route me-2"></i>{{ route.route_name }}</h1>
+    <div class="d-flex gap-2">
+      <a href="{% url 'route_optimizer:routes_list' %}" class="btn btn-outline-secondary">Back</a>
+      <button class="btn btn-success" id="btnStart" {% if route.status == 'in_progress' %}disabled{% endif %}>
+        <i class="fas fa-play me-1"></i>Start Live
+      </button>
+      <button class="btn btn-danger" id="btnStop" {% if route.status != 'in_progress' %}disabled{% endif %}>
+        <i class="fas fa-stop me-1"></i>Stop
+      </button>
+      <a href="{% url 'route_optimizer:real_time_tracking' %}" class="btn btn-outline-primary">
+        <i class="fas fa-satellite-dish me-1"></i>Open Live Tracking
+      </a>
+    </div>
+</div>
+<div class="row">
+  <div class="col-lg-6">
+    <div class="card mb-3">
+      <div class="card-header"><strong>Summary</strong></div>
+      <div class="card-body">
+        <div class="row text-center">
+          <div class="col-6 mb-3">
+            <small class="text-muted d-block">Vehicle</small>
+            <span class="badge bg-info">{{ route.vehicle.name }}</span>
+          </div>
+          <div class="col-6 mb-3">
+            <small class="text-muted d-block">Status</small>
+            <span class="badge bg-primary">{{ route.get_status_display }}</span>
+          </div>
+          <div class="col-6">
+            <small class="text-muted d-block">Distance</small>
+            <strong>{{ route.total_distance|floatformat:2 }} km</strong>
+          </div>
+          <div class="col-6">
+            <small class="text-muted d-block">Duration</small>
+            <strong>{{ route.total_duration }} min</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><strong>Stops</strong></div>
+      <div class="card-body">
+        {% if route_locations %}
+        <ol class="mb-0">
+          {% for rl in route_locations %}
+          <li class="mb-2">
+            <strong>{{ rl.location.name }}</strong><br>
+            <small class="text-muted">{{ rl.location.address }}</small>
+          </li>
+          {% endfor %}
+        </ol>
+        {% else %}
+          <p class="mb-0 text-muted">No stops recorded.</p>
+        {% endif %}
+      </div>
+    </div>
+    <div class="card mt-3">
+      <div class="card-header"><strong>Export</strong></div>
+      <div class="card-body">
+        <button class="btn btn-sm btn-outline-primary" id="btnExportJSON">
+          <i class="fas fa-file-code me-1"></i>Export JSON
+        </button>
+        <script id="exportData" type="application/json">
+{
+  "id": {{ route.id }},
+  "name": "{{ route.route_name|escapejs }}",
+  "status": "{{ route.status }}",
+  "vehicle": "{{ route.vehicle.name|escapejs }}",
+  "total_distance_km": {{ route.total_distance }},
+  "total_duration_min": {{ route.total_duration }},
+  "created_at": "{{ route.created_at|date:"c" }}",
+  "updated_at": "{{ route.updated_at|date:"c" }}",
+  "stats": {
+    "total_waste_volume_l": {{ route_stats.total_waste_volume|default:0 }},
+    "estimated_fuel_consumption_l": {{ route_stats.estimated_fuel_consumption|default:0 }},
+    "locations_count": {{ route_stats.locations_count|default:0 }}
+  },
+  "path": {{ route_path_coords|safe }},
+  "stops": [
+    {% for rl in route_locations %}
+    { "order": {{ rl.visit_order }}, "name": "{{ rl.location.name|escapejs }}", "address": "{{ rl.location.address|escapejs }}", "latitude": {{ rl.location.latitude|default:'null' }}, "longitude": {{ rl.location.longitude|default:'null' }} }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+  ]
+}
+        </script>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card">
+      <div class="card-header"><strong>Statistics</strong></div>
+      <div class="card-body">
+        {% if route_stats %}
+        <ul class="list-group list-group-flush">
+          <li class="list-group-item d-flex justify-content-between"><span>Total Waste Volume</span><strong>{{ route_stats.total_waste_volume }} L</strong></li>
+          <li class="list-group-item d-flex justify-content-between"><span>Fuel Consumption</span><strong>{{ route_stats.estimated_fuel_consumption }} L</strong></li>
+          <li class="list-group-item d-flex justify-content-between"><span>Locations Count</span><strong>{{ route_stats.locations_count }}</strong></li>
+        </ul>
+        {% else %}
+          <p class="mb-0 text-muted">Statistics unavailable.</p>
+        {% endif %}
+      </div>
+    </div>
+    <div class="card mt-3">
+      <div class="card-header"><strong>Route Map</strong></div>
+      <div class="card-body">
+        <div id="routeMap" style="height: 360px; width: 100%;"></div>
+        <script id="routeCoords" type="application/json">{{ route_path_coords|safe }}</script>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function(){
+  function download(filename, text) {
+    const blob = new Blob([text], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename; a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  (function(){
+    var btn = document.getElementById('btnExportJSON');
+    if(!btn) return;
+    btn.addEventListener('click', function(){
+      try {
+        var raw = document.getElementById('exportData');
+        var jsonText = raw ? raw.textContent : '{}';
+        var data = JSON.parse(jsonText || '{}');
+        var filename = (data && data.name ? data.name : 'route') + '.json';
+        download(filename, JSON.stringify(data, null, 2));
+      } catch (e) {
+        // ignore
+      }
+    });
+  })();
+
+  // Route map rendering using Leaflet
+  try {
+    var coordsJson = document.getElementById('routeCoords');
+    var coords = [];
+    if (coordsJson && coordsJson.textContent) {
+      try { coords = JSON.parse(coordsJson.textContent); } catch(e) { coords = []; }
+    }
+    if (coords.length) {
+      const map = L.map('routeMap');
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(map);
+
+      const polyline = L.polyline(coords, { color: '#0d6efd', weight: 4 }).addTo(map);
+      const bounds = L.latLngBounds(coords.map(function(c){ return [c[0], c[1]]; }));
+      map.fitBounds(bounds.pad(0.2));
+
+      // Markers: Start (S), End (E), middle numbered
+      const startIcon = L.divIcon({className: 'start-icon', html: '<div style="background:#28a745;color:#fff;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 0 4px rgba(0,0,0,.3)">S</div>', iconSize:[26,26], iconAnchor:[13,13]});
+      const endIcon = L.divIcon({className: 'end-icon', html: '<div style="background:#dc3545;color:#fff;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 0 4px rgba(0,0,0,.3)">E</div>', iconSize:[26,26], iconAnchor:[13,13]});
+      coords.forEach(function(p, idx){
+        var icon;
+        if(idx === 0) icon = startIcon;
+        else if(idx === coords.length-1) icon = endIcon;
+        else icon = L.divIcon({className: 'stop-icon', html: '<div style="background:#0d6efd;color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 0 4px rgba(0,0,0,.3)">'+idx+'</div>', iconSize:[24,24], iconAnchor:[12,12]});
+        L.marker([p[0], p[1]], { icon: icon }).addTo(map);
+      });
+    }
+  } catch (e) { /* ignore */ }
+
+  // Start/Stop live tracking controls
+  try{
+    var startBtn = document.getElementById('btnStart');
+    var stopBtn = document.getElementById('btnStop');
+    var routeId = parseInt('{{ route.id }}');
+    async function doPost(url){
+      const res = await fetch(url, {method:'POST', headers:{'X-Requested-With':'XMLHttpRequest'}});
+      return res.json();
+    }
+    if(startBtn){
+      startBtn.addEventListener('click', async function(){
+        try{
+          const urlTpl = '{% url "route_optimizer:api_route_tracking_start" 0 %}';
+          const url = urlTpl.replace('/0/','/'+routeId+'/');
+          const json = await doPost(url);
+          if(json.success){
+            startBtn.setAttribute('disabled','disabled');
+            stopBtn && stopBtn.removeAttribute('disabled');
+          } else { alert(json.error || 'Failed to start'); }
+        }catch(e){ alert('Failed to start'); }
+      });
+    }
+    if(stopBtn){
+      stopBtn.addEventListener('click', async function(){
+        try{
+          const urlTpl = '{% url "route_optimizer:api_route_tracking_stop" 0 %}';
+          const url = urlTpl.replace('/0/','/'+routeId+'/');
+          const json = await doPost(url);
+          if(json.success){
+            stopBtn.setAttribute('disabled','disabled');
+            startBtn && startBtn.removeAttribute('disabled');
+          } else { alert(json.error || 'Failed to stop'); }
+        }catch(e){ alert('Failed to stop'); }
+      });
+    }
+  }catch(e){ /* ignore */ }
+})();
+</script>
+{% endblock %}

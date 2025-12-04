@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Waste Financial Ledger - Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 0;
+        }
+
+        /* Navigation Bar */
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px 30px;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 25px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #2c3e50;
+            font-weight: 600;
+            padding: 8px 20px;
+            border-radius: 25px;
+            transition: all 0.3s;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        header h1 {
+            font-size: 42px;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .subtitle {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+
+        .controls {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            align-items: end;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .control-group label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #2c3e50;
+            font-size: 14px;
+        }
+
+        .control-group input {
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .control-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 16px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .company-info {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .company-info strong {
+            color: #2c3e50;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .metric-card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+        }
+
+        .metric-card.revenue {
+            border-left: 5px solid #27ae60;
+        }
+
+        .metric-card.cost {
+            border-left: 5px solid #e74c3c;
+        }
+
+        .metric-card.nwv {
+            border-left: 5px solid #3498db;
+        }
+
+        .metric-label {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-bottom: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .metric-value {
+            font-size: 36px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .chart-container {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .chart-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .chart-container canvas {
+            max-height: 400px;
+        }
+
+        .recommendations {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .recommendations h3 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        .recommendations ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .recommendations li {
+            padding: 15px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            border-radius: 5px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: white;
+            font-size: 18px;
+        }
+
+        .error {
+            background: #e74c3c;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 5px solid #c0392b;
+            white-space: pre-line;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        table th {
+            background: #667eea;
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        table tr:hover {
+            background: #f8f9fa;
+        }
+
+        #materialSummaryContainer, #categorySummaryContainer, #transactionTableContainer {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 25px;
+        }
+
+        #materialSummaryContainer h3, #categorySummaryContainer h3, #transactionTableContainer h3 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 22px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">♻️ Waste Financial Ledger</div>
+            <ul class="nav-links">
+                <li><a href="/">🏠 Master Portal</a></li>
+                <li><a href="home.html">🏠 Home</a></li>
+                <li><a href="index.html" class="active">📊 Dashboard</a></li>
+                <li><a href="waste_entry.html">📝 Data Entry</a></li>
+                <li><a href="analytics.html">📈 Analytics</a></li>
+                <li><a href="companies.html">🏢 Companies</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <header>
+            <h1>🏭 Automated Waste Financial Ledger</h1>
+            <p class="subtitle">Transform waste into measurable financial insights</p>
+        </header>
+
+        <div class="controls">
+            <div class="control-group">
+                <label for="companyId">Company ID</label>
+                <input type="text" id="companyId" value="C1234" placeholder="e.g., C1234">
+            </div>
+            <div class="control-group">
+                <label for="startDate">Start Date</label>
+                <input type="date" id="startDate">
+            </div>
+            <div class="control-group">
+                <label for="endDate">End Date</label>
+                <input type="date" id="endDate">
+            </div>
+            <div class="control-group" style="justify-content: flex-end;">
+                <label>&nbsp;</label>
+                <button onclick="generateReport()">Generate Financial Report</button>
+            </div>
+            <div class="control-group" style="justify-content: flex-end;">
+                <label>&nbsp;</label>
+                <button onclick="downloadPDF()">Download PDF Report</button>
+            </div>
+        </div>
+
+        <div id="companyInfo" class="company-info" style="display: none;">
+            <strong>Company:</strong> <span id="companyName"></span> | 
+            <strong>Report Period:</strong> <span id="reportPeriod"></span>
+        </div>
+
+        <div id="errorMessage" class="error" style="display: none;"></div>
+
+        <div id="loading" class="loading" style="display: none;">
+            <p>Generating financial report... Please wait.</p>
+        </div>
+
+        <div id="dashboard" style="display: none;">
+            <div class="metrics-grid">
+                <div class="metric-card revenue">
+                    <div class="metric-label">Total Revenue from Recyclables</div>
+                    <div class="metric-value" id="totalRevenue">₹0</div>
+                </div>
+                <div class="metric-card cost">
+                    <div class="metric-label">Total Disposal Costs</div>
+                    <div class="metric-value" id="totalCost">₹0</div>
+                </div>
+                <div class="metric-card nwv">
+                    <div class="metric-label">Net Waste Value (NWV)</div>
+                    <div class="metric-value" id="netWasteValue">₹0</div>
+                </div>
+            </div>
+
+            <div class="charts-grid">
+                <div class="chart-container">
+                    <div class="chart-title">Revenue Breakdown by Material</div>
+                    <canvas id="revenueChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-title">Cost Breakdown by Waste Type</div>
+                    <canvas id="costChart"></canvas>
+                </div>
+                <div class="chart-container" style="grid-column: 1 / -1;">
+                    <div class="chart-title">Daily Trends</div>
+                    <canvas id="trendChart"></canvas>
+                </div>
+            </div>
+
+            <div id="materialSummaryContainer" style="margin-top: 30px;"></div>
+            
+            <div id="categorySummaryContainer" style="margin-top: 30px;"></div>
+            
+            <div id="transactionTableContainer" style="margin-top: 30px;"></div>
+
+            <div class="recommendations">
+                <h3>💡 Strategic Recommendations</h3>
+                <ul id="recommendationsList"></ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Set default dates (current month) - ensure end date includes today
+        const now = new Date();
+        const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+        document.getElementById('startDate').value = firstDay.toISOString().split('T')[0];
+        // Use today's date to include all transactions up to now
+        document.getElementById('endDate').value = now.toISOString().split('T')[0];
+
+        let revenueChart = null;
+        let costChart = null;
+        let trendChart = null;
+        const pathSegments = window.location.pathname.split('/').filter(Boolean);
+        let basePrefix = '';
+        if (pathSegments.length > 0 && !pathSegments[0].includes('.')) {
+            basePrefix = '/' + pathSegments[0];
+        }
+        const API_BASE_URL = window.location.origin + basePrefix;
+
+        // Check backend connection on page load
+        async function checkBackendConnection() {
+            try {
+                // Create abort controller for timeout
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
+                
+                const response = await fetch(`${API_BASE_URL}/api/health`, {
+                    method: 'GET',
+                    signal: controller.signal
+                });
+                
+                clearTimeout(timeoutId);
+                
+                if (response.ok) {
+                    // Hide error if connection is successful
+                    document.getElementById('errorMessage').style.display = 'none';
+                    return true;
+                }
+            } catch (error) {
+                // Connection failed
+                showError(
+                    '❌ Cannot connect to backend server!\n\n' +
+                    'Please ensure the backend is running:\n' +
+                    '1. Open a terminal/command prompt\n' +
+                    '2. Navigate to the project directory\n' +
+                    '3. Run: python run_server.py\n' +
+                    '4. Wait for "Application startup complete"\n' +
+                    '5. Refresh this page and try again'
+                );
+                return false;
+            }
+        }
+
+        // Check connection on page load
+        checkBackendConnection();
+
+        async function generateReport() {
+            const companyId = document.getElementById('companyId').value.trim();
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+
+            if (!companyId) {
+                showError('Please enter a Company ID');
+                return;
+            }
+
+            // Show loading
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('dashboard').style.display = 'none';
+            document.getElementById('errorMessage').style.display = 'none';
+
+            // Check backend connection first
+            const isConnected = await checkBackendConnection();
+            if (!isConnected) {
+                document.getElementById('loading').style.display = 'none';
+                return;
+            }
+
+            try {
+                const params = new URLSearchParams({
+                    start_date: startDate,
+                    end_date: endDate,
+                    compare_historical: 'true'
+                });
+
+                // Use new endpoint format: /api/v1/waste/financial-report/{company_id}
+                const response = await fetch(`${API_BASE_URL}/api/v1/waste/financial-report/${companyId}?${params}`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                    }
+                });
+                
+                if (!response.ok) {
+                    let errorMessage = 'Failed to generate report';
+                    try {
+                        const error = await response.json();
+                        errorMessage = error.detail || errorMessage;
+                    } catch (e) {
+                        errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+                    }
+                    throw new Error(errorMessage);
+                }
+
+                const data = await response.json();
+                displayReport(data);
+
+            } catch (error) {
+                if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                    showError(
+                        '❌ Cannot connect to backend server!\n\n' +
+                        'Please ensure the backend is running:\n' +
+                        '1. Open a terminal/command prompt\n' +
+                        '2. Navigate to the project directory\n' +
+                        '3. Run: python run_server.py\n' +
+                        '4. Wait for "Application startup complete"\n' +
+                        '5. Refresh this page and try again'
+                    );
+                } else {
+                    showError(`Error: ${error.message}`);
+                }
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        async function downloadPDF() {
+            const companyId = document.getElementById('companyId').value.trim();
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+
+            if (!companyId) {
+                showError('Please enter a Company ID');
+                return;
+            }
+
+            try {
+                const params = new URLSearchParams({
+                    start_date: startDate,
+                    end_date: endDate
+                });
+
+                const url = `${API_BASE_URL}/api/v1/waste/financial-report/${companyId}/pdf?${params}`;
+                window.open(url, '_blank');
+            } catch (error) {
+                showError(`Error downloading PDF: ${error.message}`);
+            }
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        function displayReport(data) {
+            // Display company info
+            document.getElementById('companyName').textContent = data.company_name || data.company_id;
+            document.getElementById('reportPeriod').textContent = data.report_period;
+            document.getElementById('companyInfo').style.display = 'block';
+            
+            // Check if report has data
+            if (data.total_revenue === 0 && data.total_cost === 0) {
+                document.getElementById('errorMessage').innerHTML = 
+                    '⚠️ No transactions found for this date range. Submit waste transactions using the Waste Entry form.';
+                document.getElementById('errorMessage').style.display = 'block';
+            } else {
+                document.getElementById('errorMessage').style.display = 'none';
+            }
+
+            // Update metrics
+            document.getElementById('totalRevenue').textContent = `₹${data.total_revenue.toLocaleString('en-IN')}`;
+            document.getElementById('totalCost').textContent = `₹${data.total_cost.toLocaleString('en-IN')}`;
+            
+            const nwv = data.net_waste_value;
+            const nwvElement = document.getElementById('netWasteValue');
+            let nwvText = `₹${Math.abs(nwv).toLocaleString('en-IN')}`;
+            
+            // Add historical comparison if available
+            if (data.historical_comparison) {
+                const change = data.historical_comparison.nwv_change;
+                const changePercent = data.historical_comparison.nwv_change_percent;
+                const changeSymbol = change >= 0 ? '↑' : '↓';
+                nwvText += ` <span style="font-size: 0.6em; opacity: 0.8;">(${changeSymbol} ${Math.abs(changePercent).toFixed(1)}%)</span>`;
+            }
+            
+            nwvElement.innerHTML = nwvText;
+            nwvElement.parentElement.className = 'metric-card nwv ' + (nwv >= 0 ? 'revenue' : 'cost');
+
+            // Update charts - check if data exists
+            if (data.charts && data.charts.revenue_breakdown && data.charts.revenue_breakdown.length > 0) {
+                updateRevenueChart(data.charts.revenue_breakdown);
+            } else {
+                console.warn('No revenue breakdown data available');
+                // Show empty state or use material summary
+                if (data.material_summary && data.material_summary.length > 0) {
+                    const revenueData = data.material_summary
+                        .filter(m => m.total_revenue > 0)
+                        .map(m => ({material: m.material_type, value: m.total_revenue}));
+                    updateRevenueChart(revenueData);
+                }
+            }
+            
+            if (data.charts && data.charts.cost_breakdown && data.charts.cost_breakdown.length > 0) {
+                updateCostChart(data.charts.cost_breakdown);
+            } else {
+                console.warn('No cost breakdown data available');
+                // Show empty state or use category summary
+                if (data.category_summary && data.category_summary.length > 0) {
+                    const costData = data.category_summary
+                        .filter(c => c.total_cost > 0)
+                        .map(c => ({type: c.category, value: c.total_cost}));
+                    updateCostChart(costData);
+                }
+            }
+
+            // Update recommendations
+            const recList = document.getElementById('recommendationsList');
+            recList.innerHTML = '';
+            data.recommendations.forEach(rec => {
+                const li = document.createElement('li');
+                li.textContent = rec;
+                recList.appendChild(li);
+            });
+
+            // Display detailed transaction table
+            displayTransactionTable(data.transactions || []);
+            
+            // Display material summary
+            displayMaterialSummary(data.material_summary || []);
+            
+            // Display category summary
+            displayCategorySummary(data.category_summary || []);
+            
+            // Update trend chart - ALWAYS try to update
+            if (data.charts && data.charts.daily_trends && data.charts.daily_trends.length > 0) {
+                updateTrendChart(data.charts.daily_trends);
+            } else {
+                // If no daily trends, create one from transactions
+                if (data.transactions && data.transactions.length > 0) {
+                    const dailyData = {};
+                    data.transactions.forEach(txn => {
+                        const date = txn.date.split(' ')[0]; // Get just the date part
+                        if (!dailyData[date]) {
+                            dailyData[date] = { revenue: 0, cost: 0, net_value: 0 };
+                        }
+                        dailyData[date].revenue += txn.revenue || 0;
+                        dailyData[date].cost += txn.cost || 0;
+                        dailyData[date].net_value += txn.net_value || 0;
+                    });
+                    const trends = Object.keys(dailyData).sort().map(date => ({
+                        date: date,
+                        revenue: dailyData[date].revenue,
+                        cost: dailyData[date].cost,
+                        net_value: dailyData[date].net_value
+                    }));
+                    updateTrendChart(trends);
+                } else {
+                    console.warn('No trend data available');
+                }
+            }
+
+            // Show dashboard
+            document.getElementById('dashboard').style.display = 'block';
+        }
+        
+        function displayTransactionTable(transactions) {
+            const container = document.getElementById('transactionTableContainer');
+            if (!container) return;
+            
+            if (transactions.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">No transactions found for this period.</p>';
+                return;
+            }
+            
+            let html = `
+                <h3>📋 Transaction Details</h3>
+                <p style="color: #666; margin-bottom: 15px;">Total Transactions: <strong>${transactions.length}</strong></p>
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date & Time</th>
+                                <th>Material</th>
+                                <th>Category</th>
+                                <th style="text-align: right;">Quantity (kg)</th>
+                                <th style="text-align: right;">Revenue (₹)</th>
+                                <th style="text-align: right;">Cost (₹)</th>
+                                <th style="text-align: right;">Net Value (₹)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            transactions.forEach((txn, idx) => {
+                const rowColor = idx % 2 === 0 ? '#f8f9fa' : 'white';
+                html += `
+                    <tr style="background: ${rowColor};">
+                        <td>${txn.date}</td>
+                        <td><strong>${txn.material_type}</strong></td>
+                        <td>${txn.category}</td>
+                        <td style="text-align: right;">${txn.quantity_kg.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                        <td style="text-align: right; color: #27ae60;">₹${txn.revenue.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                        <td style="text-align: right; color: #e74c3c;">₹${txn.cost.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                        <td style="text-align: right; font-weight: bold; color: ${txn.net_value >= 0 ? '#27ae60' : '#e74c3c'};">₹${txn.net_value.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+        }
+        
+        function displayMaterialSummary(materials) {
+            const container = document.getElementById('materialSummaryContainer');
+            if (!container) return;
+            
+            if (materials.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+            
+            let html = `
+                <h3>📊 Material-Wise Summary</h3>
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Material Type</th>
+                                <th style="text-align: right;">Total Quantity (kg)</th>
+                                <th style="text-align: right;">Total Revenue (₹)</th>
+                                <th style="text-align: right;">Total Cost (₹)</th>
+                                <th style="text-align: right;">Net Value (₹)</th>
+                                <th style="text-align: center;">Transactions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            materials.forEach((mat, idx) => {
+                html += `
+                    <tr>
+                        <td><strong>${mat.material_type}</strong></td>
+                        <td style="text-align: right;">${mat.total_quantity_kg.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                        <td style="text-align: right; color: #27ae60;">₹${mat.total_revenue.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                        <td style="text-align: right; color: #e74c3c;">₹${mat.total_cost.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                        <td style="text-align: right; font-weight: bold; color: ${mat.net_value >= 0 ? '#27ae60' : '#e74c3c'};">₹${mat.net_value.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                        <td style="text-align: center;">${mat.transaction_count}</td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+        }
+        
+        function displayCategorySummary(categories) {
+            const container = document.getElementById('categorySummaryContainer');
+            if (!container) return;
+            
+            if (categories.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+            
+            let html = `
+                <h3>🗂️ Category-Wise Summary</h3>
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th style="text-align: right;">Total Quantity (kg)</th>
+                                <th style="text-align: right;">Total Revenue (₹)</th>
+                                <th style="text-align: right;">Total Cost (₹)</th>
+                                <th style="text-align: right;">Net Value (₹)</th>
+                                <th style="text-align: center;">Transactions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            categories.forEach((cat, idx) => {
+                html += `
+                    <tr>
+                        <td><strong>${cat.category}</strong></td>
+                        <td style="text-align: right;">${cat.total_quantity_kg.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                        <td style="text-align: right; color: #27ae60;">₹${cat.total_revenue.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                        <td style="text-align: right; color: #e74c3c;">₹${cat.total_cost.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                        <td style="text-align: right; font-weight: bold; color: ${cat.net_value >= 0 ? '#27ae60' : '#e74c3c'};">₹${cat.net_value.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                        <td style="text-align: center;">${cat.transaction_count}</td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+        }
+        
+        function updateTrendChart(dailyTrends) {
+            const ctx = document.getElementById('trendChart');
+            if (!ctx) return;
+            
+            if (!dailyTrends || dailyTrends.length === 0) {
+                console.warn('No daily trends data available');
+                ctx.parentElement.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">No trend data available. Submit transactions across multiple days to see trends.</p>';
+                return;
+            }
+            
+            if (trendChart) {
+                trendChart.destroy();
+            }
+            
+            // Parse dates properly - handle different date formats
+            const chartLabels = dailyTrends.map(d => {
+                let dateStr = d.date;
+                // Handle different date formats
+                if (dateStr.includes('T')) {
+                    dateStr = dateStr.split('T')[0];
+                }
+                const date = new Date(dateStr + 'T00:00:00');
+                if (isNaN(date.getTime())) {
+                    // Fallback: try parsing as-is
+                    return dateStr;
+                }
+                return date.toLocaleDateString('en-IN', {month: 'short', day: 'numeric'});
+            });
+            
+            // Extract data arrays
+            const revenueData = dailyTrends.map(d => d.revenue || 0);
+            const costData = dailyTrends.map(d => d.cost || 0);
+            const netValueData = dailyTrends.map(d => d.net_value || (d.revenue || 0) - (d.cost || 0));
+            
+            trendChart = new Chart(ctx.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: chartLabels,
+                    datasets: [
+                        {
+                            label: 'Daily Revenue (₹)',
+                            data: revenueData,
+                            borderColor: 'rgba(39, 174, 96, 1)',
+                            backgroundColor: 'rgba(39, 174, 96, 0.2)',
+                            tension: 0.4,
+                            fill: true,
+                            pointRadius: 6,
+                            pointHoverRadius: 8,
+                            pointBackgroundColor: 'rgba(39, 174, 96, 1)',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            borderWidth: 3,
+                            spanGaps: false
+                        },
+                        {
+                            label: 'Daily Cost (₹)',
+                            data: costData,
+                            borderColor: 'rgba(231, 76, 60, 1)',
+                            backgroundColor: 'rgba(231, 76, 60, 0.2)',
+                            tension: 0.4,
+                            fill: true,
+                            pointRadius: 6,
+                            pointHoverRadius: 8,
+                            pointBackgroundColor: 'rgba(231, 76, 60, 1)',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            borderWidth: 3,
+                            spanGaps: false
+                        },
+                        {
+                            label: 'Net Value (₹)',
+                            data: netValueData,
+                            borderColor: 'rgba(52, 152, 219, 1)',
+                            backgroundColor: 'rgba(52, 152, 219, 0.2)',
+                            tension: 0.4,
+                            fill: true,
+                            pointRadius: 6,
+                            pointHoverRadius: 8,
+                            pointBackgroundColor: 'rgba(52, 152, 219, 1)',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            borderWidth: 3,
+                            spanGaps: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            display: true
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ₹' + context.parsed.y.toLocaleString('en-IN');
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            display: true,
+                            grid: {
+                                display: true
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                display: true
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return '₹' + value.toLocaleString('en-IN');
+                                }
+                            }
+                        }
+                    },
+                    elements: {
+                        line: {
+                            borderJoinStyle: 'round',
+                            borderCapStyle: 'round'
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateRevenueChart(data) {
+            const ctx = document.getElementById('revenueChart');
+            if (!ctx) return;
+            
+            if (!data || data.length === 0) {
+                console.warn('No revenue data available');
+                ctx.parentElement.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">No revenue data available.</p>';
+                return;
+            }
+            
+            if (revenueChart) {
+                revenueChart.destroy();
+            }
+
+            // Generate colors dynamically for all materials
+            const colors = [
+                'rgba(39, 174, 96, 0.8)',   // Green
+                'rgba(52, 152, 219, 0.8)',  // Blue
+                'rgba(155, 89, 182, 0.8)',  // Purple
+                'rgba(241, 196, 15, 0.8)',  // Yellow
+                'rgba(230, 126, 34, 0.8)',  // Orange
+                'rgba(231, 76, 60, 0.8)',   // Red
+                'rgba(46, 204, 113, 0.8)',  // Emerald
+                'rgba(26, 188, 156, 0.8)',  // Turquoise
+                'rgba(52, 73, 94, 0.8)',    // Dark Blue
+                'rgba(149, 165, 166, 0.8)'  // Gray
+            ];
+            
+            revenueChart = new Chart(ctx.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: data.map(item => item.material || item.material_type),
+                    datasets: [{
+                        label: 'Revenue (₹)',
+                        data: data.map(item => item.value || item.total_revenue || 0),
+                        backgroundColor: data.map((item, idx) => colors[idx % colors.length]),
+                        borderColor: data.map((item, idx) => colors[idx % colors.length].replace('0.8', '1')),
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const value = context.parsed.y;
+                                    const material = data[context.dataIndex];
+                                    let tooltip = 'Revenue: ₹' + value.toLocaleString('en-IN');
+                                    if (material && material.quantity) {
+                                        tooltip += '\nQuantity: ' + material.quantity.toLocaleString('en-IN', {minimumFractionDigits: 2}) + ' kg';
+                                    }
+                                    if (material && material.transactions) {
+                                        tooltip += '\nTransactions: ' + material.transactions;
+                                    }
+                                    return tooltip;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '₹' + value.toLocaleString('en-IN');
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateCostChart(data) {
+            const ctx = document.getElementById('costChart');
+            if (!ctx) return;
+            
+            if (!data || data.length === 0) {
+                console.warn('No cost data available');
+                ctx.parentElement.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">No cost data available.</p>';
+                return;
+            }
+            
+            if (costChart) {
+                costChart.destroy();
+            }
+
+            // Generate colors for cost chart dynamically
+            const costColors = [
+                'rgba(231, 76, 60, 0.8)',   // Red
+                'rgba(230, 126, 34, 0.8)',  // Orange
+                'rgba(243, 156, 18, 0.8)',  // Dark Orange
+                'rgba(192, 57, 43, 0.8)',   // Dark Red
+                'rgba(211, 84, 0, 0.8)',    // Deep Orange
+                'rgba(127, 140, 141, 0.8)'  // Gray
+            ];
+            
+            costChart = new Chart(ctx.getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: data.map(item => (item.type || item.category)),
+                    datasets: [{
+                        label: 'Cost (₹)',
+                        data: data.map(item => item.value || item.total_cost || 0),
+                        backgroundColor: data.map((item, idx) => costColors[idx % costColors.length]),
+                        borderColor: data.map((item, idx) => costColors[idx % costColors.length].replace('0.8', '1')),
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed || 0;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return `${label}: ₹${value.toLocaleString('en-IN')} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

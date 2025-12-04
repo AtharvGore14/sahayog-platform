@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Waste Data Entry - Automated Waste Financial Ledger</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            padding: 30px;
+        }
+        h1 { color: #2c3e50; margin-bottom: 20px; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; font-weight: 600; margin-bottom: 5px; color: #2c3e50; }
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1em;
+        }
+        button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4); }
+        .success { background: #27ae60; color: white; padding: 15px; border-radius: 5px; margin: 20px 0; }
+        .error { background: #e74c3c; color: white; padding: 15px; border-radius: 5px; margin: 20px 0; }
+        .nav { margin-bottom: 30px; }
+        .nav a {
+            display: inline-block;
+            padding: 10px 20px;
+            margin-right: 10px;
+            background: #f8f9fa;
+            color: #2c3e50;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        .nav a.active { background: #667eea; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav class="navbar" style="background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); padding: 15px 30px; box-shadow: 0 2px 20px rgba(0,0,0,0.1); margin: -30px -30px 30px -30px; border-radius: 15px 15px 0 0;">
+            <div style="max-width: 1400px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center;">
+                <div style="font-size: 24px; font-weight: bold; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">♻️ Waste Financial Ledger</div>
+                <div style="display: flex; gap: 25px;">
+                    <a href="/" style="text-decoration: none; color: #2c3e50; font-weight: 600; padding: 8px 20px; border-radius: 25px; transition: all 0.3s;">🏠 Master Portal</a>
+                    <a href="home.html" style="text-decoration: none; color: #2c3e50; font-weight: 600; padding: 8px 20px; border-radius: 25px; transition: all 0.3s;">🏠 Home</a>
+                    <a href="index.html" style="text-decoration: none; color: #2c3e50; font-weight: 600; padding: 8px 20px; border-radius: 25px; transition: all 0.3s;">📊 Dashboard</a>
+                    <a href="waste_entry.html" class="active" style="text-decoration: none; color: white; font-weight: 600; padding: 8px 20px; border-radius: 25px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">📝 Data Entry</a>
+                    <a href="analytics.html" style="text-decoration: none; color: #2c3e50; font-weight: 600; padding: 8px 20px; border-radius: 25px; transition: all 0.3s;">📈 Analytics</a>
+                    <a href="companies.html" style="text-decoration: none; color: #2c3e50; font-weight: 600; padding: 8px 20px; border-radius: 25px; transition: all 0.3s;">🏢 Companies</a>
+                </div>
+            </div>
+        </nav>
+        
+        <h1>📝 Enter Waste Transaction</h1>
+        
+        <div id="message"></div>
+        
+        <div id="createCompanyPrompt" style="display: none; background: #fff3cd; border: 2px solid #ffc107; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+            <strong>Company Not Found</strong>
+            <p>Company "<span id="missingCompanyId"></span>" doesn't exist. Create it now?</p>
+            <div style="margin-top: 10px;">
+                <input type="text" id="newCompanyName" placeholder="Company Name" style="width: 200px; margin-right: 10px;">
+                <input type="text" id="newCompanyLocation" placeholder="Location (e.g., Mumbai)" style="width: 200px; margin-right: 10px;">
+                <button type="button" onclick="createCompany()" style="background: #28a745;">Create Company</button>
+                <button type="button" onclick="hideCreateCompanyButton()" style="background: #6c757d; margin-left: 5px;">Cancel</button>
+            </div>
+        </div>
+        
+        <div id="createCollectionPointPrompt" style="display: none; background: #d1ecf1; border: 2px solid #17a2b8; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+            <strong>No Collection Points</strong>
+            <p>Company "<span id="currentCompanyId"></span>" has no collection points. Create one now to track waste collection locations.</p>
+            <div style="margin-top: 10px;">
+                <input type="text" id="newCollectionPointName" placeholder="Collection Point Name (e.g., Main Warehouse)" style="width: 250px; margin-right: 10px;">
+                <input type="text" id="newCollectionPointLocation" placeholder="Location (e.g., Building A, Floor 2)" style="width: 250px; margin-right: 10px;">
+                <button type="button" onclick="createCollectionPoint()" style="background: #17a2b8; color: white;">Create Collection Point</button>
+                <button type="button" onclick="hideCreateCollectionPointButton()" style="background: #6c757d; color: white; margin-left: 5px;">Skip (Optional)</button>
+            </div>
+        </div>
+        
+        <form id="wasteForm">
+            <div class="form-group">
+                <label>Company ID *</label>
+                <input type="text" id="companyId" value="C1234" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Collection Point</label>
+                <select id="collectionPoint">
+                    <option value="">Select or leave blank</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Material Type *</label>
+                <select id="materialType" required>
+                    <option value="">Select material</option>
+                    <option value="Cardboard">Cardboard</option>
+                    <option value="Aluminum">Aluminum</option>
+                    <option value="Plastic">Plastic</option>
+                    <option value="Metal">Metal</option>
+                    <option value="Glass">Glass</option>
+                    <option value="Paper">Paper</option>
+                    <option value="Mixed Waste">Mixed Waste</option>
+                    <option value="Organic Waste">Organic Waste</option>
+                    <option value="Electronics">Electronics</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Material Category *</label>
+                <select id="materialCategory" required>
+                    <option value="">Select category</option>
+                    <option value="recyclable">Recyclable</option>
+                    <option value="non_recyclable">Non-Recyclable</option>
+                    <option value="hazardous">Hazardous</option>
+                    <option value="organic">Organic</option>
+                    <option value="electronic">Electronic</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Quantity (kg) *</label>
+                <input type="number" id="quantityKg" step="0.01" min="0" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Quality Score (0.0 to 1.0)</label>
+                <input type="number" id="qualityScore" step="0.01" min="0" max="1" value="1.0">
+            </div>
+            
+            <div class="form-group">
+                <label>Grade</label>
+                <select id="grade">
+                    <option value="">Select grade</option>
+                    <option value="A">A (Premium)</option>
+                    <option value="B">B (Standard)</option>
+                    <option value="C">C (Basic)</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Contamination Level (0.0 to 1.0)</label>
+                <input type="number" id="contaminationLevel" step="0.01" min="0" max="1" value="0.0">
+            </div>
+            
+            <div class="form-group">
+                <label>Transaction Date</label>
+                <input type="datetime-local" id="transactionDate">
+            </div>
+            
+            <div class="form-group">
+                <label>Recorded By</label>
+                <input type="text" id="recordedBy" placeholder="Your name">
+            </div>
+            
+            <div class="form-group">
+                <label>Notes</label>
+                <textarea id="notes" rows="3" placeholder="Additional notes..."></textarea>
+            </div>
+            
+            <button type="submit">Submit Transaction</button>
+        </form>
+        
+        <div id="result" style="margin-top: 30px;"></div>
+    </div>
+    
+    <script>
+        const pathSegments = window.location.pathname.split('/').filter(Boolean);
+        let basePrefix = '';
+        if (pathSegments.length > 0 && !pathSegments[0].includes('.')) {
+            basePrefix = '/' + pathSegments[0];
+        }
+        const API_BASE_URL = window.location.origin + basePrefix;
+        const messageBox = document.getElementById('message');
+        const resultBox = document.getElementById('result');
+
+        function setMessage(type, text) {
+            if (!messageBox) {
+                return;
+            }
+            messageBox.innerHTML = `<div class="${type}">${text}</div>`;
+        }
+
+        function clearMessage() {
+            if (messageBox) {
+                messageBox.innerHTML = '';
+            }
+        }
+
+        function showCreateCompanyButton(companyId) {
+            const prompt = document.getElementById('createCompanyPrompt');
+            const missingIdSpan = document.getElementById('missingCompanyId');
+            if (prompt && missingIdSpan) {
+                missingIdSpan.textContent = companyId || '';
+                prompt.style.display = 'block';
+                const nameInput = document.getElementById('newCompanyName');
+                const locationInput = document.getElementById('newCompanyLocation');
+                if (nameInput) nameInput.value = '';
+                if (locationInput) locationInput.value = '';
+            }
+        }
+
+        function hideCreateCompanyButton() {
+            const prompt = document.getElementById('createCompanyPrompt');
+            if (prompt) {
+                prompt.style.display = 'none';
+            }
+        }
+
+        function showCreateCollectionPointButton(companyId) {
+            const prompt = document.getElementById('createCollectionPointPrompt');
+            const companyIdSpan = document.getElementById('currentCompanyId');
+            if (prompt && companyIdSpan) {
+                companyIdSpan.textContent = companyId || '';
+                prompt.style.display = 'block';
+                const nameInput = document.getElementById('newCollectionPointName');
+                const locationInput = document.getElementById('newCollectionPointLocation');
+                if (nameInput) nameInput.value = '';
+                if (locationInput) locationInput.value = '';
+            }
+        }
+
+        function hideCreateCollectionPointButton() {
+            const prompt = document.getElementById('createCollectionPointPrompt');
+            if (prompt) {
+                prompt.style.display = 'none';
+            }
+        }
+
+        async function createCompany() {
+            const companyIdField = document.getElementById('companyId');
+            const nameField = document.getElementById('newCompanyName');
+            const locationField = document.getElementById('newCompanyLocation');
+            const companyId = companyIdField ? companyIdField.value.trim() : '';
+            const name = nameField ? nameField.value.trim() : '';
+            const location = locationField ? locationField.value.trim() : '';
+
+            if (!companyId) {
+                setMessage('error', 'Enter the company ID before creating a company.');
+                if (companyIdField) companyIdField.focus();
+                return;
+            }
+
+            if (!name || !location) {
+                setMessage('error', 'Please provide both company name and location.');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/companies`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        company_id: companyId,
+                        name,
+                        location
+                    })
+                });
+
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) {
+                    throw new Error(data.detail || 'Failed to create company.');
+                }
+
+                setMessage('success', `Company "${name}" created successfully.`);
+                hideCreateCompanyButton();
+                await loadCollectionPoints();
+            } catch (error) {
+                setMessage('error', `Error creating company: ${error.message}`);
+            }
+        }
+
+        async function createCollectionPoint() {
+            const companyIdField = document.getElementById('companyId');
+            const nameField = document.getElementById('newCollectionPointName');
+            const locationField = document.getElementById('newCollectionPointLocation');
+            const companyId = companyIdField ? companyIdField.value.trim() : '';
+            const pointName = nameField ? nameField.value.trim() : '';
+            const pointLocation = locationField ? locationField.value.trim() : '';
+
+            if (!companyId) {
+                setMessage('error', 'Enter the company ID before adding a collection point.');
+                return;
+            }
+
+            if (!pointName || !pointLocation) {
+                setMessage('error', 'Please provide a collection point name and location.');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/companies/${companyId}/collection-points`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: pointName,
+                        location: pointLocation
+                    })
+                });
+
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) {
+                    throw new Error(data.detail || 'Failed to create collection point.');
+                }
+
+                setMessage('success', `Collection point "${pointName}" created successfully.`);
+                hideCreateCollectionPointButton();
+                await loadCollectionPoints();
+            } catch (error) {
+                setMessage('error', `Error creating collection point: ${error.message}`);
+            }
+        }
+
+        function getNumericValue(value) {
+            if (value === undefined || value === null || value === '') {
+                return null;
+            }
+            const parsed = Number(value);
+            return Number.isFinite(parsed) ? parsed : null;
+        }
+
+        async function loadCollectionPoints() {
+            const companyIdField = document.getElementById('companyId');
+            const select = document.getElementById('collectionPoint');
+            if (!companyIdField || !select) {
+                return;
+            }
+
+            const companyId = companyIdField.value.trim();
+            const previousValue = select.value;
+            select.innerHTML = '<option value="">Select or leave blank</option>';
+
+            if (!companyId) {
+                hideCreateCompanyButton();
+                hideCreateCollectionPointButton();
+                return;
+            }
+
+            hideCreateCompanyButton();
+            hideCreateCollectionPointButton();
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/companies/${companyId}/collection-points`);
+
+                if (response.status === 404) {
+                    showCreateCompanyButton(companyId);
+                    setMessage('error', `Company "${companyId}" was not found. You can create it below.`);
+                    return;
+                }
+
+                if (!response.ok) {
+                    throw new Error(`Server responded with status ${response.status}.`);
+                }
+
+                const points = await response.json();
+                clearMessage();
+
+                if (!Array.isArray(points) || points.length === 0) {
+                    showCreateCollectionPointButton(companyId);
+                    return;
+                }
+
+                points.forEach((point) => {
+                    if (!point) return;
+                    const option = document.createElement('option');
+                    option.value = point.id;
+                    const locationText = point.location ? ` (${point.location})` : '';
+                    option.textContent = `${point.name}${locationText}`;
+                    select.appendChild(option);
+                });
+
+                const restored = Array.from(select.options).find((opt) => opt.value === previousValue);
+                if (restored) {
+                    select.value = previousValue;
+                }
+            } catch (error) {
+                setMessage('error', `Unable to load collection points: ${error.message}`);
+            }
+        }
+
+        function formatMaybeNumber(value) {
+            return typeof value === 'number' ? value.toFixed(2) : value;
+        }
+
+        function formatTransactionSummary(data) {
+            if (!data) {
+                return '';
+            }
+
+            const rows = [
+                ['Transaction ID', data.transaction_id],
+                ['Company ID', data.company_id],
+                ['Collection Point ID', data.collection_point_id],
+                ['Material Type', data.material_type],
+                ['Quantity (kg)', formatMaybeNumber(data.quantity_kg)],
+                ['Total Revenue', formatMaybeNumber(data.total_revenue)],
+                ['Disposal Cost', formatMaybeNumber(data.disposal_cost)],
+                ['Net Value', formatMaybeNumber(data.net_value)],
+                ['Recorded Date', data.transaction_date]
+            ].filter(([, value]) => value !== undefined && value !== null && value !== '');
+
+            const rowsHtml = rows.map(([label, value]) => {
+                return `<tr>
+                    <th style="text-align:left;padding:6px 8px;border-bottom:1px solid #f0f0f0;">${label}</th>
+                    <td style="padding:6px 8px;border-bottom:1px solid #f0f0f0;">${value}</td>
+                </tr>`;
+            }).join('');
+
+            return `
+                <div style="background:#f8f9ff;border:1px solid #d9def8;border-radius:8px;padding:16px;">
+                    <h3 style="margin-bottom:12px;color:#2c3e50;">Recorded Transaction</h3>
+                    <table style="width:100%;border-collapse:collapse;">
+                        <tbody>${rowsHtml}</tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        async function submitWasteForm(event) {
+            event.preventDefault();
+            clearMessage();
+            if (resultBox) {
+                resultBox.innerHTML = '';
+            }
+
+            const companyIdField = document.getElementById('companyId');
+            const materialTypeField = document.getElementById('materialType');
+            const materialCategoryField = document.getElementById('materialCategory');
+            const quantityField = document.getElementById('quantityKg');
+
+            const companyId = companyIdField ? companyIdField.value.trim() : '';
+            const materialType = materialTypeField ? materialTypeField.value : '';
+            const materialCategory = materialCategoryField ? materialCategoryField.value : '';
+            const quantityValue = quantityField ? getNumericValue(quantityField.value) : null;
+
+            if (!companyId) {
+                setMessage('error', 'Company ID is required.');
+                if (companyIdField) companyIdField.focus();
+                return;
+            }
+            if (!materialType) {
+                setMessage('error', 'Please select a material type.');
+                if (materialTypeField) materialTypeField.focus();
+                return;
+            }
+            if (!materialCategory) {
+                setMessage('error', 'Please select a material category.');
+                if (materialCategoryField) materialCategoryField.focus();
+                return;
+            }
+            if (quantityValue === null || quantityValue < 0) {
+                setMessage('error', 'Enter a valid quantity in kilograms.');
+                if (quantityField) quantityField.focus();
+                return;
+            }
+
+            const payload = {
+                company_id: companyId,
+                material_type: materialType,
+                material_category: materialCategory,
+                quantity_kg: quantityValue
+            };
+
+            const collectionPointField = document.getElementById('collectionPoint');
+            if (collectionPointField && collectionPointField.value) {
+                payload.collection_point_id = parseInt(collectionPointField.value, 10);
+            }
+
+            const qualityScoreField = document.getElementById('qualityScore');
+            const qualityScoreValue = qualityScoreField ? getNumericValue(qualityScoreField.value) : null;
+            if (qualityScoreValue !== null) {
+                payload.quality_score = qualityScoreValue;
+            }
+
+            const gradeField = document.getElementById('grade');
+            if (gradeField && gradeField.value) {
+                payload.grade = gradeField.value;
+            }
+
+            const contaminationField = document.getElementById('contaminationLevel');
+            const contaminationValue = contaminationField ? getNumericValue(contaminationField.value) : null;
+            if (contaminationValue !== null) {
+                payload.contamination_level = contaminationValue;
+            }
+
+            const transactionDateField = document.getElementById('transactionDate');
+            if (transactionDateField && transactionDateField.value) {
+                payload.transaction_date = transactionDateField.value;
+            }
+
+            const recordedByField = document.getElementById('recordedBy');
+            if (recordedByField && recordedByField.value.trim()) {
+                payload.recorded_by = recordedByField.value.trim();
+            }
+
+            const notesField = document.getElementById('notes');
+            if (notesField && notesField.value.trim()) {
+                payload.notes = notesField.value.trim();
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/waste/transactions`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) {
+                    throw new Error(data.detail || 'Failed to record waste transaction.');
+                }
+
+                setMessage('success', 'Waste transaction recorded successfully.');
+                if (resultBox) {
+                    resultBox.innerHTML = formatTransactionSummary(data);
+                }
+
+                const preservedCompanyId = companyId;
+                const form = document.getElementById('wasteForm');
+                if (form) {
+                    form.reset();
+                }
+                if (companyIdField) {
+                    companyIdField.value = preservedCompanyId;
+                }
+                if (qualityScoreField) {
+                    qualityScoreField.value = '1.0';
+                }
+                if (contaminationField) {
+                    contaminationField.value = '0.0';
+                }
+
+                await loadCollectionPoints();
+            } catch (error) {
+                setMessage('error', `Error saving transaction: ${error.message}`);
+            }
+        }
+
+        function initializePage() {
+            const companyIdField = document.getElementById('companyId');
+            const form = document.getElementById('wasteForm');
+
+            if (companyIdField) {
+                companyIdField.addEventListener('change', loadCollectionPoints);
+                companyIdField.addEventListener('blur', loadCollectionPoints);
+            }
+
+            if (form) {
+                form.addEventListener('submit', submitWasteForm);
+            }
+
+            loadCollectionPoints();
+        }
+
+        document.addEventListener('DOMContentLoaded', initializePage);
+    </script>
+</body>
+</html>
+
+

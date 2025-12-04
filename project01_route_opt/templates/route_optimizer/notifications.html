@@ -1,0 +1,189 @@
+{% extends 'base.html' %}
+
+{% block title %}Notifications - Sahayog Route Optimizer{% endblock %}
+
+{% block extra_css %}
+<style>
+    .notif-item.unread { background-color: #f8f9ff; }
+    .notif-type-badge { width: 8px; height: 8px; display: inline-block; border-radius: 50%; margin-right: 8px; }
+    .t-success { background:#28a745; } .t-warning { background:#ffc107; } .t-danger { background:#dc3545; } .t-info { background:#17a2b8; }
+    .tab-btn { cursor:pointer; }
+    .tab-btn.active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:#fff; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2 mb-0">
+        <i class="fas fa-bell me-2"></i>
+        Notifications
+        <span id="page-unread-count" class="badge bg-danger ms-2 {% if unread_count == 0 %}d-none{% endif %}">{{ unread_count }}</span>
+    </h1>
+    <div class="d-flex gap-2">
+        <button class="btn btn-sm btn-outline-secondary" id="btn-mark-current">
+            <i class="fas fa-check-double me-1"></i>Mark Current Tab Read
+        </button>
+        <button class="btn btn-sm btn-outline-danger" id="btn-clear-all">
+            <i class="fas fa-trash me-1"></i>Clear All
+        </button>
+        <button class="btn btn-sm btn-primary" id="btn-refresh"><i class="fas fa-sync-alt me-1"></i>Refresh</button>
+    </div>
+    </div>
+
+<!-- Tabs -->
+<div class="mb-3 d-flex flex-wrap gap-2">
+    <button class="btn tab-btn active" data-filter="all">All <span class="text-muted">({{ total_count }})</span></button>
+    <button class="btn tab-btn" data-filter="unread">Unread <span id="count-unread" class="text-muted">({{ unread_count }})</span></button>
+    <button class="btn tab-btn" data-filter="success"><span class="notif-type-badge t-success"></span>Success <span class="text-muted">({{ type_counts.success }})</span></button>
+    <button class="btn tab-btn" data-filter="warning"><span class="notif-type-badge t-warning"></span>Warning <span class="text-muted">({{ type_counts.warning }})</span></button>
+    <button class="btn tab-btn" data-filter="danger"><span class="notif-type-badge t-danger"></span>Alert <span class="text-muted">({{ type_counts.danger }})</span></button>
+    <button class="btn tab-btn" data-filter="info"><span class="notif-type-badge t-info"></span>Info <span class="text-muted">({{ type_counts.info }})</span></button>
+</div>
+
+<div id="notif-list" class="vstack gap-2">
+    {% for n in notifications %}
+    <div class="card notif-item p-0 {% if not n.read %}unread{% endif %}" data-id="{{ n.id }}" data-type="{{ n.type }}" data-read="{{ n.read|yesno:'true,false' }}">
+        <div class="card-body d-flex align-items-start">
+            <div class="me-3 mt-1"><span class="notif-type-badge t-{{ n.type }}"></span></div>
+            <div class="flex-grow-1">
+                <div class="d-flex justify-content-between">
+                    <h6 class="mb-1">{{ n.title }}</h6>
+                    <small class="text-muted">{{ n.timestamp }}</small>
+                </div>
+                <div class="text-muted">{{ n.message }}</div>
+                <div class="mt-2">
+                    {% if not n.read %}
+                    <button class="btn btn-sm btn-outline-primary btn-mark-read">Mark Read</button>
+                    {% else %}
+                    <button class="btn btn-sm btn-outline-secondary btn-mark-unread">Mark Unread</button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="text-center py-5">
+        <i class="fas fa-bell-slash fa-3x text-muted mb-3"></i>
+        <h5 class="text-muted">No notifications</h5>
+        <p class="text-muted">You're all caught up! Check back later for updates.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentFilter = 'all';
+
+function csrfToken(){
+    const m = document.cookie.match(/csrftoken=([^;]+)/); return m?m[1]:'';
+}
+
+function updateBadges(){
+    const unread = document.querySelectorAll('#notif-list .notif-item.unread').length;
+    const sidebar = document.getElementById('sidebar-unread-count');
+    const page = document.getElementById('page-unread-count');
+    document.getElementById('count-unread').textContent = `(${unread})`;
+    if(sidebar){ if(unread>0){ sidebar.textContent=unread; sidebar.classList.remove('d-none'); } else { sidebar.textContent='0'; sidebar.classList.add('d-none'); } }
+    if(page){ if(unread>0){ page.textContent=unread; page.classList.remove('d-none'); } else { page.textContent='0'; page.classList.add('d-none'); } }
+}
+
+function applyFilter(){
+    document.querySelectorAll('#notif-list .notif-item').forEach(card=>{
+        const type = card.getAttribute('data-type');
+        const isRead = card.getAttribute('data-read') === 'true';
+        let show = true;
+        if(currentFilter==='unread'){ show = !isRead; }
+        else if(currentFilter!=='all'){ show = type===currentFilter; }
+        card.style.display = show ? '' : 'none';
+    });
+}
+
+async function mark(id, makeRead){
+    const url = makeRead ? `/route-optimizer/api/notifications/${id}/read/` : `/route-optimizer/api/notifications/${id}/unread/`;
+    const res = await fetch(url,{ method:'POST', headers:{ 'X-CSRFToken': csrfToken(), 'X-Requested-With': 'XMLHttpRequest' }});
+    if(!res.ok) throw new Error('request failed');
+    const card = document.querySelector(`.notif-item[data-id='${id}']`);
+    if(!card) return;
+    if(makeRead){
+        card.classList.remove('unread');
+        card.setAttribute('data-read','true');
+        card.querySelector('.btn-mark-read')?.remove();
+        if(!card.querySelector('.btn-mark-unread')){
+            const btn = document.createElement('button'); btn.className='btn btn-sm btn-outline-secondary btn-mark-unread'; btn.textContent='Mark Unread';
+            card.querySelector('.mt-2').appendChild(btn);
+        }
+    }else{
+        card.classList.add('unread');
+        card.setAttribute('data-read','false');
+        card.querySelector('.btn-mark-unread')?.remove();
+        if(!card.querySelector('.btn-mark-read')){
+            const btn = document.createElement('button'); btn.className='btn btn-sm btn-outline-primary btn-mark-read'; btn.textContent='Mark Read';
+            card.querySelector('.mt-2').appendChild(btn);
+        }
+    }
+    if(currentFilter==='unread' && makeRead){ card.style.display='none'; }
+    updateBadges();
+}
+
+async function markCurrentTab(){
+    if(currentFilter==='all'){
+        await fetch('/route-optimizer/api/notifications/read-all/',{ method:'POST', headers:{ 'X-CSRFToken': csrfToken(), 'X-Requested-With': 'XMLHttpRequest' }});
+        document.querySelectorAll('#notif-list .notif-item').forEach(card=>{ card.classList.remove('unread'); card.setAttribute('data-read','true'); card.style.display=''; });
+    } else if(currentFilter==='unread'){
+        // Mark only currently visible unread as read
+        const visibleUnread = Array.from(document.querySelectorAll('#notif-list .notif-item.unread')).filter(c=>c.style.display!== 'none');
+        await Promise.all(visibleUnread.map(c=>mark(c.getAttribute('data-id'), true)));
+    } else {
+        // Mark all of this type as read
+        const cards = Array.from(document.querySelectorAll(`#notif-list .notif-item[data-type='${currentFilter}']`));
+        await Promise.all(cards.map(c=>mark(c.getAttribute('data-id'), true)));
+    }
+    applyFilter();
+    updateBadges();
+}
+
+document.addEventListener('click', async (e)=>{
+    const t = e.target;
+    if(t.classList.contains('tab-btn')){
+        document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+        t.classList.add('active');
+        currentFilter = t.getAttribute('data-filter');
+        applyFilter();
+        return;
+    }
+    if(t.classList.contains('btn-mark-read')){
+        const id = t.closest('.notif-item').getAttribute('data-id');
+        try{ await mark(id,true);}catch{}
+        return;
+    }
+    if(t.classList.contains('btn-mark-unread')){
+        const id = t.closest('.notif-item').getAttribute('data-id');
+        try{ await mark(id,false);}catch{}
+        return;
+    }
+    if(t.id==='btn-mark-current'){
+        try{ await markCurrentTab(); }catch{}
+        return;
+    }
+    if(t.id==='btn-refresh'){
+        location.reload();
+        return;
+    }
+    if(t.id==='btn-clear-all'){
+        if(confirm('Clear all notifications? This cannot be undone.')){
+            try{
+                await fetch('/route-optimizer/api/notifications/clear-all/', { method:'POST', headers:{ 'X-CSRFToken': csrfToken(), 'X-Requested-With':'XMLHttpRequest' }});
+                document.querySelectorAll('#notif-list .notif-item').forEach(n=>n.remove());
+                updateBadges();
+            }catch{}
+        }
+        return;
+    }
+});
+
+// Initialize
+applyFilter();
+updateBadges();
+</script>
+{% endblock %}

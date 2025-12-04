@@ -1,0 +1,520 @@
+{% extends 'base.html' %}
+
+{% block title %}Optimize Route - Sahayog Route Optimizer{% endblock %}
+
+{% block extra_css %}
+<style>
+    .location-card {
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+    }
+    .location-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    .location-card.selected {
+        border-color: #667eea;
+        background-color: #f8f9ff;
+    }
+    .vehicle-card {
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+    }
+    .vehicle-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    .vehicle-card.selected {
+        border-color: #667eea;
+        background-color: #f8f9ff;
+    }
+    .map-container {
+        height: 400px;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    .optimization-progress {
+        display: none;
+    }
+    .results-section {
+        display: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="fas fa-route me-2"></i>
+        Optimize Route
+    </h1>
+</div>
+
+<!-- Optimization Form -->
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-cog me-2"></i>
+                    Route Configuration
+                </h5>
+            </div>
+            <div class="card-body">
+                <form id="optimizationForm">
+                    <!-- Route Name -->
+                    <div class="mb-3">
+                        <label for="routeName" class="form-label">Route Name *</label>
+                        <input type="text" class="form-control" id="routeName" name="routeName" 
+                               placeholder="Enter a descriptive name for this route" required>
+                    </div>
+                    
+                    <!-- Location Selection -->
+                    <div class="mb-4">
+                        <label class="form-label">Select Locations to Visit *</label>
+                        <div class="row" id="locationsContainer">
+                            {% for location in locations %}
+                            <div class="col-md-6 mb-2">
+                                <div class="card location-card" data-location-id="{{ location.id }}" data-lat="{{ location.latitude }}" data-lng="{{ location.longitude }}">
+                                    <div class="card-body p-3">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <h6 class="card-title mb-1">{{ location.name }}</h6>
+                                                <p class="card-text small text-muted mb-1">{{ location.address }}</p>
+                                                <div class="d-flex gap-2">
+                                                    <span class="badge bg-primary">{{ location.get_location_type_display }}</span>
+                                                    <span class="badge bg-{% if location.priority == 'urgent' %}danger{% elif location.priority == 'high' %}warning{% elif location.priority == 'medium' %}info{% else %}secondary{% endif %}">
+                                                        {{ location.get_priority_display }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div class="text-end">
+                                                <small class="text-muted">{{ location.estimated_waste_volume }} L</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <div class="text-center mt-3">
+                            <button type="button" class="btn btn-outline-primary" id="selectAllLocations">
+                                <i class="fas fa-check-double me-2"></i>
+                                Select All
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" id="clearLocations">
+                                <i class="fas fa-times me-2"></i>
+                                Clear Selection
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Vehicle Selection -->
+                    <div class="mb-4">
+                        <label class="form-label">Select Vehicle *</label>
+                        <div class="row" id="vehiclesContainer">
+                            {% for vehicle in vehicles %}
+                            <div class="col-md-6 mb-2">
+                                <div class="card vehicle-card" data-vehicle-id="{{ vehicle.id }}">
+                                    <div class="card-body p-3">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <h6 class="card-title mb-1">{{ vehicle.name }}</h6>
+                                                <p class="card-text small text-muted mb-1">{{ vehicle.get_vehicle_type_display }}</p>
+                                                <div class="d-flex gap-2">
+                                                    <span class="badge bg-info">{{ vehicle.capacity }} L</span>
+                                                    <span class="badge bg-success">{{ vehicle.fuel_efficiency }} km/L</span>
+                                                </div>
+                                            </div>
+                                            <div class="text-center">
+                                                <i class="fas fa-truck fa-2x text-muted"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <!-- Depot Selection -->
+                    <div class="mb-4">
+                        <label for="depotLocation" class="form-label">Starting Point (Depot)</label>
+                        <select class="form-select" id="depotLocation" name="depotLocation">
+                            <option value="">Auto-select (first location)</option>
+                            {% for location in locations %}
+                            <option value="{{ location.id }}">{{ location.name }} - {{ location.address }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">Select the starting point for the route. If not specified, the first selected location will be used.</div>
+                    </div>
+                    
+                    <!-- Optimization Button -->
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary btn-lg" id="optimizeBtn">
+                            <i class="fas fa-magic me-2"></i>
+                            Optimize Route
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Map and Results Sidebar -->
+    <div class="col-lg-4">
+        <!-- Map -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-map me-2"></i>
+                    Route Map
+                </h6>
+            </div>
+            <div class="card-body p-0">
+                <div id="routeMap" class="map-container"></div>
+            </div>
+        </div>
+        
+        <!-- Optimization Progress -->
+        <div class="card optimization-progress mb-4">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-spinner fa-spin me-2"></i>
+                    Optimizing Route...
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="progress mb-3">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                         role="progressbar" style="width: 100%"></div>
+                </div>
+                <p class="text-muted small mb-0">Using Google OR-Tools to find the optimal route...</p>
+            </div>
+        </div>
+        
+        <!-- Results -->
+        <div class="card results-section">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-chart-line me-2"></i>
+                    Optimization Results
+                </h6>
+            </div>
+            <div class="card-body">
+                <div id="resultsContent">
+                    <!-- Results will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let selectedLocations = [];
+let selectedVehicle = null;
+let map = null;
+let markers = [];
+let routeLine = null;
+let recommendTimer = null;
+const scriptPrefixRaw = "{{ request.META.SCRIPT_NAME|default:''|escapejs }}";
+const scriptPrefix = scriptPrefixRaw === '/' ? '' : scriptPrefixRaw;
+const optimizerBase = `${scriptPrefix}/route-optimizer`;
+
+// Lightweight toast/alert utility for immediate feedback
+function showToast(message, type) {
+    // type: 'success', 'danger', 'warning', 'info'
+    const id = 'inline-toast-' + Date.now();
+    const alert = $(
+        `<div id="${id}" class="alert alert-${type} shadow position-fixed top-0 end-0 m-3" role="alert" style="z-index: 1080;">
+            ${message}
+        </div>`
+    );
+    $('body').append(alert);
+    setTimeout(function() { alert.fadeOut(400, function() { $(this).remove(); }); }, 2500);
+}
+
+$(document).ready(function() {
+    // Initialize map
+    initMap();
+    
+    // Location selection
+    $('.location-card').click(function() {
+        const locationId = $(this).data('location-id');
+        if ($(this).hasClass('selected')) {
+            $(this).removeClass('selected');
+            selectedLocations = selectedLocations.filter(id => id !== locationId);
+        } else {
+            $(this).addClass('selected');
+            selectedLocations.push(locationId);
+        }
+        updateMap();
+        scheduleRecommend();
+    });
+    
+    // Vehicle selection
+    $('.vehicle-card').click(function() {
+        $('.vehicle-card').removeClass('selected');
+        $(this).addClass('selected');
+        selectedVehicle = $(this).data('vehicle-id');
+    });
+    
+    // Select all locations
+    $('#selectAllLocations').click(function() {
+        $('.location-card').addClass('selected');
+        selectedLocations = $('.location-card').map(function() {
+            return $(this).data('location-id');
+        }).get();
+        updateMap();
+        scheduleRecommend();
+    });
+    
+    // Clear locations
+    $('#clearLocations').click(function() {
+        $('.location-card').removeClass('selected');
+        selectedLocations = [];
+        updateMap();
+        scheduleRecommend();
+    });
+    
+    // Form submission
+    $('#optimizationForm').submit(function(e) {
+        e.preventDefault();
+        
+        if (selectedLocations.length === 0) {
+            alert('Please select at least one location.');
+            return;
+        }
+        
+        if (!selectedVehicle) {
+            alert('Please select a vehicle.');
+            return;
+        }
+        
+        const routeName = $('#routeName').val().trim();
+        if (!routeName) {
+            alert('Please enter a route name.');
+            return;
+        }
+        
+        // Show progress
+        $('.optimization-progress').show();
+        $('.results-section').hide();
+        $('#optimizeBtn').prop('disabled', true);
+        
+        // Prepare data
+        const data = {
+            location_ids: selectedLocations,
+            vehicle_id: selectedVehicle,
+            route_name: routeName,
+            depot_location_id: $('#depotLocation').val() || null
+        };
+        
+        // Send optimization request with timeout
+        $.ajax({
+            url: window.location.href,
+            method: 'POST',
+            data: JSON.stringify(data),
+            contentType: 'application/json',
+            timeout: 30000, // 30 second timeout
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            success: function(response) {
+                // Always hide loader first
+                $('.optimization-progress').hide();
+                $('#optimizeBtn').prop('disabled', false);
+                
+                if (response && response.success) {
+                    // Show success message
+                    showToast('Route optimized successfully!', 'success');
+                    
+                    // Show results briefly
+                    showResults(response);
+                    drawPath(response.route_path_coords || []);
+                    
+                    // Redirect after 2 seconds
+                    setTimeout(function() {
+                        window.location.href = `${optimizerBase}/route/${response.route_id}/`;
+                    }, 2000);
+                } else {
+                    showToast('Optimization failed: ' + (response ? response.error : 'Unknown error'), 'danger');
+                }
+            },
+            error: function(xhr, status, error) {
+                // Always hide loader on error
+                $('.optimization-progress').hide();
+                $('#optimizeBtn').prop('disabled', false);
+                
+                let errorMsg = 'An error occurred during optimization.';
+                if (status === 'timeout') {
+                    errorMsg = 'Optimization timed out. Please try again.';
+                } else if (xhr.responseJSON && xhr.responseJSON.error) {
+                    errorMsg = xhr.responseJSON.error;
+                }
+                showToast(errorMsg, 'danger');
+            }
+        });
+    });
+});
+
+function initMap() {
+    // Initialize Leaflet map
+    map = L.map('routeMap').setView([20.5937, 78.9629], 5); // Center of India
+    
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+}
+
+function updateMap() {
+    // Clear existing markers
+    markers.forEach(marker => map.removeLayer(marker));
+    markers = [];
+    
+    if (selectedLocations.length === 0) return;
+    
+    // Get selected location coordinates and add markers
+    const bounds = L.latLngBounds();
+    
+    $('.location-card.selected').each(function() {
+        const card = $(this);
+        const locationName = card.find('.card-title').text();
+        const locationAddress = card.find('.card-text').text();
+        const lat = parseFloat(card.data('lat'));
+        const lng = parseFloat(card.data('lng'));
+        if (isNaN(lat) || isNaN(lng)) return;
+
+        const marker = L.marker([lat, lng]).addTo(map);
+        marker.bindPopup(`<strong>${locationName}</strong><br>${locationAddress}`);
+        markers.push(marker);
+        
+        bounds.extend([lat, lng]);
+    });
+    
+    if (bounds.isValid()) {
+        map.fitBounds(bounds, { padding: [20, 20] });
+    }
+}
+
+function drawPath(coords) {
+    if (!map) return;
+    if (routeLine) { map.removeLayer(routeLine); routeLine = null; }
+    if (!coords || coords.length < 2) return;
+    const latlngs = coords.map(c => [c[0], c[1]]);
+    routeLine = L.polyline(latlngs, { color: '#5a67d8', weight: 5, opacity: 0.8 }).addTo(map);
+    map.fitBounds(routeLine.getBounds(), { padding: [20, 20] });
+}
+
+function scheduleRecommend() {
+    if (recommendTimer) clearTimeout(recommendTimer);
+    recommendTimer = setTimeout(recommendRoute, 500);
+}
+
+function recommendRoute() {
+    if (selectedLocations.length < 2) return;
+    const data = {
+        location_ids: selectedLocations,
+        vehicle_id: selectedVehicle,
+        depot_location_id: $('#depotLocation').val() || null
+    };
+    $.ajax({
+        url: `${optimizerBase}/api/recommend/`,
+        method: 'POST',
+        data: JSON.stringify(data),
+        contentType: 'application/json',
+        headers: { 'X-CSRFToken': getCookie('csrftoken') },
+        success: function(res) {
+            if (!res.success) return;
+            // Only draw the path on map, no preview box
+            drawPath(res.route_path_coords || []);
+        },
+        error: function() {
+            // Silent fail for preview
+        }
+    });
+}
+
+function showResults(results) {
+    const totalDistance = Number(results.total_distance);
+    const totalTime = Number(results.total_time);
+    const fuel = Number(results.estimated_fuel_consumption);
+    const score = results.optimization_score;
+    const execTime = Number(results.execution_time);
+
+    const distanceStr = Number.isFinite(totalDistance) ? totalDistance.toFixed(2) + ' km' : '—';
+    const timeStr = Number.isFinite(totalTime) ? totalTime + ' min' : '—';
+    const fuelStr = Number.isFinite(fuel) ? fuel.toFixed(2) + ' L' : '—';
+    const scoreStr = (score !== undefined && score !== null) ? `${score}%` : '—';
+    const execStr = Number.isFinite(execTime) ? execTime.toFixed(3) + 's' : '—';
+
+    const resultsHtml = `
+        <div class="text-center mb-3">
+            <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+            <h5 class="text-success">Route Optimized Successfully!</h5>
+        </div>
+        
+        <div class="row text-center">
+            <div class="col-6">
+                <div class="border rounded p-2">
+                    <small class="text-muted d-block">Total Distance</small>
+                    <strong class="h6 mb-0">${distanceStr}</strong>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="border rounded p-2">
+                    <small class="text-muted d-block">Total Time</small>
+                    <strong class="h6 mb-0">${timeStr}</strong>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row text-center mt-2">
+            <div class="col-6">
+                <div class="border rounded p-2">
+                    <small class="text-muted d-block">Fuel Consumption</small>
+                    <strong class="h6 mb-0">${fuelStr}</strong>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="border rounded p-2">
+                    <small class="text-muted d-block">Optimization Score</small>
+                    <strong class="h6 mb-0">${scoreStr}</strong>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-3">
+            <small class="text-muted">Execution time: ${execStr}</small>
+        </div>
+        
+        <div class="alert alert-info mt-3">
+            <i class="fas fa-info-circle me-2"></i>
+            Redirecting to route details...
+        </div>
+    `;
+    
+    $('#resultsContent').html(resultsHtml);
+    $('.results-section').show();
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}
