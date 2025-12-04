@@ -24,6 +24,29 @@ def logout_view(request):
 
 def index(request):
     """Main dashboard view."""
+    # Seed demo data if database is empty (for initial setup/demo)
+    if Location.objects.count() == 0 and Vehicle.objects.count() == 0:
+        # Create demo locations
+        demo_locations = [
+            {'name': 'Central Market Bin', 'address': '123 Main Street, Downtown', 'latitude': 20.5937, 'longitude': 78.9629, 'location_type': 'bin', 'priority': 'high', 'estimated_waste_volume': 150.0, 'is_active': True},
+            {'name': 'Shopping Mall Collection Point', 'address': '456 Mall Road, Shopping District', 'latitude': 20.6037, 'longitude': 78.9729, 'location_type': 'collection_point', 'priority': 'medium', 'estimated_waste_volume': 200.0, 'is_active': True},
+            {'name': 'Residential Area Bin', 'address': '789 Residential Lane, Suburbs', 'latitude': 20.5837, 'longitude': 78.9529, 'location_type': 'bin', 'priority': 'low', 'estimated_waste_volume': 75.0, 'is_active': True},
+            {'name': 'Industrial Zone Bin', 'address': '321 Industrial Park, Factory Area', 'latitude': 20.6137, 'longitude': 78.9829, 'location_type': 'bin', 'priority': 'urgent', 'estimated_waste_volume': 300.0, 'is_active': True},
+            {'name': 'University Campus Bin', 'address': '654 University Road, Campus Area', 'latitude': 20.5737, 'longitude': 78.9429, 'location_type': 'bin', 'priority': 'medium', 'estimated_waste_volume': 120.0, 'is_active': True},
+            {'name': 'Hospital Collection Point', 'address': '987 Medical Center, Healthcare District', 'latitude': 20.6237, 'longitude': 78.9929, 'location_type': 'collection_point', 'priority': 'urgent', 'estimated_waste_volume': 250.0, 'is_active': True},
+        ]
+        for loc_data in demo_locations:
+            Location.objects.get_or_create(name=loc_data['name'], defaults=loc_data)
+        
+        # Create demo vehicles
+        demo_vehicles = [
+            {'name': 'Waste Collection Truck Alpha', 'vehicle_type': 'truck', 'capacity': 5000.0, 'fuel_efficiency': 8.5, 'current_latitude': 20.5937, 'current_longitude': 78.9629, 'is_available': True},
+            {'name': 'Compact Collection Van Beta', 'vehicle_type': 'van', 'capacity': 2000.0, 'fuel_efficiency': 12.0, 'current_latitude': 20.6037, 'current_longitude': 78.9729, 'is_available': True},
+            {'name': 'Heavy Duty Compactor Gamma', 'vehicle_type': 'compactor', 'capacity': 8000.0, 'fuel_efficiency': 6.5, 'current_latitude': 20.5837, 'current_longitude': 78.9529, 'is_available': True},
+        ]
+        for veh_data in demo_vehicles:
+            Vehicle.objects.get_or_create(name=veh_data['name'], defaults=veh_data)
+    
     # Get recent routes
     recent_routes = OptimizedRoute.objects.all().order_by('-created_at')[:5]
     
