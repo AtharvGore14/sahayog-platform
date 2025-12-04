@@ -853,25 +853,25 @@ function addCollectionPoints() {
         // Fallback: Add some default collection points if no route data
         const defaultPoints = [
             { lat: 20.5937, lng: 78.9629, name: 'Default Collection Point' }
-        ];
-        
+    ];
+    
         defaultPoints.forEach(function(point) {
-            const collectionIcon = L.divIcon({
-                className: 'collection-marker',
-                html: '<div style="background:#28a745;color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 0 4px rgba(0,0,0,0.3);"><i class="fas fa-trash" style="font-size:10px;"></i></div>',
-                iconSize: [20, 20],
-                iconAnchor: [10, 10]
-            });
-            
-            L.marker([point.lat, point.lng], { icon: collectionIcon })
-                .addTo(map)
-                .bindPopup(`
-                    <div style="min-width: 150px;">
-                        <h6 class="mb-1 text-success">${point.name}</h6>
-                        <small class="text-muted">Collection Point</small>
-                    </div>
-                `);
+        const collectionIcon = L.divIcon({
+            className: 'collection-marker',
+            html: '<div style="background:#28a745;color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 0 4px rgba(0,0,0,0.3);"><i class="fas fa-trash" style="font-size:10px;"></i></div>',
+            iconSize: [20, 20],
+            iconAnchor: [10, 10]
         });
+        
+        L.marker([point.lat, point.lng], { icon: collectionIcon })
+            .addTo(map)
+            .bindPopup(`
+                <div style="min-width: 150px;">
+                    <h6 class="mb-1 text-success">${point.name}</h6>
+                    <small class="text-muted">Collection Point</small>
+                </div>
+            `);
+    });
     }
 }
 
@@ -900,24 +900,24 @@ function addRouteLines() {
             
             const polyline = L.polyline(routePoints, {
                 color: routeColor,
-                weight: 3,
-                opacity: 0.6,
-                dashArray: '10, 10'
-            }).addTo(map);
+            weight: 3,
+            opacity: 0.6,
+            dashArray: '10, 10'
+        }).addTo(map);
             
             routeLines.push(polyline);
-            
-            // Add route label at the start point
+        
+        // Add route label at the start point
             if (routePoints.length > 0) {
                 L.marker(routePoints[0]).addTo(map)
-                    .bindPopup(`
+            .bindPopup(`
                         <div style="min-width: 150px;">
                             <h6 class="mb-1 text-primary">${position.route_name}</h6>
                             <small class="text-muted">Vehicle: ${position.vehicle}</small><br>
                             <small class="text-muted">${sortedLocations.length} stops</small>
-                        </div>
-                    `)
-                    .setOpacity(0); // Make invisible, just for popup
+                </div>
+            `)
+            .setOpacity(0); // Make invisible, just for popup
             }
         }
     });

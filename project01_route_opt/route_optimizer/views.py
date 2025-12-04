@@ -1105,7 +1105,8 @@ def notifications(request):
         ]
         Notification.objects.bulk_create([Notification(**d) for d in demo])
 
-    qs = Notification.objects.all()
+    # Order: unread first, then by created_at descending
+    qs = Notification.objects.all().order_by('is_read', '-created_at')
 
     # Precompute counts by type and unread
     total_count = qs.count()
@@ -1120,7 +1121,7 @@ def notifications(request):
     # Filter by type if requested
     notification_type = request.GET.get('type', '')
     if notification_type:
-        qs = qs.filter(notification_type=notification_type)
+        qs = qs.filter(notification_type=notification_type).order_by('is_read', '-created_at')
 
     notifications_data = [
         {
@@ -1149,6 +1150,7 @@ from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 
 
+@csrf_exempt
 @require_POST
 def api_notification_mark_read(request, notification_id: int):
     from .models import Notification
@@ -1161,6 +1163,7 @@ def api_notification_mark_read(request, notification_id: int):
         return JsonResponse({'ok': False, 'error': 'not_found'}, status=404)
 
 
+@csrf_exempt
 @require_POST
 def api_notification_mark_all_read(request):
     from .models import Notification
@@ -1168,6 +1171,7 @@ def api_notification_mark_all_read(request):
     return JsonResponse({'ok': True})
 
 
+@csrf_exempt
 @require_POST
 def api_notification_mark_unread(request, notification_id: int):
     from .models import Notification
@@ -1180,6 +1184,7 @@ def api_notification_mark_unread(request, notification_id: int):
         return JsonResponse({'ok': False, 'error': 'not_found'}, status=404)
 
 
+@csrf_exempt
 @require_POST
 def api_notification_clear_all(request):
     from .models import Notification

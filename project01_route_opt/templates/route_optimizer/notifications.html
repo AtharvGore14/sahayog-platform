@@ -4,11 +4,42 @@
 
 {% block extra_css %}
 <style>
-    .notif-item.unread { background-color: #f8f9ff; }
+    .notif-item {
+        transition: all 0.3s ease;
+        border-left: 4px solid transparent;
+    }
+    .notif-item.unread { 
+        background-color: #f8f9ff;
+        border-left-color: #667eea;
+        box-shadow: 0 2px 4px rgba(102, 126, 234, 0.1);
+    }
+    .notif-item:not(.unread) {
+        background-color: #ffffff;
+        opacity: 0.7;
+        border-left-color: #e0e0e0;
+    }
+    .notif-item:not(.unread) .card-body {
+        opacity: 0.8;
+    }
+    .notif-item:not(.unread) h6 {
+        color: #6c757d;
+        font-weight: normal;
+    }
+    .notif-item:not(.unread) .text-muted {
+        color: #adb5bd !important;
+    }
     .notif-type-badge { width: 8px; height: 8px; display: inline-block; border-radius: 50%; margin-right: 8px; }
     .t-success { background:#28a745; } .t-warning { background:#ffc107; } .t-danger { background:#dc3545; } .t-info { background:#17a2b8; }
-    .tab-btn { cursor:pointer; }
+    .tab-btn { cursor:pointer; transition: all 0.2s ease; }
     .tab-btn.active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:#fff; }
+    .tab-btn:hover:not(.active) { background-color: #f0f0f0; }
+    .btn-mark-read, .btn-mark-unread {
+        transition: all 0.2s ease;
+    }
+    .notif-item.reading {
+        opacity: 0.5;
+        transform: scale(0.98);
+    }
 </style>
 {% endblock %}
 
@@ -83,9 +114,56 @@ function updateBadges(){
     const unread = document.querySelectorAll('#notif-list .notif-item.unread').length;
     const sidebar = document.getElementById('sidebar-unread-count');
     const page = document.getElementById('page-unread-count');
-    document.getElementById('count-unread').textContent = `(${unread})`;
-    if(sidebar){ if(unread>0){ sidebar.textContent=unread; sidebar.classList.remove('d-none'); } else { sidebar.textContent='0'; sidebar.classList.add('d-none'); } }
-    if(page){ if(unread>0){ page.textContent=unread; page.classList.remove('d-none'); } else { page.textContent='0'; page.classList.add('d-none'); } }
+    const countUnread = document.getElementById('count-unread');
+    
+    if(countUnread) {
+        countUnread.textContent = `(${unread})`;
+    }
+    
+    if(sidebar){ 
+        if(unread>0){ 
+            sidebar.textContent=unread; 
+            sidebar.classList.remove('d-none'); 
+        } else { 
+            sidebar.textContent='0'; 
+            sidebar.classList.add('d-none'); 
+        } 
+    }
+    if(page){ 
+        if(unread>0){ 
+            page.textContent=unread; 
+            page.classList.remove('d-none'); 
+        } else { 
+            page.textContent='0'; 
+            page.classList.add('d-none'); 
+        } 
+    }
+}
+
+function updateTabCounts(){
+    // Update counts for each filter tab
+    const allCount = document.querySelectorAll('#notif-list .notif-item').length;
+    const unreadCount = document.querySelectorAll('#notif-list .notif-item.unread').length;
+    const successCount = document.querySelectorAll('#notif-list .notif-item[data-type="success"]').length;
+    const warningCount = document.querySelectorAll('#notif-list .notif-item[data-type="warning"]').length;
+    const dangerCount = document.querySelectorAll('#notif-list .notif-item[data-type="danger"]').length;
+    const infoCount = document.querySelectorAll('#notif-list .notif-item[data-type="info"]').length;
+    
+    // Update tab labels
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        const filter = btn.getAttribute('data-filter');
+        const span = btn.querySelector('span.text-muted');
+        if(span) {
+            let count = 0;
+            if(filter === 'all') count = allCount;
+            else if(filter === 'unread') count = unreadCount;
+            else if(filter === 'success') count = successCount;
+            else if(filter === 'warning') count = warningCount;
+            else if(filter === 'danger') count = dangerCount;
+            else if(filter === 'info') count = infoCount;
+            span.textContent = `(${count})`;
+        }
+    });
 }
 
 function applyFilter(){
@@ -100,47 +178,171 @@ function applyFilter(){
 }
 
 async function mark(id, makeRead){
-    const url = makeRead ? `/route-optimizer/api/notifications/${id}/read/` : `/route-optimizer/api/notifications/${id}/unread/`;
-    const res = await fetch(url,{ method:'POST', headers:{ 'X-CSRFToken': csrfToken(), 'X-Requested-With': 'XMLHttpRequest' }});
-    if(!res.ok) throw new Error('request failed');
     const card = document.querySelector(`.notif-item[data-id='${id}']`);
     if(!card) return;
-    if(makeRead){
-        card.classList.remove('unread');
-        card.setAttribute('data-read','true');
-        card.querySelector('.btn-mark-read')?.remove();
-        if(!card.querySelector('.btn-mark-unread')){
-            const btn = document.createElement('button'); btn.className='btn btn-sm btn-outline-secondary btn-mark-unread'; btn.textContent='Mark Unread';
-            card.querySelector('.mt-2').appendChild(btn);
-        }
-    }else{
-        card.classList.add('unread');
-        card.setAttribute('data-read','false');
-        card.querySelector('.btn-mark-unread')?.remove();
-        if(!card.querySelector('.btn-mark-read')){
-            const btn = document.createElement('button'); btn.className='btn btn-sm btn-outline-primary btn-mark-read'; btn.textContent='Mark Read';
-            card.querySelector('.mt-2').appendChild(btn);
-        }
+    
+    // Add reading state for visual feedback
+    if(makeRead) {
+        card.classList.add('reading');
     }
-    if(currentFilter==='unread' && makeRead){ card.style.display='none'; }
-    updateBadges();
+    
+    // Get base path from current URL
+    const basePath = window.location.pathname.split('/notifications')[0];
+    const url = makeRead ? `${basePath}/api/notifications/${id}/read/` : `${basePath}/api/notifications/${id}/unread/`;
+    
+    try {
+        const res = await fetch(url,{ method:'POST', headers:{ 'X-CSRFToken': csrfToken(), 'X-Requested-With': 'XMLHttpRequest' }});
+        if(!res.ok) {
+            console.error('Failed to mark notification:', res.status, res.statusText);
+            card.classList.remove('reading');
+            throw new Error('request failed');
+        }
+        
+        if(makeRead){
+            // Remove unread styling
+            card.classList.remove('unread', 'reading');
+            card.setAttribute('data-read','true');
+            
+            // Update button
+            const btnContainer = card.querySelector('.mt-2');
+            const oldBtn = card.querySelector('.btn-mark-read');
+            if(oldBtn) {
+                oldBtn.remove();
+            }
+            if(!card.querySelector('.btn-mark-unread')){
+                const btn = document.createElement('button'); 
+                btn.className='btn btn-sm btn-outline-secondary btn-mark-unread'; 
+                btn.textContent='Mark Unread';
+                btnContainer.appendChild(btn);
+            }
+            
+            // If viewing unread filter, hide with animation
+            if(currentFilter==='unread'){ 
+                setTimeout(() => {
+                    card.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                    card.style.opacity = '0';
+                    card.style.transform = 'translateX(-20px)';
+                    setTimeout(() => {
+                        card.style.display='none';
+                    }, 300);
+                }, 200);
+            } else {
+                // Move to bottom of visible list (read notifications go to bottom)
+                const notifList = document.getElementById('notif-list');
+                const unreadItems = Array.from(notifList.querySelectorAll('.notif-item.unread'));
+                if(unreadItems.length > 0) {
+                    // Insert after last unread item
+                    const lastUnread = unreadItems[unreadItems.length - 1];
+                    lastUnread.insertAdjacentElement('afterend', card);
+                } else {
+                    // No unread items, append to end
+                    notifList.appendChild(card);
+                }
+            }
+        }else{
+            // Mark as unread
+            card.classList.add('unread');
+            card.classList.remove('reading');
+            card.setAttribute('data-read','false');
+            
+            // Update button
+            const btnContainer = card.querySelector('.mt-2');
+            const oldBtn = card.querySelector('.btn-mark-unread');
+            if(oldBtn) {
+                oldBtn.remove();
+            }
+            if(!card.querySelector('.btn-mark-read')){
+                const btn = document.createElement('button'); 
+                btn.className='btn btn-sm btn-outline-primary btn-mark-read'; 
+                btn.textContent='Mark Read';
+                btnContainer.appendChild(btn);
+            }
+            
+            // Move to top of list (unread notifications go to top)
+            const notifList = document.getElementById('notif-list');
+            const unreadItems = Array.from(notifList.querySelectorAll('.notif-item.unread'));
+            if(unreadItems.length > 0) {
+                // Insert before first unread item
+                const firstUnread = unreadItems[0];
+                notifList.insertBefore(card, firstUnread);
+            } else {
+                // No unread items, prepend to start
+                notifList.insertBefore(card, notifList.firstChild);
+            }
+            
+            // Show if hidden
+            card.style.display = '';
+            card.style.opacity = '1';
+            card.style.transform = '';
+        }
+        
+        updateBadges();
+        updateTabCounts();
+    } catch(err) {
+        card.classList.remove('reading');
+        console.error('Error marking notification:', err);
+    }
 }
 
 async function markCurrentTab(){
+    const basePath = window.location.pathname.split('/notifications')[0];
+    
     if(currentFilter==='all'){
-        await fetch('/route-optimizer/api/notifications/read-all/',{ method:'POST', headers:{ 'X-CSRFToken': csrfToken(), 'X-Requested-With': 'XMLHttpRequest' }});
-        document.querySelectorAll('#notif-list .notif-item').forEach(card=>{ card.classList.remove('unread'); card.setAttribute('data-read','true'); card.style.display=''; });
+        // Mark all unread notifications as read
+        const unreadCards = Array.from(document.querySelectorAll('#notif-list .notif-item.unread'));
+        if(unreadCards.length === 0) {
+            return; // Nothing to mark
+        }
+        
+        const res = await fetch(`${basePath}/api/notifications/read-all/`,{ method:'POST', headers:{ 'X-CSRFToken': csrfToken(), 'X-Requested-With': 'XMLHttpRequest' }});
+        if(!res.ok) {
+            console.error('Failed to mark all as read:', res.status, res.statusText);
+            alert('Failed to mark all as read. Please try again.');
+            return;
+        }
+        
+        // Update all cards with animation
+        unreadCards.forEach((card, index) => {
+            setTimeout(() => {
+                card.classList.remove('unread');
+                card.setAttribute('data-read','true');
+                card.style.display='';
+                
+                // Update button
+                const btnContainer = card.querySelector('.mt-2');
+                const oldBtn = card.querySelector('.btn-mark-read');
+                if(oldBtn) oldBtn.remove();
+                if(!card.querySelector('.btn-mark-unread')){
+                    const btn = document.createElement('button'); 
+                    btn.className='btn btn-sm btn-outline-secondary btn-mark-unread'; 
+                    btn.textContent='Mark Unread';
+                    btnContainer.appendChild(btn);
+                }
+                
+                // Move to bottom
+                const notifList = document.getElementById('notif-list');
+                notifList.appendChild(card);
+            }, index * 50); // Stagger animations
+        });
     } else if(currentFilter==='unread'){
         // Mark only currently visible unread as read
         const visibleUnread = Array.from(document.querySelectorAll('#notif-list .notif-item.unread')).filter(c=>c.style.display!== 'none');
-        await Promise.all(visibleUnread.map(c=>mark(c.getAttribute('data-id'), true)));
+        for(let i = 0; i < visibleUnread.length; i++) {
+            await mark(visibleUnread[i].getAttribute('data-id'), true);
+            await new Promise(resolve => setTimeout(resolve, 100)); // Small delay between marks
+        }
     } else {
         // Mark all of this type as read
-        const cards = Array.from(document.querySelectorAll(`#notif-list .notif-item[data-type='${currentFilter}']`));
-        await Promise.all(cards.map(c=>mark(c.getAttribute('data-id'), true)));
+        const cards = Array.from(document.querySelectorAll(`#notif-list .notif-item[data-type='${currentFilter}']`)).filter(c => c.getAttribute('data-read') === 'false');
+        for(let i = 0; i < cards.length; i++) {
+            await mark(cards[i].getAttribute('data-id'), true);
+            await new Promise(resolve => setTimeout(resolve, 100)); // Small delay between marks
+        }
     }
+    
     applyFilter();
     updateBadges();
+    updateTabCounts();
 }
 
 document.addEventListener('click', async (e)=>{
@@ -167,16 +369,28 @@ document.addEventListener('click', async (e)=>{
         return;
     }
     if(t.id==='btn-refresh'){
+        // Add loading state
+        t.disabled = true;
+        t.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Refreshing...';
         location.reload();
         return;
     }
     if(t.id==='btn-clear-all'){
         if(confirm('Clear all notifications? This cannot be undone.')){
             try{
-                await fetch('/route-optimizer/api/notifications/clear-all/', { method:'POST', headers:{ 'X-CSRFToken': csrfToken(), 'X-Requested-With':'XMLHttpRequest' }});
+                const basePath = window.location.pathname.split('/notifications')[0];
+                const res = await fetch(`${basePath}/api/notifications/clear-all/`, { method:'POST', headers:{ 'X-CSRFToken': csrfToken(), 'X-Requested-With':'XMLHttpRequest' }});
+                if(!res.ok) {
+                    console.error('Failed to clear all:', res.status, res.statusText);
+                    alert('Failed to clear notifications. Please try again.');
+                    return;
+                }
                 document.querySelectorAll('#notif-list .notif-item').forEach(n=>n.remove());
                 updateBadges();
-            }catch{}
+            }catch(err){
+                console.error('Error clearing notifications:', err);
+                alert('An error occurred. Please try again.');
+            }
         }
         return;
     }
@@ -185,5 +399,6 @@ document.addEventListener('click', async (e)=>{
 // Initialize
 applyFilter();
 updateBadges();
+updateTabCounts();
 </script>
 {% endblock %}
