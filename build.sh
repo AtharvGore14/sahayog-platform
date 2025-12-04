@@ -36,6 +36,8 @@ echo "🗄️ Running migrations for project01..."
 cd "${PROJECT_ROOT}/project01_route_opt"
 export DJANGO_SETTINGS_MODULE="sahayog.settings"
 python manage.py migrate --noinput || echo "⚠️  Warning: migrations failed for project01"
+echo "🌱 Seeding demo data for project01..."
+python manage.py seed_demo_data || echo "⚠️  Warning: demo data seeding failed for project01"
 cd "${PROJECT_ROOT}"
 
 echo "🗄️ Running migrations for project03..."

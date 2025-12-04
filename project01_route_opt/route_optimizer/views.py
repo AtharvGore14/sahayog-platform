@@ -25,7 +25,11 @@ def logout_view(request):
 def index(request):
     """Main dashboard view."""
     # Seed demo data if database is empty (for initial setup/demo)
-    if Location.objects.count() == 0 and Vehicle.objects.count() == 0:
+    # Check locations and vehicles separately to ensure both are seeded
+    locations_count = Location.objects.count()
+    vehicles_count = Vehicle.objects.count()
+    
+    if locations_count == 0 or vehicles_count == 0:
         # Create demo locations - scattered across a wider geographic area
         demo_locations = [
             # Downtown/Central Area
@@ -75,8 +79,10 @@ def index(request):
             {'name': 'Suburban Collection Point', 'address': '852 Suburban Road, Outskirts', 'latitude': 20.5287, 'longitude': 78.9029, 'location_type': 'collection_point', 'priority': 'low', 'estimated_waste_volume': 85.0, 'is_active': True},
             {'name': 'Rural Area Bin', 'address': '963 Country Lane, Rural Zone', 'latitude': 20.5137, 'longitude': 78.8929, 'location_type': 'bin', 'priority': 'low', 'estimated_waste_volume': 60.0, 'is_active': True},
         ]
-        for loc_data in demo_locations:
-            Location.objects.get_or_create(name=loc_data['name'], defaults=loc_data)
+        # Only create locations if they don't exist
+        if locations_count == 0:
+            for loc_data in demo_locations:
+                Location.objects.get_or_create(name=loc_data['name'], defaults=loc_data)
         
         # Create demo vehicles - more variety
         demo_vehicles = [
@@ -89,8 +95,10 @@ def index(request):
             {'name': 'Large Capacity Truck Golf', 'vehicle_type': 'truck', 'capacity': 6000.0, 'fuel_efficiency': 7.5, 'current_latitude': 20.6237, 'current_longitude': 78.9929, 'is_available': True},
             {'name': 'Eco-Friendly Electric Van Hotel', 'vehicle_type': 'van', 'capacity': 1800.0, 'fuel_efficiency': 20.0, 'current_latitude': 20.5537, 'current_longitude': 78.9229, 'is_available': True},
         ]
-        for veh_data in demo_vehicles:
-            Vehicle.objects.get_or_create(name=veh_data['name'], defaults=veh_data)
+        # Only create vehicles if they don't exist
+        if vehicles_count == 0:
+            for veh_data in demo_vehicles:
+                Vehicle.objects.get_or_create(name=veh_data['name'], defaults=veh_data)
     
     # Get recent routes
     recent_routes = OptimizedRoute.objects.all().order_by('-created_at')[:5]
