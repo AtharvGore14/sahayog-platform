@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🤖 Sahayog AI Marketplace</title>
+    <title>Sahayog AI Marketplace</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛒</text></svg>">
+    <link rel="shortcut icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛒</text></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛒</text></svg>">
     <style>
         :root {
             color-scheme: light;
@@ -227,6 +230,46 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+        }
+        .marketplace-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .marketplace-logo-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--ai-gradient);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            box-shadow: 0 8px 16px rgba(99, 102, 241, 0.3);
+            flex-shrink: 0;
+        }
+        .marketplace-logo-text {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .marketplace-logo-text h1,
+        .marketplace-logo-text h2 {
+            margin: 0 !important;
+            padding: 0 !important;
+            font-size: 1.75rem !important;
+            font-weight: 800 !important;
+            background: var(--ai-gradient) !important;
+            -webkit-background-clip: text !important;
+            -webkit-text-fill-color: transparent !important;
+            background-clip: text !important;
+            line-height: 1.2 !important;
+        }
+        .marketplace-logo-text .subtitle {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 0.15rem;
+            line-height: 1.2;
         }
         
         /* AI Dashboard */
@@ -1095,6 +1138,14 @@
             .app-header {
                 flex-direction: column;
                 text-align: center;
+                gap: 1rem;
+            }
+            .marketplace-logo {
+                justify-content: center;
+            }
+            .marketplace-logo-text h1,
+            .marketplace-logo-text h2 {
+                font-size: 1.5rem;
             }
         }
         
@@ -1123,7 +1174,13 @@
                     </a>
                 </div>
                 <div id="login-form-container" class="form-container active">
-                    <h2>🤖 Sahayog AI</h2>
+                    <div class="marketplace-logo" style="justify-content: center; margin-bottom: 1.5rem;">
+                        <div class="marketplace-logo-icon">🛒</div>
+                        <div class="marketplace-logo-text">
+                            <h2 style="font-size: 2rem;">Sahayog AI</h2>
+                            <span class="subtitle">Marketplace</span>
+                        </div>
+                    </div>
                     <div class="ai-badge">Powered by Advanced AI</div>
                     <p>Sign in to access AI-powered marketplace intelligence</p>
                     <form id="login-form" class="form">
@@ -1135,12 +1192,13 @@
                     <p class="form-toggle-link" id="show-signup">Don't have an account? Sign Up</p>
                 </div>
                 <div id="signup-form-container" class="form-container">
-                    <div style="position: absolute; top: 1.25rem; right: 1.25rem; z-index: 100;">
-                        <a href="/" class="btn btn-back" style="width: auto; padding: 0.5rem 1rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; white-space: nowrap;">
-                            <span>🏠</span> Master Portal
-                        </a>
+                    <div class="marketplace-logo" style="justify-content: center; margin-bottom: 1.5rem;">
+                        <div class="marketplace-logo-icon">🛒</div>
+                        <div class="marketplace-logo-text">
+                            <h2 style="font-size: 2rem;">Join AI Marketplace</h2>
+                            <span class="subtitle">Sahayog Platform</span>
+                        </div>
                     </div>
-                    <h2>🎯 Join AI Marketplace</h2>
                     <div class="ai-badge">AI-Enhanced Trading</div>
                     <p>Experience the future of circular economy trading</p>
                     <form id="signup-form" class="form">
@@ -1162,7 +1220,13 @@
         <!-- Buyer Dashboard -->
         <div id="buyer-dashboard-view" class="view">
             <header class="app-header">
-                <h1>🤖 AI Buyer Dashboard</h1>
+                <div class="marketplace-logo">
+                    <div class="marketplace-logo-icon">🛒</div>
+                    <div class="marketplace-logo-text">
+                        <h1>AI Buyer Dashboard</h1>
+                        <span class="subtitle">Sahayog Marketplace</span>
+                    </div>
+                </div>
                 <div style="display: flex; align-items: center; gap: 1rem;">
                     <a href="/" class="btn btn-back" style="width: auto; padding: 0.5rem 1rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem;">
                         <span>🏠</span> Master Portal
@@ -1202,7 +1266,13 @@
         <!-- Seller Dashboard -->
         <div id="seller-dashboard-view" class="view">
             <header class="app-header">
-                <h1>🤖 AI Seller Dashboard</h1>
+                <div class="marketplace-logo">
+                    <div class="marketplace-logo-icon">🛒</div>
+                    <div class="marketplace-logo-text">
+                        <h1>AI Seller Dashboard</h1>
+                        <span class="subtitle">Sahayog Marketplace</span>
+                    </div>
+                </div>
                 <div style="display: flex; align-items: center; gap: 1rem;">
                     <a href="/" class="btn btn-back" style="width: auto; padding: 0.5rem 1rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem;">
                         <span>🏠</span> Master Portal

@@ -312,6 +312,7 @@ def create_landing_app() -> Flask:
         <meta charset=\"utf-8\" />
         <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />
         <title>Sahayog Platform</title>
+        <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>♻️</text></svg>">
         <style>
           :root {
             color-scheme: dark;
@@ -443,7 +444,7 @@ def create_landing_app() -> Flask:
             gap: 1rem;
           }
 
-          .brand-logo span {
+          .brand-logo > span:first-child {
             width: 64px;
             height: 64px;
             border-radius: 20px;
@@ -464,6 +465,12 @@ def create_landing_app() -> Flask:
             margin-top: 0.15rem;
             font-size: 0.95rem;
             color: var(--text-muted);
+            width: auto;
+            height: auto;
+            border-radius: 0;
+            background: none;
+            box-shadow: none;
+            font-size: 0.95rem;
           }
 
           .brand-cta {
@@ -862,6 +869,7 @@ def create_landing_app() -> Flask:
         <meta charset=\"utf-8\" />
         <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />
         <title>{{ title }} · Sahayog Platform</title>
+        <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>♻️</text></svg>">
         <style>
           :root {
             color-scheme: dark;

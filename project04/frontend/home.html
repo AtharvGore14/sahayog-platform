@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Waste Financial Ledger - Home</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
     <style>
         * {
             margin: 0;
@@ -36,8 +37,24 @@
         }
 
         .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
             font-size: 28px;
             font-weight: bold;
+        }
+        .logo-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        .logo-text {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -171,7 +188,10 @@
 <body>
     <nav class="navbar">
         <div class="nav-container">
-            <div class="logo">♻️ Waste Financial Ledger</div>
+            <div class="logo">
+                <div class="logo-icon">📊</div>
+                <div class="logo-text">Waste Financial Ledger</div>
+            </div>
             <ul class="nav-links">
                 <li><a href="/">🏠 Master Portal</a></li>
                 <li><a href="home.html" class="active">🏠 Home</a></li>

@@ -904,68 +904,111 @@ def performance_dashboard(request):
 
 
 def real_time_tracking(request):
-    """Real-time vehicle tracking view."""
+    """Real-time vehicle tracking view using actual route optimization data."""
+    import json
+    from datetime import datetime, timedelta
+    
     try:
         # Get active routes (using 'in_progress' status from the model)
-        active_routes = OptimizedRoute.objects.filter(status='in_progress')[:10]
+        active_routes = OptimizedRoute.objects.filter(status='in_progress').select_related('vehicle').prefetch_related('routelocation_set__location')[:10]
         
-        # Simulate vehicle positions (in real implementation, this would come from GPS)
         vehicle_positions = []
         for route in active_routes:
-            # Simulate current position along the route
-            progress = (hash(route.id) % 100) / 100  # 0-1 progress
-            
-            # Get route locations to simulate position
+            # Get route locations in visit order
             route_locations = route.routelocation_set.all().order_by('visit_order')
-            if route_locations.exists():
-                # Use the first location as a starting point for simulation
-                first_location = route_locations.first().location
-                current_lat = float(first_location.latitude) + (progress * 0.01)  # Small movement
-                current_lng = float(first_location.longitude) + (progress * 0.01)
-                
-                vehicle_positions.append({
-                    'route_id': route.id,
-                    'route_name': route.route_name,
-                    'vehicle': route.vehicle.name if route.vehicle else 'Unknown',
-                    'latitude': current_lat,
-                    'longitude': current_lng,
-                    'progress': int(progress * 100),
-                    'status': 'in_progress',
-                    'estimated_completion': f"{int((1 - progress) * route.total_duration)} min remaining"
-                })
+            
+            if not route_locations.exists():
+                continue
+            
+            # Calculate progress based on time elapsed since route started
+            # Use updated_at when status changed to 'in_progress' as start time
+            # If route was just updated (status changed), use updated_at; otherwise use created_at
+            route_start_time = route.updated_at if route.status == 'in_progress' else route.created_at
+            elapsed_minutes = (timezone.now() - route_start_time).total_seconds() / 60
+            
+            # Calculate progress ratio (0.0 to 1.0)
+            # Cap progress at 100% even if time exceeds duration
+            if route.total_duration > 0:
+                progress_ratio = min(1.0, max(0.0, elapsed_minutes / route.total_duration))
+            else:
+                progress_ratio = 0.0
+            
+            # Calculate which location segment the vehicle is in
+            total_locations = route_locations.count()
+            if total_locations == 0:
+                continue
+            
+            # Calculate current segment (between two locations)
+            current_segment = int(progress_ratio * (total_locations - 1)) if total_locations > 1 else 0
+            current_segment = min(current_segment, total_locations - 2) if total_locations > 1 else 0
+            
+            # Get current and next location
+            locations_list = list(route_locations)
+            current_location_obj = locations_list[current_segment].location
+            next_location_obj = locations_list[min(current_segment + 1, total_locations - 1)].location if total_locations > 1 else current_location_obj
+            
+            # Calculate position between current and next location
+            segment_progress = (progress_ratio * (total_locations - 1)) - current_segment if total_locations > 1 else 0
+            segment_progress = max(0, min(1, segment_progress))
+            
+            # Interpolate position between current and next location
+            current_lat = float(current_location_obj.latitude)
+            current_lng = float(current_location_obj.longitude)
+            next_lat = float(next_location_obj.latitude)
+            next_lng = float(next_location_obj.longitude)
+            
+            # Linear interpolation
+            vehicle_lat = current_lat + (next_lat - current_lat) * segment_progress
+            vehicle_lng = current_lng + (next_lng - current_lng) * segment_progress
+            
+            # Calculate remaining time
+            remaining_minutes = max(0, int((1 - progress_ratio) * route.total_duration))
+            estimated_completion = f"{remaining_minutes} min remaining" if remaining_minutes > 0 else "Completed"
+            
+            # Get current and next stop names
+            current_location_name = current_location_obj.name
+            next_location_name = next_location_obj.name if total_locations > 1 and current_segment < total_locations - 1 else "Route Complete"
+            
+            vehicle_positions.append({
+                'route_id': route.id,
+                'route_name': route.route_name,
+                'vehicle': route.vehicle.name if route.vehicle else 'Unknown',
+                'latitude': vehicle_lat,
+                'longitude': vehicle_lng,
+                'progress': int(progress_ratio * 100),
+                'status': 'in_progress',
+                'estimated_completion': estimated_completion,
+                'current_location': current_location_name,
+                'next_stop': next_location_name,
+                'route_locations': [
+                    {
+                        'id': rl.location.id,
+                        'name': rl.location.name,
+                        'latitude': float(rl.location.latitude),
+                        'longitude': float(rl.location.longitude),
+                        'visit_order': rl.visit_order,
+                        'location_type': rl.location.location_type
+                    }
+                    for rl in route_locations
+                ]
+            })
+            
     except Exception as e:
-        # Fallback to empty list if there's an error
+        import traceback
+        print(f"Error in real_time_tracking: {e}")
+        traceback.print_exc()
         active_routes = []
         vehicle_positions = []
     
-    # If no active routes, create sample data for demonstration
-    if not vehicle_positions:
-        vehicle_positions = [
-            {
-                'route_id': 1,
-                'route_name': 'Morning Collection',
-                'vehicle': 'Truck Alpha',
-                'latitude': 20.5937,
-                'longitude': 78.9629,
-                'progress': 65,
-                'status': 'in_progress',
-                'estimated_completion': '25 min remaining'
-            },
-            {
-                'route_id': 2,
-                'route_name': 'Evening Collection',
-                'vehicle': 'Van Beta',
-                'latitude': 20.6037,
-                'longitude': 78.9729,
-                'progress': 30,
-                'status': 'in_progress',
-                'estimated_completion': '45 min remaining'
-            }
-        ]
+    # Only use sample data if absolutely no routes exist (for initial setup/demo)
+    # But prefer to show empty state instead
+    use_sample_data = False  # Changed: Don't use sample data by default
     
     context = {
         'active_routes': active_routes,
-        'vehicle_positions': vehicle_positions,
+        'vehicle_positions': vehicle_positions,  # Pass as list for template iteration
+        'vehicle_positions_json': json.dumps(vehicle_positions),  # Pass as JSON string for JavaScript
+        'use_sample_data': use_sample_data,
     }
     
     return render(request, 'route_optimizer/real_time_tracking.html', context)

@@ -16,7 +16,19 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-change-this-in-produc
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='*').split(',')
+# ALLOWED_HOSTS - handle comma-separated list and strip whitespace
+_allowed_hosts = config('ALLOWED_HOSTS', default='*')
+if _allowed_hosts == '*':
+    ALLOWED_HOSTS = ['*']
+else:
+    ALLOWED_HOSTS = [host.strip() for host in _allowed_hosts.split(',') if host.strip()]
+
+# Always add Render domain if not already present
+if '*' not in ALLOWED_HOSTS:
+    render_hosts = ['sahayog-platform.onrender.com', '*.onrender.com']
+    for host in render_hosts:
+        if host not in ALLOWED_HOSTS:
+            ALLOWED_HOSTS.append(host)
 
 # Application definition
 INSTALLED_APPS = [

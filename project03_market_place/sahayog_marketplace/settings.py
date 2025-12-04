@@ -11,7 +11,20 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-a-very-secret-key-replace-this')
 DEBUG = os.getenv('DEBUG', 'True').lower() == 'true'
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '*').split(',')
+
+# ALLOWED_HOSTS - handle comma-separated list and strip whitespace
+_allowed_hosts = os.getenv('ALLOWED_HOSTS', '*')
+if _allowed_hosts == '*':
+    ALLOWED_HOSTS = ['*']
+else:
+    ALLOWED_HOSTS = [host.strip() for host in _allowed_hosts.split(',') if host.strip()]
+
+# Always add Render domain if not already present
+if '*' not in ALLOWED_HOSTS:
+    render_hosts = ['sahayog-platform.onrender.com', '*.onrender.com']
+    for host in render_hosts:
+        if host not in ALLOWED_HOSTS:
+            ALLOWED_HOSTS.append(host)
 
 # Application definition
 INSTALLED_APPS = [

@@ -499,6 +499,20 @@
                             </div>
                         </div>
                         
+                        {% if position.current_location or position.next_stop %}
+                        <div class="mb-2">
+                            {% if position.current_location %}
+                            <small class="text-muted d-block mb-1">
+                                <i class="fas fa-map-marker-alt me-1"></i>Current: <strong>{{ position.current_location }}</strong>
+                            </small>
+                            {% endif %}
+                            {% if position.next_stop %}
+                            <small class="text-muted d-block">
+                                <i class="fas fa-arrow-right me-1"></i>Next: <strong>{{ position.next_stop }}</strong>
+                            </small>
+                            {% endif %}
+                        </div>
+                        {% endif %}
                         <div class="row text-center">
                             <div class="col-6">
                                 <div class="border-end">
@@ -614,31 +628,42 @@
 {% endblock %}
 
 {% block extra_js %}
-<script type="application/json" id="vehiclePositionsData">{{ vehicle_positions|safe }}</script>
+<script type="application/json" id="vehiclePositionsData">{{ vehicle_positions_json|safe }}</script>
 <script>
 let map;
 let vehicleMarkers = [];
+let routeLines = [];
+let collectionPointMarkers = [];
 let autoRefreshInterval;
 let isAutoRefresh = false;
 
-// Vehicle positions data with error handling and enhanced sample data
+// Vehicle positions data from actual route optimization
 let vehiclePositions = [];
+let allRouteLocations = []; // Store all route locations for map display
 
-// First try to get data from Django template
+// Load data from Django template
 try {
     const dataElement = document.getElementById('vehiclePositionsData');
     if (dataElement && dataElement.textContent) {
         const dataText = dataElement.textContent.trim();
-        if (dataText) {
+        if (dataText && dataText !== '[]' && dataText !== 'null') {
             vehiclePositions = JSON.parse(dataText);
-            console.log('Loaded vehicle positions from template:', vehiclePositions);
+            console.log('Loaded vehicle positions from route optimization:', vehiclePositions);
+            
+            // Extract all route locations for map display
+            vehiclePositions.forEach(function(position) {
+                if (position.route_locations && position.route_locations.length > 0) {
+                    allRouteLocations = allRouteLocations.concat(position.route_locations);
+                }
+            });
         }
     }
 } catch (e) {
     console.error('Error parsing vehicle positions data:', e);
 }
 
-// Enhanced sample data for demonstration (always available as fallback)
+// Only use sample data if explicitly enabled and no real data exists
+{% if use_sample_data and not vehicle_positions %}
 const sampleVehiclePositions = [
     {
         route_id: 1,
@@ -651,38 +676,13 @@ const sampleVehiclePositions = [
         estimated_completion: '35 min remaining',
         current_location: 'Central Market Area',
         next_stop: 'City Hall Collection Point'
-    },
-    {
-        route_id: 2,
-        route_name: 'Residential Area Route',
-        vehicle: 'Van Beta',
-        latitude: 20.6037,
-        longitude: 78.9729,
-        progress: 72,
-        status: 'in_progress',
-        estimated_completion: '18 min remaining',
-        current_location: 'Green Park Residential',
-        next_stop: 'Final Collection Point'
-    },
-    {
-        route_id: 3,
-        route_name: 'Industrial Zone Route',
-        vehicle: 'Truck Gamma',
-        latitude: 20.5837,
-        longitude: 78.9529,
-        progress: 28,
-        status: 'in_progress',
-        estimated_completion: '52 min remaining',
-        current_location: 'Industrial Area Start',
-        next_stop: 'Factory Collection Point'
     }
 ];
-
-// Use sample data if no data from template
 if (vehiclePositions.length === 0) {
     vehiclePositions = sampleVehiclePositions;
-    console.log('Using sample vehicle positions:', vehiclePositions);
+    console.log('Using sample vehicle positions (demo mode):', vehiclePositions);
 }
+{% endif %}
 
 console.log('Final vehicle positions to display:', vehiclePositions);
 
@@ -708,40 +708,59 @@ function initializeTrackingMap() {
         // Hide loading indicator
         $('#mapLoading').hide();
         
-        // Initialize Leaflet map with a good default view
-        map = L.map('trackingMap').setView([20.5937, 78.9629], 11);
+        // Determine map center based on actual data
+        let mapCenter = [20.5937, 78.9629]; // Default center
+        let mapZoom = 11; // Default zoom
+        
+        if (vehiclePositions.length > 0) {
+            // Use first vehicle position as center
+            mapCenter = [vehiclePositions[0].latitude, vehiclePositions[0].longitude];
+        } else if (allRouteLocations.length > 0) {
+            // Use first route location as center
+            mapCenter = [allRouteLocations[0].latitude, allRouteLocations[0].longitude];
+        }
+        
+        // Initialize Leaflet map
+        map = L.map('trackingMap').setView(mapCenter, mapZoom);
         
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
         
-        // Add collection points (static markers)
-        addCollectionPoints();
-        
-        // Add route lines to show typical collection routes
+        // Add route lines first (so they appear behind markers)
         addRouteLines();
         
-        // Add vehicle markers
+        // Add collection points from actual route data
+        addCollectionPoints();
+        
+        // Add vehicle markers from actual route data
         if (vehiclePositions && vehiclePositions.length > 0) {
-            console.log('Adding', vehiclePositions.length, 'vehicle markers');
+            console.log('Adding', vehiclePositions.length, 'vehicle markers from route optimization');
             vehiclePositions.forEach(function(position) {
                 addVehicleMarker(position);
             });
             
-            // Fit map to show all markers with some padding
-            if (vehicleMarkers.length > 0) {
-                const group = new L.featureGroup(vehicleMarkers.map(v => v.marker));
+            // Fit map to show all markers (vehicles + collection points) with padding
+            const allMarkers = vehicleMarkers.map(v => v.marker);
+            if (allMarkers.length > 0) {
+                const group = new L.featureGroup(allMarkers);
                 map.fitBounds(group.getBounds().pad(0.2));
             }
         } else {
-            console.log('No vehicle positions available, showing default message');
-            // Show message if no vehicles
-            L.marker([20.5937, 78.9629]).addTo(map)
-                .bindPopup('No active vehicles to track')
+            console.log('No active routes found. Create and start a route to see live tracking.');
+            // Show helpful message if no vehicles
+            const infoMessage = L.marker(mapCenter).addTo(map)
+                .bindPopup(`
+                    <div style="min-width: 200px; text-align: center;">
+                        <h6 class="mb-2">No Active Routes</h6>
+                        <p class="mb-2 small">Create a route and start live tracking to see vehicles here.</p>
+                        <a href="{% url 'route_optimizer:optimize_route' %}" class="btn btn-sm btn-primary">Create Route</a>
+                    </div>
+                `)
                 .openPopup();
         }
         
-        console.log('Map initialized successfully with', vehicleMarkers.length, 'vehicles');
+        console.log('Map initialized successfully with', vehicleMarkers.length, 'vehicles and', collectionPointMarkers.length, 'collection points');
         
         // Update debug info if debug panel is visible
         if (document.getElementById('debugPanel').style.display === 'block') {
@@ -754,76 +773,113 @@ function initializeTrackingMap() {
 }
 
 function addCollectionPoints() {
-    // Add some collection points to make the map more informative
-    const collectionPoints = [
-        { lat: 20.5937, lng: 78.9629, name: 'Central Market Collection Point' },
-        { lat: 20.6037, lng: 78.9729, name: 'Green Park Collection Point' },
-        { lat: 20.5837, lng: 78.9529, name: 'Industrial Area Collection Point' },
-        { lat: 20.6137, lng: 78.9829, name: 'Residential Zone Collection Point' },
-        { lat: 20.5737, lng: 78.9429, name: 'Commercial District Collection Point' }
-    ];
-    
-    collectionPoints.forEach(function(point) {
-        const collectionIcon = L.divIcon({
-            className: 'collection-marker',
-            html: '<div style="background:#28a745;color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 0 4px rgba(0,0,0,0.3);"><i class="fas fa-trash" style="font-size:10px;"></i></div>',
-            iconSize: [20, 20],
-            iconAnchor: [10, 10]
+    // Use actual route locations from route optimization data
+    if (allRouteLocations.length > 0) {
+        // Group by location to avoid duplicates
+        const uniqueLocations = {};
+        allRouteLocations.forEach(function(loc) {
+            const key = loc.latitude + ',' + loc.longitude;
+            if (!uniqueLocations[key]) {
+                uniqueLocations[key] = loc;
+            }
         });
         
-        L.marker([point.lat, point.lng], { icon: collectionIcon })
-            .addTo(map)
-            .bindPopup(`
-                <div style="min-width: 150px;">
-                    <h6 class="mb-1 text-success">${point.name}</h6>
-                    <small class="text-muted">Collection Point</small>
-                </div>
-            `);
-    });
+        Object.values(uniqueLocations).forEach(function(location) {
+            const collectionIcon = L.divIcon({
+                className: 'collection-marker',
+                html: '<div style="background:#28a745;color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 0 4px rgba(0,0,0,0.3);"><i class="fas fa-trash" style="font-size:10px;"></i></div>',
+                iconSize: [20, 20],
+                iconAnchor: [10, 10]
+            });
+            
+            L.marker([location.latitude, location.longitude], { icon: collectionIcon })
+                .addTo(map)
+                .bindPopup(`
+                    <div style="min-width: 150px;">
+                        <h6 class="mb-1 text-success">${location.name}</h6>
+                        <small class="text-muted">${location.location_type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</small>
+                    </div>
+                `);
+            
+            collectionPointMarkers.push([location.latitude, location.longitude]);
+        });
+    } else {
+        // Fallback: Add some default collection points if no route data
+        const defaultPoints = [
+            { lat: 20.5937, lng: 78.9629, name: 'Default Collection Point' }
+        ];
+        
+        defaultPoints.forEach(function(point) {
+            const collectionIcon = L.divIcon({
+                className: 'collection-marker',
+                html: '<div style="background:#28a745;color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 0 4px rgba(0,0,0,0.3);"><i class="fas fa-trash" style="font-size:10px;"></i></div>',
+                iconSize: [20, 20],
+                iconAnchor: [10, 10]
+            });
+            
+            L.marker([point.lat, point.lng], { icon: collectionIcon })
+                .addTo(map)
+                .bindPopup(`
+                    <div style="min-width: 150px;">
+                        <h6 class="mb-1 text-success">${point.name}</h6>
+                        <small class="text-muted">Collection Point</small>
+                    </div>
+                `);
+        });
+    }
 }
 
 function addRouteLines() {
-    // Add route lines to show typical collection routes
-    const routes = [
-        {
-            name: 'Downtown Route',
-            color: '#0d6efd',
-            points: [
-                [20.5937, 78.9629], // Central Market
-                [20.6037, 78.9729], // Green Park
-                [20.6137, 78.9829], // Residential Zone
-                [20.5937, 78.9629]  // Back to start
-            ]
-        },
-        {
-            name: 'Industrial Route',
-            color: '#dc3545',
-            points: [
-                [20.5837, 78.9529], // Industrial Area
-                [20.5737, 78.9429], // Commercial District
-                [20.5837, 78.9529]  // Back to start
-            ]
-        }
-    ];
+    // Add route lines from actual route optimization data
+    const routeColors = ['#0d6efd', '#dc3545', '#28a745', '#ffc107', '#6f42c1', '#fd7e14'];
+    let colorIndex = 0;
     
-    routes.forEach(function(route) {
-        const polyline = L.polyline(route.points, {
-            color: route.color,
-            weight: 3,
-            opacity: 0.6,
-            dashArray: '10, 10'
-        }).addTo(map);
-        
-        // Add route label at the start point
-        L.marker(route.points[0]).addTo(map)
-            .bindPopup(`
-                <div style="min-width: 120px;">
-                    <h6 class="mb-1 text-primary">${route.name}</h6>
-                    <small class="text-muted">Collection Route</small>
-                </div>
-            `)
-            .setOpacity(0); // Make invisible, just for popup
+    vehiclePositions.forEach(function(position) {
+        if (position.route_locations && position.route_locations.length > 1) {
+            // Sort locations by visit_order
+            const sortedLocations = position.route_locations.slice().sort((a, b) => a.visit_order - b.visit_order);
+            
+            // Create polyline points from route locations
+            const routePoints = sortedLocations.map(function(loc) {
+                return [loc.latitude, loc.longitude];
+            });
+            
+            // Close the route by returning to start (optional)
+            if (routePoints.length > 2) {
+                routePoints.push(routePoints[0]);
+            }
+            
+            const routeColor = routeColors[colorIndex % routeColors.length];
+            colorIndex++;
+            
+            const polyline = L.polyline(routePoints, {
+                color: routeColor,
+                weight: 3,
+                opacity: 0.6,
+                dashArray: '10, 10'
+            }).addTo(map);
+            
+            routeLines.push(polyline);
+            
+            // Add route label at the start point
+            if (routePoints.length > 0) {
+                L.marker(routePoints[0]).addTo(map)
+                    .bindPopup(`
+                        <div style="min-width: 150px;">
+                            <h6 class="mb-1 text-primary">${position.route_name}</h6>
+                            <small class="text-muted">Vehicle: ${position.vehicle}</small><br>
+                            <small class="text-muted">${sortedLocations.length} stops</small>
+                        </div>
+                    `)
+                    .setOpacity(0); // Make invisible, just for popup
+            }
+        }
     });
+    
+    // If no routes, don't add any lines
+    if (routeLines.length === 0 && vehiclePositions.length === 0) {
+        console.log('No route data available to display route lines');
+    }
 }
 
 function addVehicleMarker(position) {
@@ -890,44 +946,51 @@ function addVehicleMarker(position) {
 }
 
 function updateVehiclePositions() {
-    // Simulate vehicle movement
+    // Refresh data from server to get updated positions
+    // For now, we'll update progress based on time elapsed
+    // In a real implementation, this would fetch from an API endpoint
+    
     vehicleMarkers.forEach(function(vehicle) {
         const position = vehiclePositions.find(p => p.route_id === vehicle.routeId);
-        if (position) {
-            // Simulate more realistic movement along a path
-            const latOffset = (Math.random() - 0.5) * 0.002;
-            const lngOffset = (Math.random() - 0.5) * 0.002;
-            
-            const newLat = position.latitude + latOffset;
-            const newLng = position.longitude + lngOffset;
-            
-            vehicle.marker.setLatLng([newLat, newLng]);
-            
-            // Update progress more realistically
-            const progressIncrement = Math.random() * 1.5 + 0.5; // 0.5-2% progress
-            const newProgress = Math.min(100, position.progress + progressIncrement);
+        if (position && position.route_locations && position.route_locations.length > 0) {
+            // Calculate updated progress based on time (simulated movement along route)
+            // In production, this would come from GPS/API
+            const timeElapsed = 5; // seconds since last update (auto-refresh interval)
+            const progressIncrement = (timeElapsed / 60) / (position.route_locations.length * 2); // Rough estimate
+            const newProgress = Math.min(100, position.progress + (progressIncrement * 100));
             position.progress = newProgress;
+            
+            // Recalculate position along route based on new progress
+            const totalLocations = position.route_locations.length;
+            const current_segment = Math.floor((newProgress / 100) * (totalLocations - 1));
+            const segment_progress = ((newProgress / 100) * (totalLocations - 1)) - current_segment;
+            
+            if (current_segment < totalLocations - 1) {
+                const sortedLocs = position.route_locations.slice().sort((a, b) => a.visit_order - b.visit_order);
+                const currentLoc = sortedLocs[Math.min(current_segment, totalLocations - 1)];
+                const nextLoc = sortedLocs[Math.min(current_segment + 1, totalLocations - 1)];
+                
+                const newLat = currentLoc.latitude + (nextLoc.latitude - currentLoc.latitude) * segment_progress;
+                const newLng = currentLoc.longitude + (nextLoc.longitude - currentLoc.longitude) * segment_progress;
+                
+                vehicle.marker.setLatLng([newLat, newLng]);
+            }
             
             // Update progress bar
             $(`.vehicle-info[data-route-id="${position.route_id}"] .progress-bar`)
-                .css('width', newProgress + '%');
-            $(`.vehicle-info[data-route-id="${position.route_id}"] .text-muted`)
-                .last().text(newProgress.toFixed(0) + '%');
+                .css('width', newProgress.toFixed(0) + '%');
+            $(`.vehicle-info[data-route-id="${position.route_id}"] .text-muted.fw-bold`)
+                .text(newProgress.toFixed(0) + '%');
             
-            // Update ETA based on progress
+            // Update ETA (rough estimate)
             const remainingProgress = 100 - newProgress;
-            const estimatedMinutes = Math.round(remainingProgress * 0.5); // Rough estimate
+            const estimatedMinutes = Math.max(0, Math.round(remainingProgress * 0.3));
             position.estimated_completion = estimatedMinutes > 0 ? 
                 `${estimatedMinutes} min remaining` : 'Completed';
             
             // Update ETA display
-            $(`.vehicle-info[data-route-id="${position.route_id}"] .small`)
-                .first().text(position.estimated_completion);
-            
-            // Check for location reached (simulate)
-            if (newProgress > 0 && Math.random() > 0.95) { // 5% chance
-                showLocationReachedAlert(position);
-            }
+            $(`.vehicle-info[data-route-id="${position.route_id}"] .small.text-info`)
+                .text(position.estimated_completion);
         }
     });
     
@@ -996,10 +1059,11 @@ function updateDebugInfo() {
     document.getElementById('debugVehicleCount').textContent = vehiclePositions.length;
     document.getElementById('debugMapReady').textContent = map ? 'Yes' : 'No';
     document.getElementById('debugDataSource').textContent = 
-        vehiclePositions.length > 0 ? 'Sample Data' : 'No Data';
+        vehiclePositions.length > 0 ? 'Route Optimization Data' : 'No Active Routes';
 }
 
 function refreshTracking() {
+    // Reload page to get fresh data from server
     location.reload();
 }
 
