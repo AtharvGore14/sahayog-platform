@@ -675,12 +675,58 @@ const sampleVehiclePositions = [
         status: 'in_progress',
         estimated_completion: '35 min remaining',
         current_location: 'Central Market Area',
-        next_stop: 'City Hall Collection Point'
+        next_stop: 'City Hall Collection Point',
+        route_locations: [
+            { id: 1, name: 'Central Market Area', latitude: 20.5937, longitude: 78.9629, visit_order: 1, location_type: 'bin' },
+            { id: 2, name: 'City Hall Collection Point', latitude: 20.6037, longitude: 78.9729, visit_order: 2, location_type: 'collection_point' },
+            { id: 3, name: 'Shopping Mall Collection Point', latitude: 20.6137, longitude: 78.9829, visit_order: 3, location_type: 'collection_point' }
+        ]
+    },
+    {
+        route_id: 2,
+        route_name: 'Residential Collection Route',
+        vehicle: 'Van Beta',
+        latitude: 20.5837,
+        longitude: 78.9529,
+        progress: 72,
+        status: 'in_progress',
+        estimated_completion: '18 min remaining',
+        current_location: 'Residential Area Bin',
+        next_stop: 'University Campus Bin',
+        route_locations: [
+            { id: 4, name: 'Residential Area Bin', latitude: 20.5837, longitude: 78.9529, visit_order: 1, location_type: 'bin' },
+            { id: 5, name: 'University Campus Bin', latitude: 20.5737, longitude: 78.9429, visit_order: 2, location_type: 'bin' },
+            { id: 6, name: 'Park Collection Point', latitude: 20.5637, longitude: 78.9329, visit_order: 3, location_type: 'collection_point' }
+        ]
+    },
+    {
+        route_id: 3,
+        route_name: 'Industrial Zone Route',
+        vehicle: 'Compactor Gamma',
+        latitude: 20.6137,
+        longitude: 78.9829,
+        progress: 28,
+        status: 'in_progress',
+        estimated_completion: '52 min remaining',
+        current_location: 'Industrial Zone Bin',
+        next_stop: 'Warehouse Collection Point',
+        route_locations: [
+            { id: 7, name: 'Industrial Zone Bin', latitude: 20.6137, longitude: 78.9829, visit_order: 1, location_type: 'bin' },
+            { id: 8, name: 'Warehouse Collection Point', latitude: 20.6237, longitude: 78.9929, visit_order: 2, location_type: 'collection_point' },
+            { id: 9, name: 'Factory Area Bin', latitude: 20.6337, longitude: 79.0029, visit_order: 3, location_type: 'bin' }
+        ]
     }
 ];
 if (vehiclePositions.length === 0) {
     vehiclePositions = sampleVehiclePositions;
     console.log('Using sample vehicle positions (demo mode):', vehiclePositions);
+    
+    // Extract all route locations for map display
+    vehiclePositions.forEach(function(position) {
+        if (position.route_locations && position.route_locations.length > 0) {
+            allRouteLocations = allRouteLocations.concat(position.route_locations);
+        }
+    });
 }
 {% endif %}
 

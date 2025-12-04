@@ -1000,9 +1000,8 @@ def real_time_tracking(request):
         active_routes = []
         vehicle_positions = []
     
-    # Only use sample data if absolutely no routes exist (for initial setup/demo)
-    # But prefer to show empty state instead
-    use_sample_data = False  # Changed: Don't use sample data by default
+    # Use sample data if no active routes exist (for demo purposes)
+    use_sample_data = len(vehicle_positions) == 0
     
     context = {
         'active_routes': active_routes,
