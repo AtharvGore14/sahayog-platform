@@ -149,9 +149,21 @@ def index(request):
         print(f"Error in index view: {e}", file=sys.stderr)
         print(error_trace, file=sys.stderr)
         
-        # Return a simple error page or redirect
-        from django.http import HttpResponseServerError
-        return HttpResponseServerError(f"Server Error: {str(e)}. Please check server logs.")
+        # Return a simple error page with basic context
+        context = {
+            'recent_routes': [],
+            'total_routes': 0,
+            'total_locations': 0,
+            'total_vehicles': 0,
+            'optimization_history': [],
+            'error_message': f'Database connection issue. Please ensure migrations have run. Error: {str(e)}',
+        }
+        try:
+            return render(request, 'route_optimizer/index.html', context)
+        except Exception:
+            # If template rendering also fails, return a simple error response
+            from django.http import HttpResponseServerError
+            return HttpResponseServerError(f"Server Error: {str(e)}. Please check server logs and ensure database migrations have run.")
 
 
 def locations(request):
