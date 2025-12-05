@@ -1071,8 +1071,18 @@
             // Detect API base URL - use current origin for production (Render), fallback to localhost for dev
             const API_BASE = window.location.origin || 'http://127.0.0.1:8000';
             // WebSocket base - use wss:// for HTTPS (production), ws:// for HTTP (dev)
+            // Note: WebSocket connections go through the marketplace subprocess proxy
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
             const WS_BASE = `${protocol}//${window.location.host}`;
+            
+            // Debug logging for production
+            console.log('🌐 Environment Detection:', {
+                origin: window.location.origin,
+                protocol: window.location.protocol,
+                host: window.location.host,
+                API_BASE: API_BASE,
+                WS_BASE: WS_BASE
+            });
             let authToken = null;
             let webSocket = null;
             let currentUser = null;

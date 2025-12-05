@@ -133,24 +133,28 @@ CELERY_BEAT_SCHEDULE = {
 
 # --- Channels (WebSocket) Configuration ---
 REDIS_URL = config('REDIS_URL', default='redis://localhost:6379/0')
-# Parse Redis URL for Channels
-if REDIS_URL.startswith('redis://'):
-    # Extract host and port from redis://host:port/db
-    redis_parts = REDIS_URL.replace('redis://', '').split('/')
+# Parse Redis URL for Channels - handle both redis:// and rediss:// (SSL)
+if REDIS_URL.startswith('redis://') or REDIS_URL.startswith('rediss://'):
+    # Extract host and port from redis://host:port/db or rediss://host:port/db
+    redis_parts = REDIS_URL.replace('redis://', '').replace('rediss://', '').split('/')
     host_port = redis_parts[0].split(':')
     redis_host = host_port[0] if len(host_port) > 0 else '127.0.0.1'
     redis_port = int(host_port[1]) if len(host_port) > 1 else 6379
     redis_db = int(redis_parts[1]) if len(redis_parts) > 1 else 0
+    # Use SSL if rediss://
+    use_ssl = REDIS_URL.startswith('rediss://')
 else:
     redis_host = '127.0.0.1'
     redis_port = 6379
     redis_db = 0
+    use_ssl = False
 
 CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
             "hosts": [(redis_host, redis_port)],
+            "prefix": "marketplace",
         },
     },
 }
