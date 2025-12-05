@@ -50,31 +50,6 @@ os.environ.setdefault('FASTAPI_ROOT_PATH', '/ledger')
 if 'FORCE_SCRIPT_NAME' not in os.environ:
     os.environ.setdefault('FORCE_SCRIPT_NAME', '/django')
 
-# Run migrations at startup if needed (for production deployments)
-def ensure_migrations():
-    """Ensure migrations have run for Django project01."""
-    try:
-        import django
-        django.setup()
-        from django.core.management import execute_from_command_line
-        from django.db import connection
-        # Check if tables exist by trying to query django_migrations
-        with connection.cursor() as cursor:
-            cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='django_migrations'")
-            if not cursor.fetchone():
-                # Tables don't exist, run migrations
-                print("⚠️  Running migrations at startup...", file=sys.stderr)
-                execute_from_command_line(['manage.py', 'migrate', '--noinput'])
-    except Exception as e:
-        # If migrations fail, log but continue - app will handle gracefully
-        print(f"⚠️  Could not run migrations at startup: {e}", file=sys.stderr)
-
-# Try to run migrations at startup (only if using SQLite, PostgreSQL migrations should run during build)
-if 'DATABASE_URL' not in os.environ:
-    try:
-        ensure_migrations()
-    except Exception:
-        pass  # Continue even if migrations fail
 
 # Import Django WSGI application
 from sahayog.wsgi import application as django_application  # type: ignore
