@@ -25,7 +25,11 @@ else:
 
 # Always add Render domain if not already present
 if '*' not in ALLOWED_HOSTS:
-    render_hosts = ['sahayog-platform.onrender.com', '*.onrender.com']
+    render_hosts = [
+        'sahayog-platform.onrender.com',
+        'sahayog-platform-1.onrender.com',
+        '*.onrender.com'
+    ]
     for host in render_hosts:
         if host not in ALLOWED_HOSTS:
             ALLOWED_HOSTS.append(host)
@@ -62,6 +66,14 @@ MIDDLEWARE = [
 # Proxy settings for Render deployment
 USE_X_FORWARDED_HOST = True
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# Cookie settings for subdirectory mounting
+SESSION_COOKIE_PATH = '/django/'
+CSRF_COOKIE_PATH = '/django/'
+SESSION_COOKIE_SECURE = True  # Use secure cookies in production (HTTPS)
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SAMESITE = 'Lax'
 
 ROOT_URLCONF = 'sahayog.urls'
 

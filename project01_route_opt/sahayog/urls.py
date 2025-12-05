@@ -10,7 +10,8 @@ from django.conf.urls.static import static
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('route-optimizer/', include('route_optimizer.urls')),
-    path('', RedirectView.as_view(url=reverse_lazy('route_optimizer:index'), permanent=False)),
+    # Redirect root to route optimizer index - use relative path since DispatcherMiddleware handles prefix
+    path('', RedirectView.as_view(url='route-optimizer/', permanent=False), name='root'),
 ]
 
 # Serve media files in development
