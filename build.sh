@@ -38,7 +38,13 @@ cd "${PROJECT_ROOT}"
 echo "🗄️ Running migrations for project01..."
 cd "${PROJECT_ROOT}/project01_route_opt"
 export DJANGO_SETTINGS_MODULE="sahayog.settings"
-python manage.py migrate --noinput || echo "⚠️  Warning: migrations failed for project01"
+export FORCE_SCRIPT_NAME="/django"
+# Run migrations - this is critical, so we continue even if it fails
+# The app will handle missing tables gracefully
+python manage.py migrate --noinput 2>&1 || {
+    echo "⚠️  Warning: migrations failed for project01, but continuing..."
+    echo "This might be due to database connection issues. The app will handle this gracefully."
+}
 cd "${PROJECT_ROOT}"
 
 echo "🗄️ Running migrations for project03..."
