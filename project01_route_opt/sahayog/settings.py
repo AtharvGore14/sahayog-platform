@@ -67,11 +67,9 @@ MIDDLEWARE = [
 USE_X_FORWARDED_HOST = True
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
-# Cookie settings for subdirectory mounting
-SESSION_COOKIE_PATH = '/django/'
-CSRF_COOKIE_PATH = '/django/'
-SESSION_COOKIE_SECURE = True  # Use secure cookies in production (HTTPS)
-CSRF_COOKIE_SECURE = True
+# Cookie settings for production (HTTPS)
+SESSION_COOKIE_SECURE = not DEBUG  # Use secure cookies in production
+CSRF_COOKIE_SECURE = not DEBUG
 SESSION_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_SAMESITE = 'Lax'
 
