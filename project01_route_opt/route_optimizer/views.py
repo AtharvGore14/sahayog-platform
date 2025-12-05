@@ -51,54 +51,54 @@ def index(request):
         # Only seed demo data if database tables exist and data is empty
         if locations_count == 0 or vehicles_count == 0:
             try:
-                # Create demo locations - scattered across a wider geographic area
+                # Create demo locations - scattered across Pune city
                 demo_locations = [
-                    # Downtown/Central Area
-                    {'name': 'Central Market Bin', 'address': '123 Main Street, Downtown', 'latitude': 20.5937, 'longitude': 78.9629, 'location_type': 'bin', 'priority': 'high', 'estimated_waste_volume': 150.0, 'is_active': True},
-                    {'name': 'City Hall Collection Point', 'address': '456 Government Square, Downtown', 'latitude': 20.5987, 'longitude': 78.9679, 'location_type': 'collection_point', 'priority': 'high', 'estimated_waste_volume': 180.0, 'is_active': True},
-                    {'name': 'Downtown Plaza Bin', 'address': '789 Commerce Street, Central', 'latitude': 20.5887, 'longitude': 78.9579, 'location_type': 'bin', 'priority': 'medium', 'estimated_waste_volume': 120.0, 'is_active': True},
+                    # Central Pune / Shaniwar Wada Area
+                    {'name': 'Shaniwar Wada Collection Point', 'address': 'Shaniwar Peth, Near Shaniwar Wada, Pune', 'latitude': 18.5204, 'longitude': 73.8567, 'location_type': 'collection_point', 'priority': 'high', 'estimated_waste_volume': 180.0, 'is_active': True},
+                    {'name': 'Tulsi Baug Market Bin', 'address': 'Tulsi Baug, Laxmi Road, Pune', 'latitude': 18.5150, 'longitude': 73.8500, 'location_type': 'bin', 'priority': 'high', 'estimated_waste_volume': 150.0, 'is_active': True},
+                    {'name': 'FC Road Collection Point', 'address': 'Fergusson College Road, Pune', 'latitude': 18.5300, 'longitude': 73.8400, 'location_type': 'collection_point', 'priority': 'medium', 'estimated_waste_volume': 120.0, 'is_active': True},
                     
-                    # Shopping District
-                    {'name': 'Shopping Mall Collection Point', 'address': '456 Mall Road, Shopping District', 'latitude': 20.6037, 'longitude': 78.9729, 'location_type': 'collection_point', 'priority': 'medium', 'estimated_waste_volume': 200.0, 'is_active': True},
-                    {'name': 'Retail Complex Bin', 'address': '321 Retail Avenue, Shopping District', 'latitude': 20.6087, 'longitude': 78.9779, 'location_type': 'bin', 'priority': 'medium', 'estimated_waste_volume': 140.0, 'is_active': True},
-                    {'name': 'Market Square Bin', 'address': '654 Market Street, Shopping Area', 'latitude': 20.5987, 'longitude': 78.9779, 'location_type': 'bin', 'priority': 'high', 'estimated_waste_volume': 160.0, 'is_active': True},
+                    # Koregaon Park / Shopping District
+                    {'name': 'Koregaon Park Collection Point', 'address': 'Koregaon Park, Pune', 'latitude': 18.5400, 'longitude': 73.9000, 'location_type': 'collection_point', 'priority': 'medium', 'estimated_waste_volume': 200.0, 'is_active': True},
+                    {'name': 'Phoenix Mall Bin', 'address': 'Phoenix Marketcity, Viman Nagar, Pune', 'latitude': 18.5700, 'longitude': 73.9200, 'location_type': 'bin', 'priority': 'high', 'estimated_waste_volume': 160.0, 'is_active': True},
+                    {'name': 'Amanora Mall Collection Point', 'address': 'Amanora Town Centre, Hadapsar, Pune', 'latitude': 18.4900, 'longitude': 73.9200, 'location_type': 'collection_point', 'priority': 'medium', 'estimated_waste_volume': 140.0, 'is_active': True},
                     
                     # Residential Areas
-                    {'name': 'Residential Area Bin', 'address': '789 Residential Lane, Suburbs', 'latitude': 20.5837, 'longitude': 78.9529, 'location_type': 'bin', 'priority': 'low', 'estimated_waste_volume': 75.0, 'is_active': True},
-                    {'name': 'Housing Society Collection Point', 'address': '147 Housing Complex, Suburbs', 'latitude': 20.5787, 'longitude': 78.9479, 'location_type': 'collection_point', 'priority': 'low', 'estimated_waste_volume': 90.0, 'is_active': True},
-                    {'name': 'Apartment Complex Bin', 'address': '258 Apartment Road, Residential', 'latitude': 20.5737, 'longitude': 78.9529, 'location_type': 'bin', 'priority': 'medium', 'estimated_waste_volume': 110.0, 'is_active': True},
+                    {'name': 'Kothrud Residential Bin', 'address': 'Kothrud, Pune', 'latitude': 18.5100, 'longitude': 73.8100, 'location_type': 'bin', 'priority': 'low', 'estimated_waste_volume': 75.0, 'is_active': True},
+                    {'name': 'Baner Housing Society Collection Point', 'address': 'Baner, Pune', 'latitude': 18.5600, 'longitude': 73.7800, 'location_type': 'collection_point', 'priority': 'low', 'estimated_waste_volume': 90.0, 'is_active': True},
+                    {'name': 'Aundh Apartment Complex Bin', 'address': 'Aundh, Pune', 'latitude': 18.5500, 'longitude': 73.8100, 'location_type': 'bin', 'priority': 'medium', 'estimated_waste_volume': 110.0, 'is_active': True},
                     
-                    # Industrial Zone
-                    {'name': 'Industrial Zone Bin', 'address': '321 Industrial Park, Factory Area', 'latitude': 20.6137, 'longitude': 78.9829, 'location_type': 'bin', 'priority': 'urgent', 'estimated_waste_volume': 300.0, 'is_active': True},
-                    {'name': 'Warehouse Collection Point', 'address': '654 Warehouse Road, Industrial', 'latitude': 20.6187, 'longitude': 78.9879, 'location_type': 'collection_point', 'priority': 'urgent', 'estimated_waste_volume': 350.0, 'is_active': True},
-                    {'name': 'Factory Area Bin', 'address': '987 Factory Street, Industrial Zone', 'latitude': 20.6237, 'longitude': 78.9929, 'location_type': 'bin', 'priority': 'high', 'estimated_waste_volume': 280.0, 'is_active': True},
+                    # Industrial Zone - Pimpri-Chinchwad
+                    {'name': 'Pimpri Industrial Estate Bin', 'address': 'Pimpri Industrial Area, Pune', 'latitude': 18.6200, 'longitude': 73.8000, 'location_type': 'bin', 'priority': 'urgent', 'estimated_waste_volume': 300.0, 'is_active': True},
+                    {'name': 'Chinchwad Warehouse Collection Point', 'address': 'Chinchwad, Pune', 'latitude': 18.6300, 'longitude': 73.7900, 'location_type': 'collection_point', 'priority': 'urgent', 'estimated_waste_volume': 350.0, 'is_active': True},
+                    {'name': 'Bhosari Industrial Bin', 'address': 'Bhosari Industrial Area, Pune', 'latitude': 18.6400, 'longitude': 73.8200, 'location_type': 'bin', 'priority': 'high', 'estimated_waste_volume': 280.0, 'is_active': True},
                     
                     # Educational Institutions
-                    {'name': 'University Campus Bin', 'address': '654 University Road, Campus Area', 'latitude': 20.5737, 'longitude': 78.9429, 'location_type': 'bin', 'priority': 'medium', 'estimated_waste_volume': 120.0, 'is_active': True},
-                    {'name': 'School Collection Point', 'address': '321 School Lane, Education District', 'latitude': 20.5687, 'longitude': 78.9379, 'location_type': 'collection_point', 'priority': 'medium', 'estimated_waste_volume': 95.0, 'is_active': True},
-                    {'name': 'College Campus Bin', 'address': '147 College Avenue, Academic Area', 'latitude': 20.5637, 'longitude': 78.9429, 'location_type': 'bin', 'priority': 'medium', 'estimated_waste_volume': 105.0, 'is_active': True},
+                    {'name': 'Pune University Campus Bin', 'address': 'Savitribai Phule Pune University, Ganeshkhind, Pune', 'latitude': 18.5520, 'longitude': 73.8200, 'location_type': 'bin', 'priority': 'medium', 'estimated_waste_volume': 120.0, 'is_active': True},
+                    {'name': 'COEP Collection Point', 'address': 'College of Engineering Pune, Shivajinagar, Pune', 'latitude': 18.5300, 'longitude': 73.8500, 'location_type': 'collection_point', 'priority': 'medium', 'estimated_waste_volume': 95.0, 'is_active': True},
+                    {'name': 'Symbiosis Campus Bin', 'address': 'Symbiosis International University, Viman Nagar, Pune', 'latitude': 18.5700, 'longitude': 73.9100, 'location_type': 'bin', 'priority': 'medium', 'estimated_waste_volume': 105.0, 'is_active': True},
                     
                     # Healthcare Facilities
-                    {'name': 'Hospital Collection Point', 'address': '987 Medical Center, Healthcare District', 'latitude': 20.6237, 'longitude': 78.9929, 'location_type': 'collection_point', 'priority': 'urgent', 'estimated_waste_volume': 250.0, 'is_active': True},
-                    {'name': 'Clinic Bin', 'address': '456 Health Street, Medical Area', 'latitude': 20.6187, 'longitude': 78.9879, 'location_type': 'bin', 'priority': 'high', 'estimated_waste_volume': 130.0, 'is_active': True},
+                    {'name': 'Ruby Hall Clinic Collection Point', 'address': 'Ruby Hall Clinic, Sassoon Road, Pune', 'latitude': 18.5200, 'longitude': 73.8700, 'location_type': 'collection_point', 'priority': 'urgent', 'estimated_waste_volume': 250.0, 'is_active': True},
+                    {'name': 'Jehangir Hospital Bin', 'address': 'Jehangir Hospital, Sassoon Road, Pune', 'latitude': 18.5150, 'longitude': 73.8650, 'location_type': 'bin', 'priority': 'high', 'estimated_waste_volume': 130.0, 'is_active': True},
                     
                     # Parks and Recreation
-                    {'name': 'Park Area Bin', 'address': '147 Park Street, Recreation Area', 'latitude': 20.5637, 'longitude': 78.9329, 'location_type': 'bin', 'priority': 'low', 'estimated_waste_volume': 50.0, 'is_active': True},
-                    {'name': 'Stadium Collection Point', 'address': '741 Stadium Boulevard, Sports Complex', 'latitude': 20.6437, 'longitude': 79.0129, 'location_type': 'collection_point', 'priority': 'medium', 'estimated_waste_volume': 220.0, 'is_active': True},
-                    {'name': 'Recreation Center Bin', 'address': '852 Recreation Road, Leisure Area', 'latitude': 20.5537, 'longitude': 78.9229, 'location_type': 'bin', 'priority': 'low', 'estimated_waste_volume': 65.0, 'is_active': True},
+                    {'name': 'Pu La Deshpande Garden Bin', 'address': 'Pu La Deshpande Garden, Sinhgad Road, Pune', 'latitude': 18.5000, 'longitude': 73.7600, 'location_type': 'bin', 'priority': 'low', 'estimated_waste_volume': 50.0, 'is_active': True},
+                    {'name': 'Balewadi Stadium Collection Point', 'address': 'Shree Shiv Chhatrapati Sports Complex, Balewadi, Pune', 'latitude': 18.5800, 'longitude': 73.7700, 'location_type': 'collection_point', 'priority': 'medium', 'estimated_waste_volume': 220.0, 'is_active': True},
+                    {'name': 'Empress Garden Bin', 'address': 'Empress Garden, Koregaon Park, Pune', 'latitude': 18.5450, 'longitude': 73.8950, 'location_type': 'bin', 'priority': 'low', 'estimated_waste_volume': 65.0, 'is_active': True},
                     
                     # Transportation Hubs
-                    {'name': 'Airport Collection Point', 'address': '369 Airport Road, Transportation Hub', 'latitude': 20.5537, 'longitude': 78.9229, 'location_type': 'collection_point', 'priority': 'high', 'estimated_waste_volume': 400.0, 'is_active': True},
-                    {'name': 'Bus Station Bin', 'address': '159 Transit Street, Transport Hub', 'latitude': 20.5487, 'longitude': 78.9179, 'location_type': 'bin', 'priority': 'medium', 'estimated_waste_volume': 170.0, 'is_active': True},
-                    {'name': 'Railway Station Collection Point', 'address': '357 Railway Road, Transport Area', 'latitude': 20.5437, 'longitude': 78.9129, 'location_type': 'collection_point', 'priority': 'high', 'estimated_waste_volume': 380.0, 'is_active': True},
+                    {'name': 'Pune Airport Collection Point', 'address': 'Pune Airport, Lohegaon, Pune', 'latitude': 18.5822, 'longitude': 73.9197, 'location_type': 'collection_point', 'priority': 'high', 'estimated_waste_volume': 400.0, 'is_active': True},
+                    {'name': 'Swargate Bus Stand Bin', 'address': 'Swargate Bus Stand, Pune', 'latitude': 18.5000, 'longitude': 73.8600, 'location_type': 'bin', 'priority': 'medium', 'estimated_waste_volume': 170.0, 'is_active': True},
+                    {'name': 'Pune Railway Station Collection Point', 'address': 'Pune Railway Station, Shivajinagar, Pune', 'latitude': 18.5300, 'longitude': 73.8600, 'location_type': 'collection_point', 'priority': 'high', 'estimated_waste_volume': 380.0, 'is_active': True},
                     
-                    # Business District
-                    {'name': 'Business District Bin', 'address': '258 Business Avenue, Corporate Area', 'latitude': 20.6337, 'longitude': 79.0029, 'location_type': 'bin', 'priority': 'high', 'estimated_waste_volume': 180.0, 'is_active': True},
-                    {'name': 'Office Complex Collection Point', 'address': '741 Corporate Tower, Business District', 'latitude': 20.6387, 'longitude': 79.0079, 'location_type': 'collection_point', 'priority': 'high', 'estimated_waste_volume': 210.0, 'is_active': True},
+                    # IT Hubs / Business District
+                    {'name': 'Hinjewadi IT Park Bin', 'address': 'Hinjewadi IT Park, Pune', 'latitude': 18.5800, 'longitude': 73.7200, 'location_type': 'bin', 'priority': 'high', 'estimated_waste_volume': 180.0, 'is_active': True},
+                    {'name': 'Magarpatta City Collection Point', 'address': 'Magarpatta City, Hadapsar, Pune', 'latitude': 18.5000, 'longitude': 73.9300, 'location_type': 'collection_point', 'priority': 'high', 'estimated_waste_volume': 210.0, 'is_active': True},
                     
-                    # Outskirts/Extended Areas
-                    {'name': 'Suburban Collection Point', 'address': '852 Suburban Road, Outskirts', 'latitude': 20.5287, 'longitude': 78.9029, 'location_type': 'collection_point', 'priority': 'low', 'estimated_waste_volume': 85.0, 'is_active': True},
-                    {'name': 'Rural Area Bin', 'address': '963 Country Lane, Rural Zone', 'latitude': 20.5137, 'longitude': 78.8929, 'location_type': 'bin', 'priority': 'low', 'estimated_waste_volume': 60.0, 'is_active': True},
+                    # Extended Areas
+                    {'name': 'Wakad Collection Point', 'address': 'Wakad, Pune', 'latitude': 18.6000, 'longitude': 73.7600, 'location_type': 'collection_point', 'priority': 'low', 'estimated_waste_volume': 85.0, 'is_active': True},
+                    {'name': 'Sinhagad Road Bin', 'address': 'Sinhagad Road, Pune', 'latitude': 18.4800, 'longitude': 73.7500, 'location_type': 'bin', 'priority': 'low', 'estimated_waste_volume': 60.0, 'is_active': True},
                 ]
                 # Only create locations if they don't exist
                 if locations_count == 0:
@@ -109,16 +109,16 @@ def index(request):
                             # Skip if database tables don't exist
                             break
                 
-                # Create demo vehicles - more variety
+                # Create demo vehicles - positioned at key Pune locations
                 demo_vehicles = [
-                    {'name': 'Waste Collection Truck Alpha', 'vehicle_type': 'truck', 'capacity': 5000.0, 'fuel_efficiency': 8.5, 'current_latitude': 20.5937, 'current_longitude': 78.9629, 'is_available': True},
-                    {'name': 'Compact Collection Van Beta', 'vehicle_type': 'van', 'capacity': 2000.0, 'fuel_efficiency': 12.0, 'current_latitude': 20.6037, 'current_longitude': 78.9729, 'is_available': True},
-                    {'name': 'Heavy Duty Compactor Gamma', 'vehicle_type': 'compactor', 'capacity': 8000.0, 'fuel_efficiency': 6.5, 'current_latitude': 20.5837, 'current_longitude': 78.9529, 'is_available': True},
-                    {'name': 'Agricultural Tractor Delta', 'vehicle_type': 'tractor', 'capacity': 3000.0, 'fuel_efficiency': 15.0, 'current_latitude': 20.6137, 'current_longitude': 78.9829, 'is_available': True},
-                    {'name': 'Recycling Truck Echo', 'vehicle_type': 'truck', 'capacity': 4500.0, 'fuel_efficiency': 9.0, 'current_latitude': 20.5737, 'current_longitude': 78.9429, 'is_available': True},
-                    {'name': 'Mini Collection Van Foxtrot', 'vehicle_type': 'van', 'capacity': 1500.0, 'fuel_efficiency': 14.0, 'current_latitude': 20.5637, 'current_longitude': 78.9329, 'is_available': True},
-                    {'name': 'Large Capacity Truck Golf', 'vehicle_type': 'truck', 'capacity': 6000.0, 'fuel_efficiency': 7.5, 'current_latitude': 20.6237, 'current_longitude': 78.9929, 'is_available': True},
-                    {'name': 'Eco-Friendly Electric Van Hotel', 'vehicle_type': 'van', 'capacity': 1800.0, 'fuel_efficiency': 20.0, 'current_latitude': 20.5537, 'current_longitude': 78.9229, 'is_available': True},
+                    {'name': 'Pune Municipal Waste Truck 01', 'vehicle_type': 'truck', 'capacity': 5000.0, 'fuel_efficiency': 8.5, 'current_latitude': 18.5204, 'current_longitude': 73.8567, 'is_available': True},
+                    {'name': 'PMC Collection Van 02', 'vehicle_type': 'van', 'capacity': 2000.0, 'fuel_efficiency': 12.0, 'current_latitude': 18.5400, 'current_longitude': 73.9000, 'is_available': True},
+                    {'name': 'Heavy Duty Compactor PMC-03', 'vehicle_type': 'compactor', 'capacity': 8000.0, 'fuel_efficiency': 6.5, 'current_latitude': 18.6200, 'current_longitude': 73.8000, 'is_available': True},
+                    {'name': 'Agricultural Waste Tractor 04', 'vehicle_type': 'tractor', 'capacity': 3000.0, 'fuel_efficiency': 15.0, 'current_latitude': 18.6000, 'current_longitude': 73.7600, 'is_available': True},
+                    {'name': 'Recycling Truck PMC-05', 'vehicle_type': 'truck', 'capacity': 4500.0, 'fuel_efficiency': 9.0, 'current_latitude': 18.5700, 'current_longitude': 73.9200, 'is_available': True},
+                    {'name': 'Mini Collection Van PMC-06', 'vehicle_type': 'van', 'capacity': 1500.0, 'fuel_efficiency': 14.0, 'current_latitude': 18.5100, 'current_longitude': 73.8100, 'is_available': True},
+                    {'name': 'Large Capacity Truck PMC-07', 'vehicle_type': 'truck', 'capacity': 6000.0, 'fuel_efficiency': 7.5, 'current_latitude': 18.5300, 'current_longitude': 73.8600, 'is_available': True},
+                    {'name': 'Eco-Friendly Electric Van PMC-08', 'vehicle_type': 'van', 'capacity': 1800.0, 'fuel_efficiency': 20.0, 'current_latitude': 18.5500, 'current_longitude': 73.8100, 'is_available': True},
                 ]
                 # Only create vehicles if they don't exist
                 if vehicles_count == 0:
