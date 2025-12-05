@@ -7,6 +7,7 @@ from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Q, Sum, Avg, Count, F
+from django.db.utils import OperationalError, DatabaseError
 from django.utils import timezone
 from datetime import datetime, timedelta
 import json
@@ -29,7 +30,6 @@ def index(request):
     try:
         # Seed demo data if database is empty (for initial setup/demo)
         # Check locations and vehicles separately to ensure both are seeded
-        from django.db.utils import OperationalError, DatabaseError
         try:
             locations_count = Location.objects.count()
             vehicles_count = Vehicle.objects.count()
@@ -120,7 +120,6 @@ def index(request):
                 Vehicle.objects.get_or_create(name=veh_data['name'], defaults=veh_data)
     
         # Get recent routes
-        from django.db.utils import OperationalError, DatabaseError
         try:
             recent_routes = OptimizedRoute.objects.all().order_by('-created_at')[:5]
         except (OperationalError, DatabaseError):
