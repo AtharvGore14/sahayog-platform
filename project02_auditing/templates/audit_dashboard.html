@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Sahayog Auditing Platform</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧾</text></svg>">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+        .navbar {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+        }
+        .welcome-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border: none;
+            margin-bottom: 2rem;
+        }
+        .feature-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            border: none;
+            transition: all 0.3s ease;
+            height: 100%;
+        }
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+        }
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 12px 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+        }
+        .stats-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .alert {
+            border-radius: 10px;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="{{ url_for('dashboard') }}" style="text-decoration: none;">
+                <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #28a745, #20c997); border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-right: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
+                    <span style="font-size: 1.5rem;">🧾</span>
+                </div>
+                <div>
+                    <strong style="color: white; font-size: 1.2rem;">Sahayog</strong>
+                    <div style="color: rgba(255,255,255,0.8); font-size: 0.85rem; line-height: 1;">Auditing Suite</div>
+                </div>
+            </a>
+            <div class="navbar-nav ms-auto d-flex align-items-center gap-3">
+                <a class="nav-link" href="{{ url_for('audit') }}">
+                    <i class="fas fa-camera me-1"></i>New Audit
+                </a>
+                <a class="nav-link" href="{{ url_for('audit_history') }}">
+                    <i class="fas fa-history me-1"></i>History
+                </a>
+                <a class="btn btn-outline-light" href="/">
+                    <i class="fas fa-home me-2"></i>Master Portal
+                </a>
+                <span class="badge bg-primary-subtle text-primary-emphasis">
+                    <i class="fas fa-user-check me-2"></i>{{ session.get('username', 'Guest Auditor') }}
+                </span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Welcome Card -->
+        <div class="welcome-card">
+            <div class="card-body p-4">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h1 class="display-6 mb-3">
+                            <i class="fas fa-chart-line text-success me-3"></i>
+                            Welcome to Advanced Auditing Platform
+                        </h1>
+                        <p class="lead mb-3">
+                            Hello <strong>{{ username }}</strong>! Ready to perform AI-powered waste analysis and auditing?
+                        </p>
+                        <p class="text-muted mb-4">
+                            Upload waste images for comprehensive analysis including waste type classification, 
+                            environmental impact assessment, and disposal recommendations.
+                        </p>
+                        <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center gap-3">
+                            <a href="{{ url_for('audit') }}" class="btn btn-primary btn-lg">
+                                <i class="fas fa-upload me-2"></i>Start New Audit
+                            </a>
+                            <a href="/" class="btn btn-outline-secondary btn-lg">
+                                <i class="fas fa-home me-2"></i>Return to Master Portal
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <div class="stats-card">
+                            <h3 class="mb-1">AI-Powered</h3>
+                            <p class="mb-0">Advanced Computer Vision Analysis</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Features Grid -->
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card card">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon text-primary">
+                            <i class="fas fa-camera"></i>
+                        </div>
+                        <h5 class="card-title">Image Upload</h5>
+                        <p class="card-text text-muted">
+                            Upload waste images for comprehensive AI analysis and classification.
+                        </p>
+                        <a href="{{ url_for('audit') }}" class="btn btn-primary">
+                            Upload Image
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card card">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon text-success">
+                            <i class="fas fa-brain"></i>
+                        </div>
+                        <h5 class="card-title">AI Analysis</h5>
+                        <p class="card-text text-muted">
+                            Advanced computer vision analyzes color, texture, and shape patterns.
+                        </p>
+                        <a href="{{ url_for('audit') }}" class="btn btn-primary">
+                            Start Analysis
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card card">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon text-info">
+                            <i class="fas fa-chart-bar"></i>
+                        </div>
+                        <h5 class="card-title">Detailed Results</h5>
+                        <p class="card-text text-muted">
+                            Get comprehensive reports with recommendations and environmental impact.
+                        </p>
+                        <a href="{{ url_for('audit_history') }}" class="btn btn-primary">
+                            View History
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="row mt-5">
+            <div class="col-md-3">
+                <div class="stats-card text-center">
+                    <h4 class="mb-1">6</h4>
+                    <small>Waste Types</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card text-center">
+                    <h4 class="mb-1">95%</h4>
+                    <small>Accuracy</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card text-center">
+                    <h4 class="mb-1">3s</h4>
+                    <small>Analysis Time</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card text-center">
+                    <h4 class="mb-1">AI</h4>
+                    <small>Powered</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

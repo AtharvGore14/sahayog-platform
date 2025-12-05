@@ -1,0 +1,2175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Waste Financial Ledger - Dashboard</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 0;
+        }
+
+        /* Navigation Bar */
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px 30px;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .logo-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        .logo-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 25px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #2c3e50;
+            font-weight: 600;
+            padding: 8px 20px;
+            border-radius: 25px;
+            transition: all 0.3s;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        header h1 {
+            font-size: 42px;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .subtitle {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+
+        .controls {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            align-items: end;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .control-group label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #2c3e50;
+            font-size: 14px;
+        }
+
+        .control-group input {
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .control-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 16px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .company-info {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .company-info strong {
+            color: #2c3e50;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .metric-card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+        }
+
+        .metric-card.revenue {
+            border-left: 5px solid #27ae60;
+        }
+
+        .metric-card.cost {
+            border-left: 5px solid #e74c3c;
+        }
+
+        .metric-card.nwv {
+            border-left: 5px solid #3498db;
+        }
+
+        .metric-label {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-bottom: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .metric-value {
+            font-size: 36px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .chart-container {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .chart-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .chart-container canvas {
+            max-height: 400px;
+        }
+
+        .recommendations {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .recommendations h3 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        .recommendations ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .recommendations li {
+            padding: 15px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            border-radius: 5px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: white;
+            font-size: 18px;
+        }
+
+        .error {
+            background: #e74c3c;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 5px solid #c0392b;
+            white-space: pre-line;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        table th {
+            background: #667eea;
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        table tr:hover {
+            background: #f8f9fa;
+        }
+
+        #materialSummaryContainer, #categorySummaryContainer, #transactionTableContainer {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 25px;
+        }
+
+        #materialSummaryContainer h3, #categorySummaryContainer h3, #transactionTableContainer h3 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 22px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <div class="logo-icon">📊</div>
+                <div class="logo-text">Waste Financial Ledger</div>
+            </div>
+            <ul class="nav-links">
+                <li><a href="/">🏠 Master Portal</a></li>
+                <li><a href="home.html">🏠 Home</a></li>
+                <li><a href="index.html" class="active">📊 Dashboard</a></li>
+                <li><a href="waste_entry.html">📝 Data Entry</a></li>
+                <li><a href="analytics.html">📈 Analytics</a></li>
+                <li><a href="companies.html">🏢 Companies</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <header>
+            <h1>🏭 Automated Waste Financial Ledger</h1>
+            <p class="subtitle">Transform waste into measurable financial insights</p>
+        </header>
+
+        <div class="controls">
+            <div class="control-group">
+                <label for="companyId">Company ID</label>
+                <input type="text" id="companyId" value="C1234" placeholder="e.g., C1234">
+            </div>
+            <div class="control-group">
+                <label for="startDate">Start Date</label>
+                <input type="date" id="startDate">
+            </div>
+            <div class="control-group">
+                <label for="endDate">End Date</label>
+                <input type="date" id="endDate">
+            </div>
+            <div class="control-group" style="justify-content: flex-end;">
+                <label>&nbsp;</label>
+                <button onclick="generateReport()">Generate Financial Report</button>
+            </div>
+            <div class="control-group" style="justify-content: flex-end;">
+                <label>&nbsp;</label>
+                <button onclick="downloadPDF()">Download PDF Report</button>
+            </div>
+        </div>
+
+        <div id="companyInfo" class="company-info" style="display: none;">
+            <strong>Company:</strong> <span id="companyName"></span> | 
+            <strong>Report Period:</strong> <span id="reportPeriod"></span>
+        </div>
+
+        <div id="errorMessage" class="error" style="display: none;"></div>
+
+        <div id="loading" class="loading" style="display: none;">
+            <p>Generating financial report... Please wait.</p>
+        </div>
+
+        <div id="dashboard" style="display: none;">
+            <div class="metrics-grid">
+                <div class="metric-card revenue">
+                    <div class="metric-label">Total Revenue from Recyclables</div>
+                    <div class="metric-value" id="totalRevenue">₹0</div>
+                </div>
+                <div class="metric-card cost">
+                    <div class="metric-label">Total Disposal Costs</div>
+                    <div class="metric-value" id="totalCost">₹0</div>
+                    <div style="font-size: 0.4em; opacity: 0.7; margin-top: 5px;">
+                        Actual vs Expected Cost Tracking
+                    </div>
+                </div>
+                <div class="metric-card nwv">
+                    <div class="metric-label">Net Waste Value (NWV)</div>
+                    <div class="metric-value" id="netWasteValue">₹0</div>
+                </div>
+            </div>
+
+            <div class="charts-grid">
+                <div class="chart-container">
+                    <div class="chart-title">Revenue Breakdown by Material</div>
+                    <canvas id="revenueChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-title">Cost Breakdown by Waste Type</div>
+                    <canvas id="costChart"></canvas>
+                </div>
+                <div class="chart-container" style="grid-column: 1 / -1;">
+                    <div class="chart-title">Daily Trends</div>
+                    <canvas id="trendChart"></canvas>
+                </div>
+            </div>
+
+            <div id="materialSummaryContainer" style="margin-top: 30px;"></div>
+            
+            <div id="categorySummaryContainer" style="margin-top: 30px;"></div>
+            
+            <div id="transactionTableContainer" style="margin-top: 30px;"></div>
+
+            <!-- Advanced Analytical Metrics Section -->
+            <div id="advancedAnalyticsContainer" style="margin-top: 30px;"></div>
+
+            <div class="recommendations">
+                <h3>💡 Strategic Recommendations</h3>
+                <ul id="recommendationsList"></ul>
+            </div>
+
+            <!-- Revenue Analytics Section -->
+            <div id="revenueAnalyticsContainer" style="display: none; margin-top: 30px;">
+                <div style="background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+                    <h3 style="color: #2c3e50; margin-bottom: 20px; font-size: 22px;">💰 Revenue Analytics & Tracking</h3>
+                    <button onclick="loadRevenueAnalytics()" style="background: linear-gradient(135deg, #27ae60 0%, #229954 100%); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; margin-bottom: 20px;">
+                        📊 View Revenue Analytics
+                    </button>
+                    <div id="revenueAnalyticsContent"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Revenue Entry Modal -->
+    <div id="revenueEntryModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; align-items: center; justify-content: center;">
+        <div style="background: white; padding: 30px; border-radius: 15px; max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+            <h2 style="color: #2c3e50; margin-bottom: 20px;">💰 Add Revenue Entry</h2>
+            <form id="revenueEntryForm">
+                <input type="hidden" id="revenueTransactionId">
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #2c3e50;">Material Type</label>
+                    <input type="text" id="revenueMaterialType" readonly style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; background: #f8f9fa;">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #2c3e50;">Expected Revenue (₹)</label>
+                    <input type="number" id="revenueExpected" step="0.01" min="0" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px;">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #2c3e50;">Actual Revenue Received (₹) *</label>
+                    <input type="number" id="revenueActual" required step="0.01" min="0" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px;">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #2c3e50;">Payment Method</label>
+                    <select id="revenuePaymentMethod" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px;">
+                        <option value="">Select payment method</option>
+                        <option value="cash">Cash</option>
+                        <option value="bank_transfer">Bank Transfer</option>
+                        <option value="check">Check</option>
+                        <option value="digital">Digital Payment</option>
+                        <option value="credit">Credit</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #2c3e50;">Vendor/Buyer Name</label>
+                    <input type="text" id="revenueVendorName" placeholder="Who paid for this waste?" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px;">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #2c3e50;">Invoice Number</label>
+                    <input type="text" id="revenueInvoiceNumber" placeholder="Invoice/Reference number" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px;">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #2c3e50;">Revenue Date</label>
+                    <input type="datetime-local" id="revenueDate" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px;">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #2c3e50;">Notes</label>
+                    <textarea id="revenueNotes" rows="3" placeholder="Additional notes..." style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px;"></textarea>
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #2c3e50;">Recorded By</label>
+                    <input type="text" id="revenueRecordedBy" placeholder="Your name" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px;">
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="submit" style="flex: 1; background: linear-gradient(135deg, #27ae60 0%, #229954 100%); color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                        💰 Save Revenue Entry
+                    </button>
+                    <button type="button" onclick="closeRevenueEntryModal()" style="flex: 1; background: #95a5a6; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+            <div id="revenueEntryMessage" style="margin-top: 15px;"></div>
+        </div>
+    </div>
+
+    <!-- Cost Entry Modal -->
+    <div id="costEntryModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; align-items: center; justify-content: center;">
+        <div style="background: white; padding: 30px; border-radius: 15px; max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+            <h2 style="color: #2c3e50; margin-bottom: 20px;">💸 Add Cost Entry</h2>
+            <form id="costEntryForm">
+                <input type="hidden" id="costTransactionId">
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #2c3e50;">Material Type</label>
+                    <input type="text" id="costMaterialType" readonly style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; background: #f8f9fa;">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #2c3e50;">Expected Cost (₹)</label>
+                    <input type="number" id="costExpected" step="0.01" min="0" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px;">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #2c3e50;">Actual Cost Incurred (₹) *</label>
+                    <input type="number" id="costActual" required step="0.01" min="0" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px;">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #2c3e50;">Cost Breakdown (Optional - will auto-sum)</label>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div>
+                            <label style="font-size: 0.9em; color: #666;">Disposal Cost (₹)</label>
+                            <input type="number" id="costDisposal" step="0.01" min="0" style="width: 100%; padding: 8px; border: 2px solid #e0e0e0; border-radius: 8px;">
+                        </div>
+                        <div>
+                            <label style="font-size: 0.9em; color: #666;">Transportation (₹)</label>
+                            <input type="number" id="costTransportation" step="0.01" min="0" style="width: 100%; padding: 8px; border: 2px solid #e0e0e0; border-radius: 8px;">
+                        </div>
+                        <div>
+                            <label style="font-size: 0.9em; color: #666;">Processing (₹)</label>
+                            <input type="number" id="costProcessing" step="0.01" min="0" style="width: 100%; padding: 8px; border: 2px solid #e0e0e0; border-radius: 8px;">
+                        </div>
+                        <div>
+                            <label style="font-size: 0.9em; color: #666;">Other Costs (₹)</label>
+                            <input type="number" id="costOther" step="0.01" min="0" style="width: 100%; padding: 8px; border: 2px solid #e0e0e0; border-radius: 8px;">
+                        </div>
+                    </div>
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #2c3e50;">Cost Type</label>
+                    <select id="costType" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px;">
+                        <option value="">Select cost type</option>
+                        <option value="disposal">Disposal/Landfill</option>
+                        <option value="transportation">Transportation</option>
+                        <option value="processing">Processing/Treatment</option>
+                        <option value="other">Other</option>
+                        <option value="mixed">Mixed (Multiple Types)</option>
+                    </select>
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #2c3e50;">Vendor/Service Provider</label>
+                    <input type="text" id="costVendorName" placeholder="Who charged this cost?" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px;">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #2c3e50;">Invoice/Bill Number</label>
+                    <input type="text" id="costInvoiceNumber" placeholder="Invoice/Bill reference" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px;">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #2c3e50;">Payment Method</label>
+                    <select id="costPaymentMethod" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px;">
+                        <option value="">Select payment method</option>
+                        <option value="cash">Cash</option>
+                        <option value="bank_transfer">Bank Transfer</option>
+                        <option value="check">Check</option>
+                        <option value="digital">Digital Payment</option>
+                        <option value="credit">Credit</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #2c3e50;">Cost Date</label>
+                    <input type="datetime-local" id="costDate" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px;">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #2c3e50;">Notes</label>
+                    <textarea id="costNotes" rows="3" placeholder="Additional notes..." style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px;"></textarea>
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #2c3e50;">Recorded By</label>
+                    <input type="text" id="costRecordedBy" placeholder="Your name" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px;">
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="submit" style="flex: 1; background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                        💸 Save Cost Entry
+                    </button>
+                    <button type="button" onclick="closeCostEntryModal()" style="flex: 1; background: #95a5a6; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+            <div id="costEntryMessage" style="margin-top: 15px;"></div>
+        </div>
+    </div>
+
+    <script>
+        // Set default dates (current month) - ensure end date includes today
+        const now = new Date();
+        const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+        document.getElementById('startDate').value = firstDay.toISOString().split('T')[0];
+        // Use today's date to include all transactions up to now
+        document.getElementById('endDate').value = now.toISOString().split('T')[0];
+
+        let revenueChart = null;
+        let costChart = null;
+        let trendChart = null;
+        const pathSegments = window.location.pathname.split('/').filter(Boolean);
+        let basePrefix = '';
+        if (pathSegments.length > 0 && !pathSegments[0].includes('.')) {
+            basePrefix = '/' + pathSegments[0];
+        }
+        const API_BASE_URL = window.location.origin + basePrefix;
+
+        // Check backend connection on page load
+        async function checkBackendConnection() {
+            try {
+                // Create abort controller for timeout
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
+                
+                const response = await fetch(`${API_BASE_URL}/api/health`, {
+                    method: 'GET',
+                    signal: controller.signal
+                });
+                
+                clearTimeout(timeoutId);
+                
+                if (response.ok) {
+                    // Hide error if connection is successful
+                    document.getElementById('errorMessage').style.display = 'none';
+                    return true;
+                }
+            } catch (error) {
+                // Connection failed
+                showError(
+                    '❌ Cannot connect to backend server!\n\n' +
+                    'Please ensure the backend is running:\n' +
+                    '1. Open a terminal/command prompt\n' +
+                    '2. Navigate to the project directory\n' +
+                    '3. Run: python run_server.py\n' +
+                    '4. Wait for "Application startup complete"\n' +
+                    '5. Refresh this page and try again'
+                );
+                return false;
+            }
+        }
+
+        // Check connection on page load
+        checkBackendConnection();
+
+        async function generateReport() {
+            const companyId = document.getElementById('companyId').value.trim();
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+
+            if (!companyId) {
+                showError('Please enter a Company ID');
+                return;
+            }
+
+            // Show loading
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('dashboard').style.display = 'none';
+            document.getElementById('errorMessage').style.display = 'none';
+
+            // Check backend connection first
+            const isConnected = await checkBackendConnection();
+            if (!isConnected) {
+                document.getElementById('loading').style.display = 'none';
+                return;
+            }
+
+            try {
+                const params = new URLSearchParams({
+                    start_date: startDate,
+                    end_date: endDate,
+                    compare_historical: 'true'
+                });
+
+                // Use new endpoint format: /api/v1/waste/financial-report/{company_id}
+                const response = await fetch(`${API_BASE_URL}/api/v1/waste/financial-report/${companyId}?${params}`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                    }
+                });
+                
+                if (!response.ok) {
+                    let errorMessage = 'Failed to generate report';
+                    try {
+                        const error = await response.json();
+                        errorMessage = error.detail || errorMessage;
+                    } catch (e) {
+                        errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+                    }
+                    throw new Error(errorMessage);
+                }
+
+                const data = await response.json();
+                displayReport(data);
+
+            } catch (error) {
+                if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                    showError(
+                        '❌ Cannot connect to backend server!\n\n' +
+                        'Please ensure the backend is running:\n' +
+                        '1. Open a terminal/command prompt\n' +
+                        '2. Navigate to the project directory\n' +
+                        '3. Run: python run_server.py\n' +
+                        '4. Wait for "Application startup complete"\n' +
+                        '5. Refresh this page and try again'
+                    );
+                } else {
+                    showError(`Error: ${error.message}`);
+                }
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        async function downloadPDF() {
+            const companyId = document.getElementById('companyId').value.trim();
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+
+            if (!companyId) {
+                showError('Please enter a Company ID');
+                return;
+            }
+
+            try {
+                const params = new URLSearchParams({
+                    start_date: startDate,
+                    end_date: endDate
+                });
+
+                const url = `${API_BASE_URL}/api/v1/waste/financial-report/${companyId}/pdf?${params}`;
+                window.open(url, '_blank');
+            } catch (error) {
+                showError(`Error downloading PDF: ${error.message}`);
+            }
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        function displayReport(data) {
+            // Display company info
+            document.getElementById('companyName').textContent = data.company_name || data.company_id;
+            document.getElementById('reportPeriod').textContent = data.report_period;
+            document.getElementById('companyInfo').style.display = 'block';
+            
+            // Check if report has data
+            if (data.total_revenue === 0 && data.total_cost === 0) {
+                document.getElementById('errorMessage').innerHTML = 
+                    '⚠️ No transactions found for this date range. Submit waste transactions using the Waste Entry form.';
+                document.getElementById('errorMessage').style.display = 'block';
+            } else {
+                document.getElementById('errorMessage').style.display = 'none';
+            }
+
+            // Update metrics - use actual revenue if available
+            const displayRevenue = data.total_actual_revenue !== undefined && data.total_actual_revenue > 0 
+                ? data.total_actual_revenue 
+                : data.total_revenue;
+            
+            document.getElementById('totalRevenue').textContent = `₹${displayRevenue.toLocaleString('en-IN')}`;
+            document.getElementById('totalCost').textContent = `₹${data.total_cost.toLocaleString('en-IN')}`;
+            
+            // Show revenue breakdown if available
+            if (data.total_actual_revenue !== undefined && data.total_actual_revenue > 0 && data.total_expected_revenue !== undefined) {
+                const revenueInfo = document.getElementById('totalRevenue');
+                const variance = data.total_actual_revenue - data.total_expected_revenue;
+                const variancePercent = data.total_expected_revenue > 0 ? ((variance / data.total_expected_revenue) * 100) : 0;
+                revenueInfo.innerHTML = `
+                    ₹${displayRevenue.toLocaleString('en-IN')}
+                    <div style="font-size: 0.5em; opacity: 0.8; margin-top: 5px;">
+                        Expected: ₹${data.total_expected_revenue.toLocaleString('en-IN')} 
+                        <span style="color: ${variance >= 0 ? '#27ae60' : '#e74c3c'};">
+                            (${variance >= 0 ? '+' : ''}${variancePercent.toFixed(1)}%)
+                        </span>
+                    </div>
+                `;
+            }
+            
+            const nwv = data.net_waste_value;
+            const nwvElement = document.getElementById('netWasteValue');
+            let nwvText = `₹${Math.abs(nwv).toLocaleString('en-IN')}`;
+            
+            // Add historical comparison if available
+            if (data.historical_comparison) {
+                const change = data.historical_comparison.nwv_change;
+                const changePercent = data.historical_comparison.nwv_change_percent;
+                const changeSymbol = change >= 0 ? '↑' : '↓';
+                nwvText += ` <span style="font-size: 0.6em; opacity: 0.8;">(${changeSymbol} ${Math.abs(changePercent).toFixed(1)}%)</span>`;
+            }
+            
+            nwvElement.innerHTML = nwvText;
+            nwvElement.parentElement.className = 'metric-card nwv ' + (nwv >= 0 ? 'revenue' : 'cost');
+
+            // Update charts - check if data exists
+            // Use material summary which includes actual revenue from entries
+            if (data.material_summary && data.material_summary.length > 0) {
+                const revenueData = data.material_summary.map(m => ({
+                    material: m.material_type,
+                    value: m.total_revenue,  // This now includes actual revenue from entries
+                    expected_value: m.total_expected_revenue || m.total_revenue,
+                    quantity: m.total_quantity_kg,
+                    transactions: m.transaction_count
+                }));
+                updateRevenueChart(revenueData);
+            } else if (data.charts && data.charts.revenue_breakdown && data.charts.revenue_breakdown.length > 0) {
+                updateRevenueChart(data.charts.revenue_breakdown);
+            } else {
+                console.warn('No revenue breakdown data available');
+            }
+            
+            if (data.charts && data.charts.cost_breakdown && data.charts.cost_breakdown.length > 0) {
+                updateCostChart(data.charts.cost_breakdown);
+            } else {
+                console.warn('No cost breakdown data available');
+                // Show empty state or use category summary
+                if (data.category_summary && data.category_summary.length > 0) {
+                    const costData = data.category_summary
+                        .filter(c => c.total_cost > 0)
+                        .map(c => ({type: c.category, value: c.total_cost}));
+                    updateCostChart(costData);
+                }
+            }
+
+            // Display advanced analytical metrics
+            displayAdvancedAnalytics(data);
+            
+            // Update recommendations
+            const recList = document.getElementById('recommendationsList');
+            recList.innerHTML = '';
+            data.recommendations.forEach(rec => {
+                const li = document.createElement('li');
+                li.textContent = rec;
+                recList.appendChild(li);
+            });
+
+            // Display detailed transaction table
+            displayTransactionTable(data.transactions || []);
+            
+            // Display material summary
+            displayMaterialSummary(data.material_summary || []);
+            
+            // Display category summary
+            displayCategorySummary(data.category_summary || []);
+            
+            // Update trend chart - ALWAYS try to update
+            if (data.charts && data.charts.daily_trends && data.charts.daily_trends.length > 0) {
+                updateTrendChart(data.charts.daily_trends);
+            } else {
+                // If no daily trends, create one from transactions
+                if (data.transactions && data.transactions.length > 0) {
+                    const dailyData = {};
+                    data.transactions.forEach(txn => {
+                        const date = txn.date.split(' ')[0]; // Get just the date part
+                        if (!dailyData[date]) {
+                            dailyData[date] = { revenue: 0, cost: 0, net_value: 0 };
+                        }
+                        dailyData[date].revenue += txn.revenue || 0;
+                        dailyData[date].cost += txn.cost || 0;
+                        dailyData[date].net_value += txn.net_value || 0;
+                    });
+                    const trends = Object.keys(dailyData).sort().map(date => ({
+                        date: date,
+                        revenue: dailyData[date].revenue,
+                        cost: dailyData[date].cost,
+                        net_value: dailyData[date].net_value
+                    }));
+                    updateTrendChart(trends);
+                } else {
+                    console.warn('No trend data available');
+                }
+            }
+
+            // Show dashboard
+            document.getElementById('dashboard').style.display = 'block';
+        }
+        
+        function displayAdvancedAnalytics(data) {
+            const container = document.getElementById('advancedAnalyticsContainer');
+            if (!container) return;
+            
+            let html = '<div style="background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); margin-bottom: 30px;">';
+            html += '<h2 style="color: #2c3e50; margin-bottom: 25px; font-size: 28px; border-bottom: 3px solid #667eea; padding-bottom: 10px;">📊 Advanced Analytical Insights</h2>';
+            
+            // Data Quality Indicator
+            if (data.data_quality) {
+                const dq = data.data_quality;
+                const completenessColor = dq.data_completeness_percent >= 80 ? '#27ae60' : dq.data_completeness_percent >= 50 ? '#f39c12' : '#e74c3c';
+                html += `
+                    <div style="margin-bottom: 25px; padding: 15px; background: #f8f9fa; border-radius: 10px; border-left: 4px solid ${completenessColor};">
+                        <h4 style="color: #2c3e50; margin-bottom: 10px; font-size: 16px;">📋 Data Quality & Completeness</h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+                            <div>
+                                <div style="font-size: 12px; color: #666;">Data Completeness</div>
+                                <div style="font-size: 20px; font-weight: bold; color: ${completenessColor};">
+                                    ${dq.data_completeness_percent.toFixed(1)}%
+                                </div>
+                            </div>
+                            <div>
+                                <div style="font-size: 12px; color: #666;">Revenue Entries</div>
+                                <div style="font-size: 18px; font-weight: bold; color: ${dq.has_actual_revenue ? '#27ae60' : '#e74c3c'};">
+                                    ${dq.revenue_entries_count} ${dq.has_actual_revenue ? '✓' : '✗'}
+                                </div>
+                            </div>
+                            <div>
+                                <div style="font-size: 12px; color: #666;">Cost Entries</div>
+                                <div style="font-size: 18px; font-weight: bold; color: ${dq.has_actual_costs ? '#27ae60' : '#e74c3c'};">
+                                    ${dq.cost_entries_count} ${dq.has_actual_costs ? '✓' : '✗'}
+                                </div>
+                            </div>
+                        </div>
+                        ${dq.data_completeness_percent < 50 ? `
+                            <div style="margin-top: 10px; padding: 10px; background: #fff3cd; border-radius: 5px;">
+                                <p style="margin: 0; font-size: 12px; color: #856404;">
+                                    💡 <strong>Tip:</strong> Add more revenue and cost entries to improve data accuracy and get better insights.
+                                </p>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }
+            
+            // Variance Analysis
+            if (data.variance_analysis) {
+                const varAnalysis = data.variance_analysis;
+                html += `
+                    <div style="margin-bottom: 30px;">
+                        <h3 style="color: #667eea; margin-bottom: 15px; font-size: 20px;">📈 Variance Analysis</h3>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
+                            <div style="background: ${varAnalysis.revenue_variance >= 0 ? '#d4edda' : '#f8d7da'}; padding: 20px; border-radius: 10px; border-left: 4px solid ${varAnalysis.revenue_variance >= 0 ? '#27ae60' : '#e74c3c'};">
+                                <div style="font-size: 14px; color: #666; margin-bottom: 5px;">Revenue Variance</div>
+                                <div style="font-size: 24px; font-weight: bold; color: ${varAnalysis.revenue_variance >= 0 ? '#27ae60' : '#e74c3c'};">
+                                    ${varAnalysis.revenue_variance >= 0 ? '+' : ''}₹${varAnalysis.revenue_variance.toLocaleString('en-IN', {minimumFractionDigits: 2})}
+                                </div>
+                                <div style="font-size: 12px; color: #666; margin-top: 5px;">${varAnalysis.revenue_variance_percent >= 0 ? '+' : ''}${varAnalysis.revenue_variance_percent.toFixed(2)}%</div>
+                            </div>
+                            <div style="background: ${varAnalysis.cost_variance <= 0 ? '#d4edda' : '#f8d7da'}; padding: 20px; border-radius: 10px; border-left: 4px solid ${varAnalysis.cost_variance <= 0 ? '#27ae60' : '#e74c3c'};">
+                                <div style="font-size: 14px; color: #666; margin-bottom: 5px;">Cost Variance</div>
+                                <div style="font-size: 24px; font-weight: bold; color: ${varAnalysis.cost_variance <= 0 ? '#27ae60' : '#e74c3c'};">
+                                    ${varAnalysis.cost_variance <= 0 ? '' : '+'}₹${Math.abs(varAnalysis.cost_variance).toLocaleString('en-IN', {minimumFractionDigits: 2})}
+                                </div>
+                                <div style="font-size: 12px; color: #666; margin-top: 5px;">${varAnalysis.cost_variance_percent >= 0 ? '+' : ''}${varAnalysis.cost_variance_percent.toFixed(2)}%</div>
+                            </div>
+                            <div style="background: #e7f3ff; padding: 20px; border-radius: 10px; border-left: 4px solid #3498db;">
+                                <div style="font-size: 14px; color: #666; margin-bottom: 5px;">Net Variance Impact</div>
+                                <div style="font-size: 24px; font-weight: bold; color: #3498db;">
+                                    ₹${varAnalysis.net_variance_impact.toLocaleString('en-IN', {minimumFractionDigits: 2})}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Profitability Metrics
+            if (data.profitability_metrics) {
+                const profitMetrics = data.profitability_metrics;
+                html += `
+                    <div style="margin-bottom: 30px;">
+                        <h3 style="color: #667eea; margin-bottom: 15px; font-size: 20px;">💰 Profitability Metrics</h3>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                            <div style="background: linear-gradient(135deg, #27ae60 0%, #229954 100%); padding: 20px; border-radius: 10px; color: white;">
+                                <div style="font-size: 14px; opacity: 0.9; margin-bottom: 5px;">Profit Margin</div>
+                                <div style="font-size: 28px; font-weight: bold;">${profitMetrics.profit_margin_percent.toFixed(2)}%</div>
+                            </div>
+                            <div style="background: linear-gradient(135deg, #3498db 0%, #2980b9 100%); padding: 20px; border-radius: 10px; color: white;">
+                                <div style="font-size: 14px; opacity: 0.9; margin-bottom: 5px;">Cost Efficiency Ratio</div>
+                                <div style="font-size: 28px; font-weight: bold;">${profitMetrics.cost_efficiency_ratio.toFixed(2)}x</div>
+                            </div>
+                            <div style="background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%); padding: 20px; border-radius: 10px; color: white;">
+                                <div style="font-size: 14px; opacity: 0.9; margin-bottom: 5px;">ROI</div>
+                                <div style="font-size: 28px; font-weight: bold;">${profitMetrics.roi_percentage.toFixed(2)}%</div>
+                            </div>
+                            <div style="background: linear-gradient(135deg, #e67e22 0%, #d35400 100%); padding: 20px; border-radius: 10px; color: white;">
+                                <div style="font-size: 14px; opacity: 0.9; margin-bottom: 5px;">Revenue Efficiency</div>
+                                <div style="font-size: 28px; font-weight: bold;">₹${profitMetrics.revenue_efficiency_per_kg.toFixed(2)}/kg</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Material Profitability
+            if (data.material_profitability && Object.keys(data.material_profitability).length > 0) {
+                html += `
+                    <div style="margin-bottom: 30px;">
+                        <h3 style="color: #667eea; margin-bottom: 15px; font-size: 20px;">📦 Material Profitability Analysis</h3>
+                        <div style="overflow-x: auto;">
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <thead>
+                                    <tr style="background: #667eea; color: white;">
+                                        <th style="padding: 12px; text-align: left;">Material</th>
+                                        <th style="padding: 12px; text-align: right;">Profit Margin</th>
+                                        <th style="padding: 12px; text-align: right;">Revenue/kg</th>
+                                        <th style="padding: 12px; text-align: right;">Cost/kg</th>
+                                        <th style="padding: 12px; text-align: right;">Net Value/kg</th>
+                                        <th style="padding: 12px; text-align: right;">Profitability Score</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                `;
+                for (const [material, metrics] of Object.entries(data.material_profitability)) {
+                    const scoreColor = metrics.profitability_score > 50 ? '#27ae60' : metrics.profitability_score > 30 ? '#f39c12' : '#e74c3c';
+                    html += `
+                        <tr>
+                            <td style="padding: 10px; border-bottom: 1px solid #e0e0e0;"><strong>${material}</strong></td>
+                            <td style="padding: 10px; border-bottom: 1px solid #e0e0e0; text-align: right; color: ${metrics.profit_margin_percent >= 0 ? '#27ae60' : '#e74c3c'};">
+                                ${metrics.profit_margin_percent.toFixed(2)}%
+                            </td>
+                            <td style="padding: 10px; border-bottom: 1px solid #e0e0e0; text-align: right;">₹${metrics.revenue_per_kg.toFixed(2)}</td>
+                            <td style="padding: 10px; border-bottom: 1px solid #e0e0e0; text-align: right; color: #e74c3c;">₹${metrics.cost_per_kg.toFixed(2)}</td>
+                            <td style="padding: 10px; border-bottom: 1px solid #e0e0e0; text-align: right; color: #27ae60;">₹${metrics.net_value_per_kg.toFixed(2)}</td>
+                            <td style="padding: 10px; border-bottom: 1px solid #e0e0e0; text-align: right; font-weight: bold; color: ${scoreColor};">
+                                ${metrics.profitability_score.toFixed(1)}
+                            </td>
+                        </tr>
+                    `;
+                }
+                html += `
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Performance Metrics
+            if (data.performance_metrics) {
+                const perfMetrics = data.performance_metrics;
+                html += `
+                    <div style="margin-bottom: 30px;">
+                        <h3 style="color: #667eea; margin-bottom: 15px; font-size: 20px;">⚡ Performance Metrics</h3>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                            <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; border-left: 4px solid #667eea;">
+                                <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Avg Transaction Value</div>
+                                <div style="font-size: 20px; font-weight: bold; color: #667eea;">₹${perfMetrics.avg_transaction_value.toFixed(2)}</div>
+                            </div>
+                            <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; border-left: 4px solid #e74c3c;">
+                                <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Avg Transaction Cost</div>
+                                <div style="font-size: 20px; font-weight: bold; color: #e74c3c;">₹${perfMetrics.avg_transaction_cost.toFixed(2)}</div>
+                            </div>
+                            <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; border-left: 4px solid #27ae60;">
+                                <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Avg Transaction NWV</div>
+                                <div style="font-size: 20px; font-weight: bold; color: #27ae60;">₹${perfMetrics.avg_transaction_nwv.toFixed(2)}</div>
+                            </div>
+                            <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; border-left: 4px solid #9b59b6;">
+                                <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Recyclable Efficiency</div>
+                                <div style="font-size: 20px; font-weight: bold; color: #9b59b6;">${perfMetrics.recyclable_efficiency_percent.toFixed(2)}%</div>
+                            </div>
+                            <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; border-left: 4px solid ${perfMetrics.performance_trend === 'improving' ? '#27ae60' : perfMetrics.performance_trend === 'declining' ? '#e74c3c' : '#f39c12'};">
+                                <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Performance Trend</div>
+                                <div style="font-size: 20px; font-weight: bold; color: ${perfMetrics.performance_trend === 'improving' ? '#27ae60' : perfMetrics.performance_trend === 'declining' ? '#e74c3c' : '#f39c12'};">
+                                    ${perfMetrics.performance_trend === 'improving' ? '↗ Improving' : perfMetrics.performance_trend === 'declining' ? '↘ Declining' : '→ Stable'}
+                                </div>
+                            </div>
+                            <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; border-left: 4px solid #3498db;">
+                                <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Quality Revenue Ratio</div>
+                                <div style="font-size: 20px; font-weight: bold; color: #3498db;">${perfMetrics.quality_revenue_ratio_percent.toFixed(2)}%</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Cost Breakdown Analysis
+            if (data.cost_breakdown_analysis && Object.keys(data.cost_breakdown_analysis).length > 0) {
+                const costBreakdown = data.cost_breakdown_analysis;
+                
+                if (costBreakdown.has_breakdown_data === false) {
+                    // No breakdown data available
+                    html += `
+                        <div style="margin-bottom: 30px;">
+                            <h3 style="color: #667eea; margin-bottom: 15px; font-size: 20px;">💸 Cost Breakdown Analysis</h3>
+                            <div style="background: #fff3cd; padding: 20px; border-radius: 10px; border-left: 4px solid #f39c12;">
+                                <p style="color: #856404; margin: 0;">
+                                    <strong>⚠️ Cost breakdown data not available.</strong><br>
+                                    ${costBreakdown.message || 'Add cost entries with breakdown details (disposal, transportation, processing, other costs) to see cost breakdown analysis.'}
+                                </p>
+                            </div>
+                        </div>
+                    `;
+                } else if (costBreakdown.has_breakdown_data !== false) {
+                    // Show breakdown data
+                    html += `
+                        <div style="margin-bottom: 30px;">
+                            <h3 style="color: #667eea; margin-bottom: 15px; font-size: 20px;">💸 Cost Breakdown Analysis</h3>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                                <div style="background: #fff5f5; padding: 15px; border-radius: 10px; border-left: 4px solid #e74c3c;">
+                                    <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Disposal</div>
+                                    <div style="font-size: 20px; font-weight: bold; color: #e74c3c;">₹${(costBreakdown.disposal_amount || 0).toFixed(2)}</div>
+                                    <div style="font-size: 11px; color: #666; margin-top: 3px;">${(costBreakdown.disposal_percentage || 0).toFixed(1)}%</div>
+                                </div>
+                                <div style="background: #fff5f5; padding: 15px; border-radius: 10px; border-left: 4px solid #e67e22;">
+                                    <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Transportation</div>
+                                    <div style="font-size: 20px; font-weight: bold; color: #e67e22;">₹${(costBreakdown.transportation_amount || 0).toFixed(2)}</div>
+                                    <div style="font-size: 11px; color: #666; margin-top: 3px;">${(costBreakdown.transportation_percentage || 0).toFixed(1)}%</div>
+                                </div>
+                                <div style="background: #fff5f5; padding: 15px; border-radius: 10px; border-left: 4px solid #d35400;">
+                                    <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Processing</div>
+                                    <div style="font-size: 20px; font-weight: bold; color: #d35400;">₹${(costBreakdown.processing_amount || 0).toFixed(2)}</div>
+                                    <div style="font-size: 11px; color: #666; margin-top: 3px;">${(costBreakdown.processing_percentage || 0).toFixed(1)}%</div>
+                                </div>
+                                <div style="background: #fff5f5; padding: 15px; border-radius: 10px; border-left: 4px solid #c0392b;">
+                                    <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Other</div>
+                                    <div style="font-size: 20px; font-weight: bold; color: #c0392b;">₹${(costBreakdown.other_amount || 0).toFixed(2)}</div>
+                                    <div style="font-size: 11px; color: #666; margin-top: 3px;">${(costBreakdown.other_percentage || 0).toFixed(1)}%</div>
+                                </div>
+                            </div>
+                            ${costBreakdown.total_breakdown_cost ? `
+                                <div style="margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 5px;">
+                                    <div style="font-size: 12px; color: #666;">Total Breakdown Cost: ₹${costBreakdown.total_breakdown_cost.toFixed(2)}</div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                }
+            }
+            
+            // Benchmark Comparison
+            if (data.benchmark_comparison) {
+                const benchmark = data.benchmark_comparison;
+                const ratingColors = {
+                    'excellent': '#27ae60',
+                    'good': '#3498db',
+                    'average': '#f39c12',
+                    'needs_improvement': '#e74c3c'
+                };
+                const isCalculated = data.benchmark_comparison.is_calculated || false;
+                const benchmarkSource = isCalculated 
+                    ? `Calculated from ${data.benchmark_comparison.historical_transactions_count || 0} historical transactions`
+                    : 'Industry standard estimates';
+                
+                html += `
+                    <div style="margin-bottom: 30px;">
+                        <h3 style="color: #667eea; margin-bottom: 15px; font-size: 20px;">🏆 Benchmark Comparison</h3>
+                        <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; border-left: 4px solid ${ratingColors[benchmark.performance_rating]};">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                <div>
+                                    <div style="font-size: 14px; color: #666; margin-bottom: 5px;">Overall Performance Rating</div>
+                                    <div style="font-size: 24px; font-weight: bold; color: ${ratingColors[benchmark.performance_rating]}; text-transform: capitalize;">
+                                        ${benchmark.performance_rating.replace('_', ' ')}
+                                    </div>
+                                    <div style="font-size: 11px; color: #999; margin-top: 5px;">
+                                        ${isCalculated ? '📊 ' : '📈 '}${benchmarkSource}
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px;">
+                                <div>
+                                    <div style="font-size: 12px; color: #666;">Revenue/kg vs Industry</div>
+                                    <div style="font-size: 18px; font-weight: bold; color: ${benchmark.revenue_per_kg_vs_industry >= 0 ? '#27ae60' : '#e74c3c'};">
+                                        ${benchmark.revenue_per_kg_vs_industry >= 0 ? '+' : ''}₹${benchmark.revenue_per_kg_vs_industry.toFixed(2)}
+                                    </div>
+                                </div>
+                                <div>
+                                    <div style="font-size: 12px; color: #666;">Cost/kg vs Industry</div>
+                                    <div style="font-size: 18px; font-weight: bold; color: ${benchmark.cost_per_kg_vs_industry <= 0 ? '#27ae60' : '#e74c3c'};">
+                                        ${benchmark.cost_per_kg_vs_industry <= 0 ? '' : '+'}₹${benchmark.cost_per_kg_vs_industry.toFixed(2)}
+                                    </div>
+                                </div>
+                                <div>
+                                    <div style="font-size: 12px; color: #666;">Profit Margin vs Industry</div>
+                                    <div style="font-size: 18px; font-weight: bold; color: ${benchmark.profit_margin_vs_industry >= 0 ? '#27ae60' : '#e74c3c'};">
+                                        ${benchmark.profit_margin_vs_industry >= 0 ? '+' : ''}${benchmark.profit_margin_vs_industry.toFixed(2)}%
+                                    </div>
+                                </div>
+                                <div>
+                                    <div style="font-size: 12px; color: #666;">Diversion Rate vs Industry</div>
+                                    <div style="font-size: 18px; font-weight: bold; color: ${benchmark.diversion_rate_vs_industry >= 0 ? '#27ae60' : '#e74c3c'};">
+                                        ${benchmark.diversion_rate_vs_industry >= 0 ? '+' : ''}${benchmark.diversion_rate_vs_industry.toFixed(2)}%
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            html += '</div>';
+            container.innerHTML = html;
+        }
+        
+        function displayTransactionTable(transactions) {
+            const container = document.getElementById('transactionTableContainer');
+            if (!container) return;
+            
+            if (transactions.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">No transactions found for this period.</p>';
+                return;
+            }
+            
+            let html = `
+                <h3>📋 Transaction Details</h3>
+                <p style="color: #666; margin-bottom: 15px;">Total Transactions: <strong>${transactions.length}</strong></p>
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date & Time</th>
+                                <th>Material</th>
+                                <th>Category</th>
+                                <th style="text-align: right;">Quantity (kg)</th>
+                                <th style="text-align: right;">Revenue (₹)</th>
+                                <th style="text-align: right;">Cost (₹)</th>
+                                <th style="text-align: right;">Net Value (₹)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            transactions.forEach((txn, idx) => {
+                const rowColor = idx % 2 === 0 ? '#f8f9fa' : 'white';
+                html += `
+                    <tr style="background: ${rowColor};">
+                        <td>${txn.date}</td>
+                        <td><strong>${txn.material_type}</strong></td>
+                        <td>${txn.category}</td>
+                        <td style="text-align: right;">${txn.quantity_kg.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                        <td style="text-align: right; color: #27ae60;">
+                            ₹${txn.revenue.toLocaleString('en-IN', {minimumFractionDigits: 2})}
+                            <button onclick="openRevenueEntryModal(${txn.id}, '${txn.material_type}', ${txn.revenue})" 
+                                    style="margin-left: 8px; padding: 4px 8px; font-size: 11px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                                💰 Add Revenue
+                            </button>
+                        </td>
+                        <td style="text-align: right; color: #e74c3c;">
+                            ₹${txn.cost.toLocaleString('en-IN', {minimumFractionDigits: 2})}
+                            <button onclick="openCostEntryModal(${txn.id}, '${txn.material_type}', ${txn.cost || 0})" 
+                                    style="margin-left: 8px; padding: 4px 8px; font-size: 11px; background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                                💸 Add Cost
+                            </button>
+                        </td>
+                        <td style="text-align: right; font-weight: bold; color: ${txn.net_value >= 0 ? '#27ae60' : '#e74c3c'};">₹${txn.net_value.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+        }
+        
+        function displayMaterialSummary(materials) {
+            const container = document.getElementById('materialSummaryContainer');
+            if (!container) return;
+            
+            if (materials.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+            
+            let html = `
+                <h3>📊 Material-Wise Summary</h3>
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Material Type</th>
+                                <th style="text-align: right;">Total Quantity (kg)</th>
+                                <th style="text-align: right;">Total Revenue (₹)</th>
+                                <th style="text-align: right;">Total Cost (₹)</th>
+                                <th style="text-align: right;">Net Value (₹)</th>
+                                <th style="text-align: center;">Transactions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            materials.forEach((mat, idx) => {
+                html += `
+                    <tr>
+                        <td><strong>${mat.material_type}</strong></td>
+                        <td style="text-align: right;">${mat.total_quantity_kg.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                        <td style="text-align: right; color: #27ae60;">₹${mat.total_revenue.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                        <td style="text-align: right; color: #e74c3c;">₹${mat.total_cost.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                        <td style="text-align: right; font-weight: bold; color: ${mat.net_value >= 0 ? '#27ae60' : '#e74c3c'};">₹${mat.net_value.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                        <td style="text-align: center;">${mat.transaction_count}</td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+        }
+        
+        function displayCategorySummary(categories) {
+            const container = document.getElementById('categorySummaryContainer');
+            if (!container) return;
+            
+            if (categories.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+            
+            let html = `
+                <h3>🗂️ Category-Wise Summary</h3>
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th style="text-align: right;">Total Quantity (kg)</th>
+                                <th style="text-align: right;">Total Revenue (₹)</th>
+                                <th style="text-align: right;">Total Cost (₹)</th>
+                                <th style="text-align: right;">Net Value (₹)</th>
+                                <th style="text-align: center;">Transactions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            categories.forEach((cat, idx) => {
+                html += `
+                    <tr>
+                        <td><strong>${cat.category}</strong></td>
+                        <td style="text-align: right;">${cat.total_quantity_kg.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                        <td style="text-align: right; color: #27ae60;">₹${cat.total_revenue.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                        <td style="text-align: right; color: #e74c3c;">₹${cat.total_cost.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                        <td style="text-align: right; font-weight: bold; color: ${cat.net_value >= 0 ? '#27ae60' : '#e74c3c'};">₹${cat.net_value.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                        <td style="text-align: center;">${cat.transaction_count}</td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+        }
+        
+        function updateTrendChart(dailyTrends) {
+            const ctx = document.getElementById('trendChart');
+            if (!ctx) return;
+            
+            if (!dailyTrends || dailyTrends.length === 0) {
+                console.warn('No daily trends data available');
+                ctx.parentElement.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">No trend data available. Submit transactions across multiple days to see trends.</p>';
+                return;
+            }
+            
+            if (trendChart) {
+                trendChart.destroy();
+            }
+            
+            // Parse dates properly - handle different date formats
+            const chartLabels = dailyTrends.map(d => {
+                let dateStr = d.date;
+                // Handle different date formats
+                if (dateStr.includes('T')) {
+                    dateStr = dateStr.split('T')[0];
+                }
+                const date = new Date(dateStr + 'T00:00:00');
+                if (isNaN(date.getTime())) {
+                    // Fallback: try parsing as-is
+                    return dateStr;
+                }
+                return date.toLocaleDateString('en-IN', {month: 'short', day: 'numeric'});
+            });
+            
+            // Extract data arrays
+            const revenueData = dailyTrends.map(d => d.revenue || 0);
+            const costData = dailyTrends.map(d => d.cost || 0);
+            const netValueData = dailyTrends.map(d => d.net_value || (d.revenue || 0) - (d.cost || 0));
+            
+            trendChart = new Chart(ctx.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: chartLabels,
+                    datasets: [
+                        {
+                            label: 'Daily Revenue (₹)',
+                            data: revenueData,
+                            borderColor: 'rgba(39, 174, 96, 1)',
+                            backgroundColor: 'rgba(39, 174, 96, 0.2)',
+                            tension: 0.4,
+                            fill: true,
+                            pointRadius: 6,
+                            pointHoverRadius: 8,
+                            pointBackgroundColor: 'rgba(39, 174, 96, 1)',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            borderWidth: 3,
+                            spanGaps: false
+                        },
+                        {
+                            label: 'Daily Cost (₹)',
+                            data: costData,
+                            borderColor: 'rgba(231, 76, 60, 1)',
+                            backgroundColor: 'rgba(231, 76, 60, 0.2)',
+                            tension: 0.4,
+                            fill: true,
+                            pointRadius: 6,
+                            pointHoverRadius: 8,
+                            pointBackgroundColor: 'rgba(231, 76, 60, 1)',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            borderWidth: 3,
+                            spanGaps: false
+                        },
+                        {
+                            label: 'Net Value (₹)',
+                            data: netValueData,
+                            borderColor: 'rgba(52, 152, 219, 1)',
+                            backgroundColor: 'rgba(52, 152, 219, 0.2)',
+                            tension: 0.4,
+                            fill: true,
+                            pointRadius: 6,
+                            pointHoverRadius: 8,
+                            pointBackgroundColor: 'rgba(52, 152, 219, 1)',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            borderWidth: 3,
+                            spanGaps: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            display: true
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ₹' + context.parsed.y.toLocaleString('en-IN');
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            display: true,
+                            grid: {
+                                display: true
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                display: true
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return '₹' + value.toLocaleString('en-IN');
+                                }
+                            }
+                        }
+                    },
+                    elements: {
+                        line: {
+                            borderJoinStyle: 'round',
+                            borderCapStyle: 'round'
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateRevenueChart(data) {
+            const ctx = document.getElementById('revenueChart');
+            if (!ctx) return;
+            
+            if (!data || data.length === 0) {
+                console.warn('No revenue data available');
+                ctx.parentElement.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">No revenue data available.</p>';
+                return;
+            }
+            
+            if (revenueChart) {
+                revenueChart.destroy();
+            }
+
+            // Generate colors dynamically for all materials
+            const colors = [
+                'rgba(39, 174, 96, 0.8)',   // Green
+                'rgba(52, 152, 219, 0.8)',  // Blue
+                'rgba(155, 89, 182, 0.8)',  // Purple
+                'rgba(241, 196, 15, 0.8)',  // Yellow
+                'rgba(230, 126, 34, 0.8)',  // Orange
+                'rgba(231, 76, 60, 0.8)',   // Red
+                'rgba(46, 204, 113, 0.8)',  // Emerald
+                'rgba(26, 188, 156, 0.8)',  // Turquoise
+                'rgba(52, 73, 94, 0.8)',    // Dark Blue
+                'rgba(149, 165, 166, 0.8)'  // Gray
+            ];
+            
+            // Prepare data - use actual revenue values
+            const chartLabels = data.map(item => item.material || item.material_type);
+            const chartData = data.map(item => item.value || item.total_revenue || 0);
+            const expectedData = data.map(item => item.expected_value || item.value || item.total_revenue || 0);
+            
+            // Check if we have both actual and expected to show comparison
+            const hasExpected = expectedData.some((val, idx) => val !== chartData[idx]);
+            
+            revenueChart = new Chart(ctx.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: chartLabels,
+                    datasets: [
+                        {
+                            label: 'Actual Revenue (₹)',
+                            data: chartData,
+                            backgroundColor: data.map((item, idx) => colors[idx % colors.length]),
+                            borderColor: data.map((item, idx) => colors[idx % colors.length].replace('0.8', '1')),
+                            borderWidth: 2
+                        }
+                    ].concat(hasExpected ? [{
+                        label: 'Expected Revenue (₹)',
+                        data: expectedData,
+                        backgroundColor: data.map((item, idx) => colors[idx % colors.length].replace('0.8', '0.3')),
+                        borderColor: data.map((item, idx) => colors[idx % colors.length].replace('0.8', '0.6')),
+                        borderWidth: 1,
+                        borderDash: [5, 5]
+                    }] : [])
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const value = context.parsed.y;
+                                    const material = data[context.dataIndex];
+                                    let tooltip = 'Revenue: ₹' + value.toLocaleString('en-IN');
+                                    if (material && material.quantity) {
+                                        tooltip += '\nQuantity: ' + material.quantity.toLocaleString('en-IN', {minimumFractionDigits: 2}) + ' kg';
+                                    }
+                                    if (material && material.transactions) {
+                                        tooltip += '\nTransactions: ' + material.transactions;
+                                    }
+                                    return tooltip;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '₹' + value.toLocaleString('en-IN');
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Revenue Entry Functions
+        function openRevenueEntryModal(transactionId, materialType, expectedRevenue) {
+            document.getElementById('revenueTransactionId').value = transactionId;
+            document.getElementById('revenueMaterialType').value = materialType;
+            document.getElementById('revenueExpected').value = expectedRevenue.toFixed(2);
+            document.getElementById('revenueActual').value = '';
+            document.getElementById('revenuePaymentMethod').value = '';
+            document.getElementById('revenueVendorName').value = '';
+            document.getElementById('revenueInvoiceNumber').value = '';
+            document.getElementById('revenueNotes').value = '';
+            document.getElementById('revenueRecordedBy').value = '';
+            
+            // Set default date to now
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            document.getElementById('revenueDate').value = `${year}-${month}-${day}T${hours}:${minutes}`;
+            
+            document.getElementById('revenueEntryModal').style.display = 'flex';
+            document.getElementById('revenueEntryMessage').innerHTML = '';
+        }
+
+        function closeRevenueEntryModal() {
+            document.getElementById('revenueEntryModal').style.display = 'none';
+        }
+
+        document.getElementById('revenueEntryForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const transactionId = parseInt(document.getElementById('revenueTransactionId').value);
+            const actualRevenue = parseFloat(document.getElementById('revenueActual').value);
+            const expectedRevenue = parseFloat(document.getElementById('revenueExpected').value) || null;
+            const paymentMethod = document.getElementById('revenuePaymentMethod').value;
+            const vendorName = document.getElementById('revenueVendorName').value;
+            const invoiceNumber = document.getElementById('revenueInvoiceNumber').value;
+            const revenueDate = document.getElementById('revenueDate').value;
+            const notes = document.getElementById('revenueNotes').value;
+            const recordedBy = document.getElementById('revenueRecordedBy').value;
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/revenue/entries`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        transaction_id: transactionId,
+                        actual_revenue: actualRevenue,
+                        expected_revenue: expectedRevenue,
+                        payment_method: paymentMethod || null,
+                        vendor_name: vendorName || null,
+                        invoice_number: invoiceNumber || null,
+                        revenue_date: revenueDate || null,
+                        notes: notes || null,
+                        recorded_by: recordedBy || null
+                    })
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Failed to save revenue entry');
+                }
+                
+                const result = await response.json();
+                document.getElementById('revenueEntryMessage').innerHTML = 
+                    `<div style="background: #27ae60; color: white; padding: 15px; border-radius: 8px; margin-top: 15px;">
+                        ✅ Revenue entry saved successfully!<br>
+                        Actual: ₹${result.actual_revenue.toFixed(2)} | 
+                        Expected: ₹${result.expected_revenue.toFixed(2)} | 
+                        Variance: ₹${result.revenue_variance.toFixed(2)}
+                    </div>`;
+                
+                // Refresh dashboard immediately
+                closeRevenueEntryModal();
+                // Force refresh by clearing dashboard first
+                document.getElementById('dashboard').style.display = 'none';
+                document.getElementById('loading').style.display = 'block';
+                // Then regenerate report
+                setTimeout(() => {
+                    generateReport();
+                }, 500);
+                
+            } catch (error) {
+                document.getElementById('revenueEntryMessage').innerHTML = 
+                    `<div style="background: #e74c3c; color: white; padding: 15px; border-radius: 8px; margin-top: 15px;">
+                        ❌ Error: ${error.message}
+                    </div>`;
+            }
+        });
+
+        // Cost Entry Functions
+        function openCostEntryModal(transactionId, materialType, expectedCost) {
+            document.getElementById('costTransactionId').value = transactionId;
+            document.getElementById('costMaterialType').value = materialType;
+            document.getElementById('costExpected').value = expectedCost.toFixed(2);
+            document.getElementById('costActual').value = '';
+            document.getElementById('costDisposal').value = '';
+            document.getElementById('costTransportation').value = '';
+            document.getElementById('costProcessing').value = '';
+            document.getElementById('costOther').value = '';
+            document.getElementById('costType').value = '';
+            document.getElementById('costVendorName').value = '';
+            document.getElementById('costInvoiceNumber').value = '';
+            document.getElementById('costPaymentMethod').value = '';
+            document.getElementById('costNotes').value = '';
+            document.getElementById('costRecordedBy').value = '';
+            
+            // Set default date to now
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            document.getElementById('costDate').value = `${year}-${month}-${day}T${hours}:${minutes}`;
+            
+            document.getElementById('costEntryModal').style.display = 'flex';
+            document.getElementById('costEntryMessage').innerHTML = '';
+        }
+
+        function closeCostEntryModal() {
+            document.getElementById('costEntryModal').style.display = 'none';
+        }
+
+        // Auto-calculate total cost from breakdown
+        document.addEventListener('DOMContentLoaded', function() {
+            ['costDisposal', 'costTransportation', 'costProcessing', 'costOther'].forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.addEventListener('input', function() {
+                        const disposal = parseFloat(document.getElementById('costDisposal').value) || 0;
+                        const transportation = parseFloat(document.getElementById('costTransportation').value) || 0;
+                        const processing = parseFloat(document.getElementById('costProcessing').value) || 0;
+                        const other = parseFloat(document.getElementById('costOther').value) || 0;
+                        const total = disposal + transportation + processing + other;
+                        if (total > 0) {
+                            document.getElementById('costActual').value = total.toFixed(2);
+                        }
+                    });
+                }
+            });
+
+            const costEntryForm = document.getElementById('costEntryForm');
+            if (costEntryForm) {
+                costEntryForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    
+                    const transactionId = parseInt(document.getElementById('costTransactionId').value);
+                    const actualCost = parseFloat(document.getElementById('costActual').value);
+                    const expectedCost = parseFloat(document.getElementById('costExpected').value) || null;
+                    const disposalCost = parseFloat(document.getElementById('costDisposal').value) || null;
+                    const transportationCost = parseFloat(document.getElementById('costTransportation').value) || null;
+                    const processingCost = parseFloat(document.getElementById('costProcessing').value) || null;
+                    const otherCosts = parseFloat(document.getElementById('costOther').value) || null;
+                    const costType = document.getElementById('costType').value;
+                    const vendorName = document.getElementById('costVendorName').value;
+                    const invoiceNumber = document.getElementById('costInvoiceNumber').value;
+                    const paymentMethod = document.getElementById('costPaymentMethod').value;
+                    const costDate = document.getElementById('costDate').value;
+                    const notes = document.getElementById('costNotes').value;
+                    const recordedBy = document.getElementById('costRecordedBy').value;
+                    
+                    try {
+                        const response = await fetch(`${API_BASE_URL}/api/v1/cost/entries`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                transaction_id: transactionId,
+                                actual_cost: actualCost,
+                                expected_cost: expectedCost,
+                                disposal_cost: disposalCost,
+                                transportation_cost: transportationCost,
+                                processing_cost: processingCost,
+                                other_costs: otherCosts,
+                                cost_type: costType || null,
+                                vendor_name: vendorName || null,
+                                invoice_number: invoiceNumber || null,
+                                payment_method: paymentMethod || null,
+                                cost_date: costDate || null,
+                                notes: notes || null,
+                                recorded_by: recordedBy || null
+                            })
+                        });
+                        
+                        if (!response.ok) {
+                            const error = await response.json();
+                            throw new Error(error.detail || 'Failed to save cost entry');
+                        }
+                        
+                        const result = await response.json();
+                        document.getElementById('costEntryMessage').innerHTML = 
+                            `<div style="background: #27ae60; color: white; padding: 15px; border-radius: 8px; margin-top: 15px;">
+                                ✅ Cost entry saved successfully!<br>
+                                Actual: ₹${result.actual_cost.toFixed(2)} | 
+                                Expected: ₹${result.expected_cost.toFixed(2)} | 
+                                Variance: ₹${result.cost_variance.toFixed(2)}
+                            </div>`;
+                        
+                        // Refresh dashboard immediately
+                        closeCostEntryModal();
+                        document.getElementById('dashboard').style.display = 'none';
+                        document.getElementById('loading').style.display = 'block';
+                        setTimeout(() => {
+                            generateReport();
+                        }, 500);
+                        
+                    } catch (error) {
+                        document.getElementById('costEntryMessage').innerHTML = 
+                            `<div style="background: #e74c3c; color: white; padding: 15px; border-radius: 8px; margin-top: 15px;">
+                                ❌ Error: ${error.message}
+                            </div>`;
+                    }
+                });
+            }
+        });
+
+        async function loadRevenueAnalytics() {
+            const companyId = document.getElementById('companyId').value.trim();
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            
+            if (!companyId) {
+                alert('Please enter a Company ID first');
+                return;
+            }
+            
+            try {
+                const params = new URLSearchParams({
+                    start_date: startDate,
+                    end_date: endDate
+                });
+                
+                const response = await fetch(`${API_BASE_URL}/api/v1/revenue/analytics/${companyId}?${params}`);
+                if (!response.ok) {
+                    throw new Error('Failed to load revenue analytics');
+                }
+                
+                const analytics = await response.json();
+                displayRevenueAnalytics(analytics);
+                document.getElementById('revenueAnalyticsContainer').style.display = 'block';
+                
+            } catch (error) {
+                alert('Error loading revenue analytics: ' + error.message);
+            }
+        }
+
+        function displayRevenueAnalytics(analytics) {
+            const container = document.getElementById('revenueAnalyticsContent');
+            
+            let html = `
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;">
+                    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 10px; color: white;">
+                        <div style="font-size: 14px; opacity: 0.9; margin-bottom: 5px;">Expected Revenue</div>
+                        <div style="font-size: 28px; font-weight: bold;">₹${analytics.summary.total_expected_revenue.toLocaleString('en-IN')}</div>
+                    </div>
+                    <div style="background: linear-gradient(135deg, #27ae60 0%, #229954 100%); padding: 20px; border-radius: 10px; color: white;">
+                        <div style="font-size: 14px; opacity: 0.9; margin-bottom: 5px;">Actual Revenue</div>
+                        <div style="font-size: 28px; font-weight: bold;">₹${analytics.summary.total_actual_revenue.toLocaleString('en-IN')}</div>
+                    </div>
+                    <div style="background: linear-gradient(135deg, ${analytics.summary.total_variance >= 0 ? '#27ae60' : '#e74c3c'} 0%, ${analytics.summary.total_variance >= 0 ? '#229954' : '#c0392b'} 100%); padding: 20px; border-radius: 10px; color: white;">
+                        <div style="font-size: 14px; opacity: 0.9; margin-bottom: 5px;">Variance</div>
+                        <div style="font-size: 28px; font-weight: bold;">₹${analytics.summary.total_variance.toLocaleString('en-IN')}</div>
+                        <div style="font-size: 12px; opacity: 0.9; margin-top: 5px;">${analytics.summary.variance_percentage >= 0 ? '+' : ''}${analytics.summary.variance_percentage.toFixed(2)}%</div>
+                    </div>
+                    <div style="background: linear-gradient(135deg, #3498db 0%, #2980b9 100%); padding: 20px; border-radius: 10px; color: white;">
+                        <div style="font-size: 14px; opacity: 0.9; margin-bottom: 5px;">Revenue Entries</div>
+                        <div style="font-size: 28px; font-weight: bold;">${analytics.summary.revenue_entries_count}</div>
+                        <div style="font-size: 12px; opacity: 0.9; margin-top: 5px;">${analytics.summary.transactions_without_revenue} pending</div>
+                    </div>
+                </div>
+            `;
+            
+            // Material Analysis
+            if (Object.keys(analytics.material_analysis).length > 0) {
+                html += `
+                    <h4 style="color: #2c3e50; margin-bottom: 15px; margin-top: 30px;">📊 Material-Wise Revenue Analysis</h4>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: #667eea; color: white;">
+                                    <th style="padding: 12px; text-align: left;">Material</th>
+                                    <th style="padding: 12px; text-align: right;">Expected</th>
+                                    <th style="padding: 12px; text-align: right;">Actual</th>
+                                    <th style="padding: 12px; text-align: right;">Variance</th>
+                                    <th style="padding: 12px; text-align: right;">Variance %</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                
+                for (const [material, data] of Object.entries(analytics.material_analysis)) {
+                    html += `
+                        <tr>
+                            <td style="padding: 10px; border-bottom: 1px solid #e0e0e0;"><strong>${material}</strong></td>
+                            <td style="padding: 10px; border-bottom: 1px solid #e0e0e0; text-align: right;">₹${data.expected_revenue.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                            <td style="padding: 10px; border-bottom: 1px solid #e0e0e0; text-align: right; color: #27ae60;">₹${data.actual_revenue.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                            <td style="padding: 10px; border-bottom: 1px solid #e0e0e0; text-align: right; color: ${data.variance >= 0 ? '#27ae60' : '#e74c3c'}; font-weight: bold;">₹${data.variance.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                            <td style="padding: 10px; border-bottom: 1px solid #e0e0e0; text-align: right; color: ${data.variance_percentage >= 0 ? '#27ae60' : '#e74c3c'};">${data.variance_percentage >= 0 ? '+' : ''}${data.variance_percentage.toFixed(2)}%</td>
+                        </tr>
+                    `;
+                }
+                
+                html += `
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            }
+            
+            // Vendor Analysis
+            if (Object.keys(analytics.vendor_analysis).length > 0) {
+                html += `
+                    <h4 style="color: #2c3e50; margin-bottom: 15px; margin-top: 30px;">🏢 Vendor/Buyer Analysis</h4>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: #667eea; color: white;">
+                                    <th style="padding: 12px; text-align: left;">Vendor/Buyer</th>
+                                    <th style="padding: 12px; text-align: right;">Total Revenue</th>
+                                    <th style="padding: 12px; text-align: right;">Transactions</th>
+                                    <th style="padding: 12px; text-align: right;">Avg per Transaction</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                
+                for (const [vendor, data] of Object.entries(analytics.vendor_analysis)) {
+                    html += `
+                        <tr>
+                            <td style="padding: 10px; border-bottom: 1px solid #e0e0e0;"><strong>${vendor}</strong></td>
+                            <td style="padding: 10px; border-bottom: 1px solid #e0e0e0; text-align: right; color: #27ae60;">₹${data.total_revenue.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                            <td style="padding: 10px; border-bottom: 1px solid #e0e0e0; text-align: right;">${data.transaction_count}</td>
+                            <td style="padding: 10px; border-bottom: 1px solid #e0e0e0; text-align: right;">₹${data.avg_revenue_per_transaction.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                        </tr>
+                    `;
+                }
+                
+                html += `
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            }
+            
+            container.innerHTML = html;
+        }
+
+        async function loadCostAnalytics() {
+            const companyId = document.getElementById('companyId').value.trim();
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            
+            if (!companyId) {
+                alert('Please enter a Company ID first');
+                return;
+            }
+            
+            try {
+                const params = new URLSearchParams({
+                    start_date: startDate,
+                    end_date: endDate
+                });
+                
+                const response = await fetch(`${API_BASE_URL}/api/v1/cost/analytics/${companyId}?${params}`);
+                if (!response.ok) {
+                    throw new Error('Failed to load cost analytics');
+                }
+                
+                const analytics = await response.json();
+                displayCostAnalytics(analytics);
+                document.getElementById('costAnalyticsContainer').style.display = 'block';
+                
+            } catch (error) {
+                alert('Error loading cost analytics: ' + error.message);
+            }
+        }
+
+        function displayCostAnalytics(analytics) {
+            const container = document.getElementById('costAnalyticsContent');
+            
+            let html = `
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;">
+                    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 10px; color: white;">
+                        <div style="font-size: 14px; opacity: 0.9; margin-bottom: 5px;">Expected Cost</div>
+                        <div style="font-size: 28px; font-weight: bold;">₹${analytics.summary.total_expected_cost.toLocaleString('en-IN')}</div>
+                    </div>
+                    <div style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); padding: 20px; border-radius: 10px; color: white;">
+                        <div style="font-size: 14px; opacity: 0.9; margin-bottom: 5px;">Actual Cost</div>
+                        <div style="font-size: 28px; font-weight: bold;">₹${analytics.summary.total_actual_cost.toLocaleString('en-IN')}</div>
+                    </div>
+                    <div style="background: linear-gradient(135deg, ${analytics.summary.total_variance <= 0 ? '#27ae60' : '#e74c3c'} 0%, ${analytics.summary.total_variance <= 0 ? '#229954' : '#c0392b'} 100%); padding: 20px; border-radius: 10px; color: white;">
+                        <div style="font-size: 14px; opacity: 0.9; margin-bottom: 5px;">Variance</div>
+                        <div style="font-size: 28px; font-weight: bold;">₹${Math.abs(analytics.summary.total_variance).toLocaleString('en-IN')}</div>
+                        <div style="font-size: 12px; opacity: 0.9; margin-top: 5px;">${analytics.summary.total_variance <= 0 ? 'Savings' : 'Over Budget'}: ${analytics.summary.variance_percentage >= 0 ? '+' : ''}${analytics.summary.variance_percentage.toFixed(2)}%</div>
+                    </div>
+                    <div style="background: linear-gradient(135deg, #3498db 0%, #2980b9 100%); padding: 20px; border-radius: 10px; color: white;">
+                        <div style="font-size: 14px; opacity: 0.9; margin-bottom: 5px;">Cost Entries</div>
+                        <div style="font-size: 28px; font-weight: bold;">${analytics.summary.cost_entries_count}</div>
+                        <div style="font-size: 12px; opacity: 0.9; margin-top: 5px;">${analytics.summary.transactions_without_cost} pending</div>
+                    </div>
+                </div>
+            `;
+            
+            // Cost Breakdown
+            if (analytics.cost_breakdown && analytics.cost_breakdown.total > 0) {
+                html += `
+                    <h4 style="color: #2c3e50; margin-bottom: 15px; margin-top: 30px;">💸 Cost Breakdown by Type</h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                        <div style="background: #fff5f5; padding: 15px; border-radius: 10px; border-left: 4px solid #e74c3c;">
+                            <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Disposal</div>
+                            <div style="font-size: 20px; font-weight: bold; color: #e74c3c;">₹${analytics.cost_breakdown.disposal.toLocaleString('en-IN', {minimumFractionDigits: 2})}</div>
+                        </div>
+                        <div style="background: #fff5f5; padding: 15px; border-radius: 10px; border-left: 4px solid #e67e22;">
+                            <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Transportation</div>
+                            <div style="font-size: 20px; font-weight: bold; color: #e67e22;">₹${analytics.cost_breakdown.transportation.toLocaleString('en-IN', {minimumFractionDigits: 2})}</div>
+                        </div>
+                        <div style="background: #fff5f5; padding: 15px; border-radius: 10px; border-left: 4px solid #d35400;">
+                            <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Processing</div>
+                            <div style="font-size: 20px; font-weight: bold; color: #d35400;">₹${analytics.cost_breakdown.processing.toLocaleString('en-IN', {minimumFractionDigits: 2})}</div>
+                        </div>
+                        <div style="background: #fff5f5; padding: 15px; border-radius: 10px; border-left: 4px solid #c0392b;">
+                            <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Other</div>
+                            <div style="font-size: 20px; font-weight: bold; color: #c0392b;">₹${analytics.cost_breakdown.other.toLocaleString('en-IN', {minimumFractionDigits: 2})}</div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Material Analysis
+            if (Object.keys(analytics.material_analysis).length > 0) {
+                html += `
+                    <h4 style="color: #2c3e50; margin-bottom: 15px; margin-top: 30px;">📊 Material-Wise Cost Analysis</h4>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: #e74c3c; color: white;">
+                                    <th style="padding: 12px; text-align: left;">Material</th>
+                                    <th style="padding: 12px; text-align: right;">Expected</th>
+                                    <th style="padding: 12px; text-align: right;">Actual</th>
+                                    <th style="padding: 12px; text-align: right;">Variance</th>
+                                    <th style="padding: 12px; text-align: right;">Variance %</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                
+                for (const [material, data] of Object.entries(analytics.material_analysis)) {
+                    html += `
+                        <tr>
+                            <td style="padding: 10px; border-bottom: 1px solid #e0e0e0;"><strong>${material}</strong></td>
+                            <td style="padding: 10px; border-bottom: 1px solid #e0e0e0; text-align: right;">₹${data.expected_cost.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                            <td style="padding: 10px; border-bottom: 1px solid #e0e0e0; text-align: right; color: #e74c3c;">₹${data.actual_cost.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                            <td style="padding: 10px; border-bottom: 1px solid #e0e0e0; text-align: right; color: ${data.variance <= 0 ? '#27ae60' : '#e74c3c'}; font-weight: bold;">₹${Math.abs(data.variance).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                            <td style="padding: 10px; border-bottom: 1px solid #e0e0e0; text-align: right; color: ${data.variance <= 0 ? '#27ae60' : '#e74c3c'};">${data.variance <= 0 ? 'Savings' : 'Over'}: ${data.variance_percentage >= 0 ? '+' : ''}${data.variance_percentage.toFixed(2)}%</td>
+                        </tr>
+                    `;
+                }
+                
+                html += `
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            }
+            
+            // Vendor Analysis
+            if (Object.keys(analytics.vendor_analysis).length > 0) {
+                html += `
+                    <h4 style="color: #2c3e50; margin-bottom: 15px; margin-top: 30px;">🏢 Vendor/Service Provider Analysis</h4>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: #e74c3c; color: white;">
+                                    <th style="padding: 12px; text-align: left;">Vendor/Provider</th>
+                                    <th style="padding: 12px; text-align: right;">Total Cost</th>
+                                    <th style="padding: 12px; text-align: right;">Transactions</th>
+                                    <th style="padding: 12px; text-align: right;">Avg per Transaction</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                
+                for (const [vendor, data] of Object.entries(analytics.vendor_analysis)) {
+                    html += `
+                        <tr>
+                            <td style="padding: 10px; border-bottom: 1px solid #e0e0e0;"><strong>${vendor}</strong></td>
+                            <td style="padding: 10px; border-bottom: 1px solid #e0e0e0; text-align: right; color: #e74c3c;">₹${data.total_cost.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                            <td style="padding: 10px; border-bottom: 1px solid #e0e0e0; text-align: right;">${data.transaction_count}</td>
+                            <td style="padding: 10px; border-bottom: 1px solid #e0e0e0; text-align: right;">₹${data.avg_cost_per_transaction.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                        </tr>
+                    `;
+                }
+                
+                html += `
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            }
+            
+            container.innerHTML = html;
+        }
+
+        function updateCostChart(data) {
+            const ctx = document.getElementById('costChart');
+            if (!ctx) return;
+            
+            if (!data || data.length === 0) {
+                console.warn('No cost data available');
+                ctx.parentElement.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">No cost data available.</p>';
+                return;
+            }
+            
+            if (costChart) {
+                costChart.destroy();
+            }
+
+            // Generate colors for cost chart dynamically
+            const costColors = [
+                'rgba(231, 76, 60, 0.8)',   // Red
+                'rgba(230, 126, 34, 0.8)',  // Orange
+                'rgba(243, 156, 18, 0.8)',  // Dark Orange
+                'rgba(192, 57, 43, 0.8)',   // Dark Red
+                'rgba(211, 84, 0, 0.8)',    // Deep Orange
+                'rgba(127, 140, 141, 0.8)'  // Gray
+            ];
+            
+            costChart = new Chart(ctx.getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: data.map(item => (item.type || item.category)),
+                    datasets: [{
+                        label: 'Cost (₹)',
+                        data: data.map(item => item.value || item.total_cost || 0),
+                        backgroundColor: data.map((item, idx) => costColors[idx % costColors.length]),
+                        borderColor: data.map((item, idx) => costColors[idx % costColors.length].replace('0.8', '1')),
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed || 0;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return `${label}: ₹${value.toLocaleString('en-IN')} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

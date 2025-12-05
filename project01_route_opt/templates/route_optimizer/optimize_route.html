@@ -1,0 +1,888 @@
+{% extends 'base.html' %}
+
+{% block title %}Optimize Route - Sahayog Route Optimizer{% endblock %}
+
+{% block extra_css %}
+<style>
+    .location-card {
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+    }
+    .location-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    .location-card.selected {
+        border-color: #667eea;
+        background-color: #f8f9ff;
+    }
+    .vehicle-card {
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+    }
+    .vehicle-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    .vehicle-card.selected {
+        border-color: #667eea;
+        background-color: #f8f9ff;
+    }
+    .map-container {
+        height: 400px;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    .optimization-progress {
+        display: none;
+    }
+    .results-section {
+        display: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="fas fa-route me-2"></i>
+        Optimize Route
+    </h1>
+</div>
+
+<!-- Optimization Form -->
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-cog me-2"></i>
+                    Route Configuration
+                </h5>
+            </div>
+            <div class="card-body">
+                <form id="optimizationForm">
+                    <!-- Route Name -->
+                    <div class="mb-3">
+                        <label for="routeName" class="form-label">Route Name *</label>
+                        <input type="text" class="form-control" id="routeName" name="routeName" 
+                               placeholder="Enter a descriptive name for this route" required>
+                    </div>
+                    
+                    <!-- Location Selection -->
+                    <div class="mb-4">
+                        <label class="form-label">Select Locations to Visit *</label>
+                        <div class="row" id="locationsContainer">
+                            {% for location in locations %}
+                            <div class="col-md-6 mb-2">
+                                <div class="card location-card" data-location-id="{{ location.id }}" data-lat="{{ location.latitude }}" data-lng="{{ location.longitude }}">
+                                    <div class="card-body p-3">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <h6 class="card-title mb-1">{{ location.name }}</h6>
+                                                <p class="card-text small text-muted mb-1">{{ location.address }}</p>
+                                                <div class="d-flex gap-2">
+                                                    <span class="badge bg-primary">{{ location.get_location_type_display }}</span>
+                                                    <span class="badge bg-{% if location.priority == 'urgent' %}danger{% elif location.priority == 'high' %}warning{% elif location.priority == 'medium' %}info{% else %}secondary{% endif %}">
+                                                        {{ location.get_priority_display }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div class="text-end">
+                                                <small class="text-muted">{{ location.estimated_waste_volume }} L</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <div class="text-center mt-3">
+                            <button type="button" class="btn btn-outline-primary" id="selectAllLocations">
+                                <i class="fas fa-check-double me-2"></i>
+                                Select All
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" id="clearLocations">
+                                <i class="fas fa-times me-2"></i>
+                                Clear Selection
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Vehicle Selection -->
+                    <div class="mb-4">
+                        <label class="form-label">Select Vehicle *</label>
+                        <div class="row" id="vehiclesContainer">
+                            {% for vehicle in vehicles %}
+                            <div class="col-md-6 mb-2">
+                                <div class="card vehicle-card" data-vehicle-id="{{ vehicle.id }}" 
+                                     data-capacity="{{ vehicle.capacity }}" 
+                                     data-fuel-efficiency="{{ vehicle.fuel_efficiency }}"
+                                     data-fuel-tank="{{ vehicle.fuel_tank_capacity|default:0 }}">
+                                    <div class="card-body p-3">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div class="flex-grow-1">
+                                                <h6 class="card-title mb-1">{{ vehicle.name }}</h6>
+                                                <p class="card-text small text-muted mb-1">{{ vehicle.get_vehicle_type_display }}</p>
+                                                <div class="d-flex gap-2 flex-wrap mb-2">
+                                                    <span class="badge bg-info" title="Waste Capacity">{{ vehicle.capacity }} L</span>
+                                                    <span class="badge bg-success" title="Fuel Efficiency">{{ vehicle.fuel_efficiency }} km/L</span>
+                                                    <span class="badge bg-warning" title="Fuel Tank Capacity">{{ vehicle.fuel_tank_capacity|default:"N/A" }} L Tank</span>
+                                                </div>
+                                                <div id="fuel-preview-{{ vehicle.id }}" class="small text-muted" style="display:none;">
+                                                    <i class="fas fa-gas-pump"></i> <span class="fuel-estimate"></span>
+                                                </div>
+                                            </div>
+                                            <div class="text-center">
+                                                <i class="fas fa-truck fa-2x text-muted"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <!-- Depot Selection -->
+                    <div class="mb-4">
+                        <label for="depotLocation" class="form-label">Starting Point (Depot)</label>
+                        <select class="form-select" id="depotLocation" name="depotLocation">
+                            <option value="">Auto-select (first location)</option>
+                            {% for location in locations %}
+                            <option value="{{ location.id }}">{{ location.name }} - {{ location.address }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">Select the starting point for the route. If not specified, the first selected location will be used.</div>
+                    </div>
+                    
+                    <!-- Optimization Button -->
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary btn-lg" id="optimizeBtn">
+                            <i class="fas fa-magic me-2"></i>
+                            Optimize Route
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Map and Results Sidebar -->
+    <div class="col-lg-4">
+        <!-- Map -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-map me-2"></i>
+                    Route Map
+                </h6>
+            </div>
+            <div class="card-body p-0">
+                <div id="routeMap" class="map-container"></div>
+            </div>
+        </div>
+        
+        <!-- Optimization Progress -->
+        <div class="card optimization-progress mb-4">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-spinner fa-spin me-2"></i>
+                    Optimizing Route...
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="progress mb-3">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                         role="progressbar" style="width: 100%"></div>
+                </div>
+                <p class="text-muted small mb-0">Using Google OR-Tools to find the optimal route...</p>
+            </div>
+        </div>
+        
+        <!-- Results -->
+        <div class="card results-section">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-chart-line me-2"></i>
+                    Optimization Results
+                </h6>
+            </div>
+            <div class="card-body">
+                <div id="resultsContent">
+                    <!-- Results will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let selectedLocations = [];
+let selectedVehicle = null;
+let map = null;
+let markers = [];
+let routeLine = null;
+let recommendTimer = null;
+let mapUpdateTimer = null;
+let locationCache = {}; // Cache location data for faster access
+let vehicleCache = {}; // Cache vehicle data for fuel calculations
+const scriptPrefixRaw = "{{ request.META.SCRIPT_NAME|default:''|escapejs }}";
+const scriptPrefix = scriptPrefixRaw === '/' ? '' : scriptPrefixRaw;
+const optimizerBase = `${scriptPrefix}/route-optimizer`;
+
+// Lightweight toast/alert utility for immediate feedback
+function showToast(message, type) {
+    // type: 'success', 'danger', 'warning', 'info'
+    const id = 'inline-toast-' + Date.now();
+    const alert = $(
+        `<div id="${id}" class="alert alert-${type} shadow position-fixed top-0 end-0 m-3" role="alert" style="z-index: 1080;">
+            ${message}
+        </div>`
+    );
+    $('body').append(alert);
+    setTimeout(function() { alert.fadeOut(400, function() { $(this).remove(); }); }, 2500);
+}
+
+$(document).ready(function() {
+    // Cache location data on page load for faster access
+    $('.location-card').each(function() {
+        const card = $(this);
+        const locationId = parseInt(card.attr('data-location-id')) || card.data('location-id');
+        // Use attr() instead of data() for more reliable attribute reading
+        const lat = parseFloat(card.attr('data-lat')) || parseFloat(card.data('lat'));
+        const lng = parseFloat(card.attr('data-lng')) || parseFloat(card.data('lng'));
+        
+        if (locationId && !isNaN(lat) && !isNaN(lng)) {
+            locationCache[locationId] = {
+                name: card.find('.card-title').text().trim(),
+                address: card.find('.card-text').text().trim(),
+                lat: lat,
+                lng: lng
+            };
+        } else {
+            console.warn('Invalid location data:', {
+                id: locationId,
+                lat: lat,
+                lng: lng,
+                card: card[0]
+            });
+        }
+    });
+    
+    // Cache vehicle data on page load
+    $('.vehicle-card').each(function() {
+        const card = $(this);
+        const vehicleId = parseInt(card.attr('data-vehicle-id')) || card.data('vehicle-id');
+        const capacity = parseFloat(card.attr('data-capacity')) || parseFloat(card.data('capacity')) || 0;
+        const fuelEfficiency = parseFloat(card.attr('data-fuel-efficiency')) || parseFloat(card.data('fuel-efficiency')) || 0;
+        const fuelTank = parseFloat(card.attr('data-fuel-tank')) || parseFloat(card.data('fuel-tank')) || 0;
+        
+        if (vehicleId) {
+            vehicleCache[vehicleId] = {
+                capacity: capacity,
+                fuel_efficiency: fuelEfficiency,
+                fuel_tank_capacity: fuelTank,
+                name: card.find('.card-title').text().trim()
+            };
+        }
+    });
+    
+    console.log('Location cache populated:', Object.keys(locationCache).length, 'locations');
+    console.log('Vehicle cache populated:', Object.keys(vehicleCache).length, 'vehicles');
+    
+    // Initialize map
+    initMap();
+    
+    // Location selection
+    $('.location-card').click(function() {
+        const locationId = $(this).data('location-id');
+        if ($(this).hasClass('selected')) {
+            $(this).removeClass('selected');
+            selectedLocations = selectedLocations.filter(id => id !== locationId);
+        } else {
+            $(this).addClass('selected');
+            selectedLocations.push(locationId);
+        }
+        
+        // Update map markers first
+        updateMapMarkersOnly();
+        
+        // Then show temporary path after a tiny delay to ensure markers are rendered
+        setTimeout(function() {
+            showTemporaryPath();
+        }, 50);
+        
+        // Update fuel preview
+        updateFuelPreview();
+        
+        // Then schedule optimized route
+        scheduleRecommend();
+    });
+    
+    // Vehicle selection
+    $('.vehicle-card').click(function() {
+        $('.vehicle-card').removeClass('selected');
+        $(this).addClass('selected');
+        selectedVehicle = $(this).data('vehicle-id');
+        // Update fuel preview when vehicle is selected
+        updateFuelPreview();
+    });
+    
+    // Select all locations
+    $('#selectAllLocations').click(function() {
+        $('.location-card').addClass('selected');
+        selectedLocations = $('.location-card').map(function() {
+            return $(this).data('location-id');
+        }).get();
+        scheduleMapUpdate(); // Debounced update
+        scheduleRecommend();
+    });
+    
+    // Clear locations
+    $('#clearLocations').click(function() {
+        $('.location-card').removeClass('selected');
+        selectedLocations = [];
+        scheduleMapUpdate(); // Debounced update
+        scheduleRecommend();
+    });
+    
+    // Form submission
+    $('#optimizationForm').submit(function(e) {
+        e.preventDefault();
+        
+        if (selectedLocations.length === 0) {
+            alert('Please select at least one location.');
+            return;
+        }
+        
+        if (!selectedVehicle) {
+            alert('Please select a vehicle.');
+            return;
+        }
+        
+        // Validate fuel capacity before submission
+        const vehicle = vehicleCache[selectedVehicle];
+        if (vehicle && vehicle.fuel_tank_capacity > 0 && selectedLocations.length >= 2) {
+            const fuelEstimate = calculateEstimatedFuel();
+            if (fuelEstimate && !fuelEstimate.sufficient) {
+                const shortage = (fuelEstimate.fuel - fuelEstimate.fuel_tank).toFixed(1);
+                const proceed = confirm(
+                    `WARNING: Estimated fuel requirement (${fuelEstimate.fuel.toFixed(1)}L) exceeds vehicle fuel tank capacity (${fuelEstimate.fuel_tank}L).\n\n` +
+                    `Shortage: ${shortage}L\n\n` +
+                    `Vehicle may need refueling during the route. Do you want to proceed anyway?`
+                );
+                if (!proceed) {
+                    return;
+                }
+            }
+        }
+        
+        const routeName = $('#routeName').val().trim();
+        if (!routeName) {
+            alert('Please enter a route name.');
+            return;
+        }
+        
+        // Show progress
+        $('.optimization-progress').show();
+        $('.results-section').hide();
+        $('#optimizeBtn').prop('disabled', true);
+        
+        // Prepare data
+        const data = {
+            location_ids: selectedLocations,
+            vehicle_id: selectedVehicle,
+            route_name: routeName,
+            depot_location_id: $('#depotLocation').val() || null
+        };
+        
+        // Send optimization request with timeout
+        $.ajax({
+            url: window.location.href,
+            method: 'POST',
+            data: JSON.stringify(data),
+            contentType: 'application/json',
+            timeout: 30000, // 30 second timeout
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            success: function(response) {
+                // Always hide loader first
+                $('.optimization-progress').hide();
+                $('#optimizeBtn').prop('disabled', false);
+                
+                if (response && response.success) {
+                    // Check fuel warnings
+                    if (response.fuel_warning) {
+                        if (!response.fuel_sufficient) {
+                            showToast(response.fuel_warning, 'danger');
+                        } else {
+                            showToast(response.fuel_warning, 'warning');
+                        }
+                    } else {
+                        showToast('Route optimized successfully!', 'success');
+                    }
+                    
+                    // Show results briefly
+                    showResults(response);
+                    drawPath(response.route_path_coords || []);
+                    
+                    // Redirect after 3 seconds (longer if fuel warning)
+                    const redirectDelay = response.fuel_warning ? 4000 : 2000;
+                    setTimeout(function() {
+                        window.location.href = `${optimizerBase}/route/${response.route_id}/`;
+                    }, redirectDelay);
+                } else {
+                    showToast('Optimization failed: ' + (response ? response.error : 'Unknown error'), 'danger');
+                }
+            },
+            error: function(xhr, status, error) {
+                // Always hide loader on error
+                $('.optimization-progress').hide();
+                $('#optimizeBtn').prop('disabled', false);
+                
+                let errorMsg = 'An error occurred during optimization.';
+                if (status === 'timeout') {
+                    errorMsg = 'Optimization timed out. Please try again.';
+                } else if (xhr.responseJSON && xhr.responseJSON.error) {
+                    errorMsg = xhr.responseJSON.error;
+                }
+                showToast(errorMsg, 'danger');
+            }
+        });
+    });
+});
+
+function initMap() {
+    // Initialize Leaflet map - Center on Pune
+    map = L.map('routeMap').setView([18.5204, 73.8567], 11); // Center on Pune
+    
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors',
+        maxZoom: 19
+    }).addTo(map);
+}
+
+// Debounced map update function
+function scheduleMapUpdate() {
+    if (mapUpdateTimer) clearTimeout(mapUpdateTimer);
+    mapUpdateTimer = setTimeout(function() {
+        requestAnimationFrame(updateMap);
+    }, 100); // 100ms debounce for smoother updates
+}
+
+// Update only markers without touching the route line
+function updateMapMarkersOnly() {
+    if (!map) return;
+    
+    // Clear existing markers efficiently
+    markers.forEach(function(marker) {
+        map.removeLayer(marker);
+    });
+    markers = [];
+    
+    if (selectedLocations.length === 0) {
+        // Reset map view to Pune if no locations selected
+        map.setView([18.5204, 73.8567], 11);
+        // Clear route line
+        if (routeLine) {
+            map.removeLayer(routeLine);
+            routeLine = null;
+        }
+        return;
+    }
+    
+    // Use cached location data instead of DOM queries
+    const bounds = L.latLngBounds();
+    
+    selectedLocations.forEach(function(locationId) {
+        const loc = locationCache[locationId];
+        if (!loc || isNaN(loc.lat) || isNaN(loc.lng)) return;
+        
+        const marker = L.marker([loc.lat, loc.lng]).addTo(map);
+        marker.bindPopup(`<strong>${loc.name}</strong><br>${loc.address}`);
+        markers.push(marker);
+        
+        bounds.extend([loc.lat, loc.lng]);
+    });
+    
+    // Fit bounds only if we have valid bounds
+    if (bounds.isValid() && selectedLocations.length > 0) {
+        // Use requestAnimationFrame for smoother bounds fitting
+        requestAnimationFrame(function() {
+            map.fitBounds(bounds, { 
+                padding: [30, 30],
+                maxZoom: 14 // Limit max zoom to prevent excessive zooming
+            });
+        });
+    }
+}
+
+function updateMap() {
+    updateMapMarkersOnly();
+    // Show temporary path if we have 2+ locations
+    if (selectedLocations.length >= 2) {
+        showTemporaryPath();
+    } else {
+        // Clear route line if less than 2 locations
+        if (routeLine) {
+            map.removeLayer(routeLine);
+            routeLine = null;
+        }
+    }
+}
+
+function drawPath(coords) {
+    if (!map) return;
+    // Remove existing route line (including temporary)
+    if (routeLine) {
+        map.removeLayer(routeLine);
+        routeLine = null;
+    }
+    if (!coords || coords.length < 2) return;
+    
+    // Draw optimized route path with solid purple line
+    const latlngs = coords.map(c => [c[0], c[1]]);
+    routeLine = L.polyline(latlngs, {
+        color: '#5a67d8', // Purple color for optimized route
+        weight: 5,
+        opacity: 0.8,
+        smoothFactor: 1.0 // Smooth the line
+    }).addTo(map);
+    
+    // Fit bounds smoothly
+    requestAnimationFrame(function() {
+        map.fitBounds(routeLine.getBounds(), {
+            padding: [30, 30],
+            maxZoom: 14
+        });
+    });
+}
+
+function scheduleRecommend() {
+    if (recommendTimer) clearTimeout(recommendTimer);
+    // Show immediate straight-line path, then optimize
+    showTemporaryPath();
+    // Then get optimized route after a short delay
+    recommendTimer = setTimeout(recommendRoute, 800); // 800ms delay
+}
+
+// Show temporary straight-line path immediately for instant feedback
+function showTemporaryPath() {
+    if (!map) {
+        console.warn('Map not initialized');
+        return;
+    }
+    
+    if (selectedLocations.length < 2) {
+        // Clear route line if less than 2 locations
+        if (routeLine) {
+            map.removeLayer(routeLine);
+            routeLine = null;
+        }
+        return;
+    }
+    
+    // Create a simple straight-line path through selected locations in order
+    const tempCoords = [];
+    selectedLocations.forEach(function(locationId) {
+        const loc = locationCache[locationId];
+        if (loc && !isNaN(loc.lat) && !isNaN(loc.lng)) {
+            tempCoords.push([loc.lat, loc.lng]);
+        } else {
+            console.warn('Invalid location data for ID:', locationId, loc);
+        }
+    });
+    
+    console.log('Drawing temporary path with', tempCoords.length, 'coordinates');
+    
+    if (tempCoords.length >= 2) {
+        // Draw temporary path immediately (synchronously for instant feedback)
+        drawTemporaryPath(tempCoords);
+    } else {
+        console.warn('Not enough valid coordinates to draw path:', tempCoords.length);
+        // Clear line if not enough valid coordinates
+        if (routeLine) {
+            map.removeLayer(routeLine);
+            routeLine = null;
+        }
+    }
+}
+
+function drawTemporaryPath(coords) {
+    if (!map) {
+        console.warn('Map not available for drawing path');
+        return;
+    }
+    if (!coords || coords.length < 2) {
+        console.warn('Invalid coordinates for path:', coords);
+        return;
+    }
+    
+    // Validate coordinates
+    const validCoords = coords.filter(function(coord) {
+        return Array.isArray(coord) && coord.length === 2 && 
+               !isNaN(coord[0]) && !isNaN(coord[1]) &&
+               coord[0] >= -90 && coord[0] <= 90 &&
+               coord[1] >= -180 && coord[1] <= 180;
+    });
+    
+    if (validCoords.length < 2) {
+        console.warn('Not enough valid coordinates:', validCoords);
+        return;
+    }
+    
+    console.log('Drawing path with', validCoords.length, 'valid coordinates');
+    
+    // Remove existing route line
+    if (routeLine) {
+        try {
+            map.removeLayer(routeLine);
+        } catch (e) {
+            // Ignore errors
+        }
+        routeLine = null;
+    }
+    
+    // Draw temporary straight-line path with dashed style
+    try {
+        routeLine = L.polyline(validCoords, {
+            color: '#6b7280', // Darker gray color for better visibility
+            weight: 5,
+            opacity: 0.8,
+            dashArray: '8, 4', // Dashed line to indicate it's temporary
+            lineCap: 'round',
+            lineJoin: 'round'
+        });
+        
+        // Add to map
+        routeLine.addTo(map);
+        
+        // Bring to front so it's visible above markers
+        routeLine.bringToFront();
+        
+        // Force map to redraw
+        map.invalidateSize();
+        
+        console.log('Temporary path drawn successfully with', validCoords.length, 'points:', validCoords);
+    } catch (e) {
+        console.error('Error drawing temporary path:', e, e.stack);
+        routeLine = null;
+    }
+}
+
+function recommendRoute() {
+    if (selectedLocations.length < 2) {
+        return;
+    }
+    
+    const data = {
+        location_ids: selectedLocations,
+        vehicle_id: selectedVehicle,
+        depot_location_id: $('#depotLocation').val() || null
+    };
+    
+    // Make AJAX call for optimized route
+    $.ajax({
+        url: `${optimizerBase}/api/recommend/`,
+        method: 'POST',
+        data: JSON.stringify(data),
+        contentType: 'application/json',
+        timeout: 15000, // 15 second timeout for recommendations
+        headers: { 'X-CSRFToken': getCookie('csrftoken') },
+        success: function(res) {
+            if (!res.success || !res.route_path_coords) return;
+            // Draw optimized path, replacing temporary path
+            requestAnimationFrame(function() {
+                drawPath(res.route_path_coords);
+            });
+        },
+        error: function() {
+            // Keep temporary path if optimization fails
+            // Silent fail for preview - don't show errors for recommendations
+        }
+    });
+}
+
+// Calculate estimated fuel for selected locations (rough estimate)
+function calculateEstimatedFuel() {
+    if (!selectedVehicle || selectedLocations.length < 2) {
+        return null;
+    }
+    
+    const vehicle = vehicleCache[selectedVehicle];
+    if (!vehicle || !vehicle.fuel_efficiency || vehicle.fuel_efficiency <= 0) {
+        return null;
+    }
+    
+    // Rough estimate: calculate distance between selected locations
+    let totalDistance = 0;
+    for (let i = 0; i < selectedLocations.length - 1; i++) {
+        const loc1 = locationCache[selectedLocations[i]];
+        const loc2 = locationCache[selectedLocations[i + 1]];
+        if (loc1 && loc2) {
+            // Haversine distance calculation (rough estimate)
+            const R = 6371; // Earth radius in km
+            const dLat = (loc2.lat - loc1.lat) * Math.PI / 180;
+            const dLon = (loc2.lng - loc1.lng) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                      Math.cos(loc1.lat * Math.PI / 180) * Math.cos(loc2.lat * Math.PI / 180) *
+                      Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            totalDistance += R * c;
+        }
+    }
+    
+    // Add 20% buffer for route optimization (routes are usually longer than straight lines)
+    totalDistance *= 1.2;
+    
+    const fuelRequired = totalDistance / vehicle.fuel_efficiency;
+    return {
+        distance: totalDistance,
+        fuel: fuelRequired,
+        fuel_tank: vehicle.fuel_tank_capacity,
+        sufficient: fuelRequired <= vehicle.fuel_tank_capacity
+    };
+}
+
+function updateFuelPreview() {
+    // Hide all fuel previews
+    $('[id^="fuel-preview-"]').hide();
+    
+    if (!selectedVehicle || selectedLocations.length < 2) {
+        return;
+    }
+    
+    const estimate = calculateEstimatedFuel();
+    if (!estimate) return;
+    
+    const previewEl = $(`#fuel-preview-${selectedVehicle}`);
+    const fuelEstimateEl = previewEl.find('.fuel-estimate');
+    
+    if (estimate.fuel <= estimate.fuel_tank) {
+        const percentage = (estimate.fuel / estimate.fuel_tank * 100).toFixed(1);
+        fuelEstimateEl.html(`Est. ${estimate.fuel.toFixed(1)}L (${percentage}% of tank)`);
+        previewEl.removeClass('text-danger text-warning').addClass('text-success');
+    } else {
+        const shortage = (estimate.fuel - estimate.fuel_tank).toFixed(1);
+        fuelEstimateEl.html(`Est. ${estimate.fuel.toFixed(1)}L - <strong class="text-danger">Shortage: ${shortage}L</strong>`);
+        previewEl.removeClass('text-success text-warning').addClass('text-danger');
+    }
+    
+    previewEl.show();
+}
+
+function showResults(results) {
+    const totalDistance = Number(results.total_distance);
+    const totalTime = Number(results.total_time);
+    const fuel = Number(results.estimated_fuel_consumption);
+    const fuelTank = Number(results.fuel_tank_capacity) || 0;
+    const fuelSufficient = results.fuel_sufficient !== false;
+    const fuelWarning = results.fuel_warning || '';
+    const score = results.optimization_score;
+    const execTime = Number(results.execution_time);
+
+    const distanceStr = Number.isFinite(totalDistance) ? totalDistance.toFixed(2) + ' km' : '—';
+    const timeStr = Number.isFinite(totalTime) ? totalTime + ' min' : '—';
+    const fuelStr = Number.isFinite(fuel) ? fuel.toFixed(2) + ' L' : '—';
+    const fuelTankStr = Number.isFinite(fuelTank) ? fuelTank.toFixed(1) + ' L' : '—';
+    const scoreStr = (score !== undefined && score !== null) ? `${score}%` : '—';
+    const execStr = Number.isFinite(execTime) ? execTime.toFixed(3) + 's' : '—';
+    
+    // Fuel status indicator
+    let fuelStatusHtml = '';
+    if (fuelTank > 0 && Number.isFinite(fuel)) {
+        const fuelPercentage = (fuel / fuelTank * 100).toFixed(1);
+        let fuelStatusClass = 'success';
+        let fuelStatusIcon = 'fa-check-circle';
+        
+        if (!fuelSufficient) {
+            fuelStatusClass = 'danger';
+            fuelStatusIcon = 'fa-exclamation-triangle';
+        } else if (fuel > fuelTank * 0.8) {
+            fuelStatusClass = 'warning';
+            fuelStatusIcon = 'fa-exclamation-circle';
+        }
+        
+        fuelStatusHtml = `
+            <div class="alert alert-${fuelStatusClass} mt-2">
+                <i class="fas ${fuelStatusIcon} me-2"></i>
+                <strong>Fuel Status:</strong> ${fuelStr} required (${fuelPercentage}% of ${fuelTankStr} tank capacity)
+                ${fuelWarning ? '<br><small>' + fuelWarning + '</small>' : ''}
+            </div>
+        `;
+    }
+
+    const resultsHtml = `
+        <div class="text-center mb-3">
+            <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+            <h5 class="text-success">Route Optimized Successfully!</h5>
+        </div>
+        
+        <div class="row text-center">
+            <div class="col-6">
+                <div class="border rounded p-2">
+                    <small class="text-muted d-block">Total Distance</small>
+                    <strong class="h6 mb-0">${distanceStr}</strong>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="border rounded p-2">
+                    <small class="text-muted d-block">Total Time</small>
+                    <strong class="h6 mb-0">${timeStr}</strong>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row text-center mt-2">
+            <div class="col-6">
+                <div class="border rounded p-2">
+                    <small class="text-muted d-block">Fuel Consumption</small>
+                    <strong class="h6 mb-0">${fuelStr}</strong>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="border rounded p-2">
+                    <small class="text-muted d-block">Optimization Score</small>
+                    <strong class="h6 mb-0">${scoreStr}</strong>
+                </div>
+            </div>
+        </div>
+        
+        ${fuelStatusHtml}
+        
+        <div class="mt-3">
+            <small class="text-muted">Execution time: ${execStr}</small>
+        </div>
+        
+        <div class="alert alert-info mt-3">
+            <i class="fas fa-info-circle me-2"></i>
+            Redirecting to route details...
+        </div>
+    `;
+    
+    $('#resultsContent').html(resultsHtml);
+    $('.results-section').show();
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}

@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Company Management</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px 30px;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .logo-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        .logo-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 25px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #2c3e50;
+            font-weight: 600;
+            padding: 8px 20px;
+            border-radius: 25px;
+            transition: all 0.3s;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        header h1 {
+            font-size: 42px;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .section {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .section h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #2c3e50;
+        }
+
+        .form-group input, .form-group select {
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 16px;
+            transition: transform 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        table th {
+            background: #667eea;
+            color: white;
+            padding: 15px;
+            text-align: left;
+        }
+
+        table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .success {
+            background: #27ae60;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+
+        .error {
+            background: #e74c3c;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <div class="logo-icon">📊</div>
+                <div class="logo-text">Waste Financial Ledger</div>
+            </div>
+            <ul class="nav-links">
+                <li><a href="/">🏠 Master Portal</a></li>
+                <li><a href="home.html">🏠 Home</a></li>
+                <li><a href="index.html">📊 Dashboard</a></li>
+                <li><a href="waste_entry.html">📝 Data Entry</a></li>
+                <li><a href="analytics.html">📈 Analytics</a></li>
+                <li><a href="companies.html" class="active">🏢 Companies</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <header>
+            <h1>🏢 Company Management</h1>
+            <p class="subtitle">Manage companies and collection points</p>
+        </header>
+
+        <div class="section">
+            <h2>Create New Company</h2>
+            <div id="createCompanyMessage"></div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Company ID *</label>
+                    <input type="text" id="newCompanyId" placeholder="e.g., C1234">
+                </div>
+                <div class="form-group">
+                    <label>Company Name *</label>
+                    <input type="text" id="newCompanyName" placeholder="e.g., ABC Industries">
+                </div>
+                <div class="form-group">
+                    <label>Location *</label>
+                    <input type="text" id="newCompanyLocation" placeholder="e.g., Mumbai">
+                </div>
+                <div class="form-group">
+                    <label>Industry Type</label>
+                    <select id="newCompanyIndustry">
+                        <option value="">Select Industry</option>
+                        <option value="Manufacturing">Manufacturing</option>
+                        <option value="Retail">Retail</option>
+                        <option value="Healthcare">Healthcare</option>
+                        <option value="Food Service">Food Service</option>
+                        <option value="Construction">Construction</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+            </div>
+            <button onclick="createCompany()">Create Company</button>
+        </div>
+
+        <div class="section">
+            <h2>All Companies</h2>
+            <div id="companiesList"></div>
+        </div>
+
+        <div class="section">
+            <h2>Collection Points</h2>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Select Company</label>
+                    <select id="selectedCompany" onchange="loadCollectionPoints()">
+                        <option value="">Select a company</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Collection Point Name *</label>
+                    <input type="text" id="newPointName" placeholder="e.g., Main Warehouse">
+                </div>
+                <div class="form-group">
+                    <label>Location *</label>
+                    <input type="text" id="newPointLocation" placeholder="e.g., Building A, Floor 2">
+                </div>
+            </div>
+            <button onclick="createCollectionPoint()">Add Collection Point</button>
+            <div id="collectionPointsList" style="margin-top: 20px;"></div>
+        </div>
+    </div>
+
+    <script>
+        const pathSegments = window.location.pathname.split('/').filter(Boolean);
+        let basePrefix = '';
+        if (pathSegments.length > 0 && !pathSegments[0].includes('.')) {
+            basePrefix = '/' + pathSegments[0];
+        }
+        const API_BASE_URL = window.location.origin + basePrefix;
+
+        // Load companies on page load
+        window.onload = function() {
+            loadCompanies();
+        };
+
+        async function loadCompanies() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/companies`);
+                const companies = await response.json();
+                
+                // Populate select dropdown
+                const select = document.getElementById('selectedCompany');
+                select.innerHTML = '<option value="">Select a company</option>';
+                companies.forEach(company => {
+                    const option = document.createElement('option');
+                    option.value = company.id;
+                    option.textContent = `${company.name} (${company.id})`;
+                    select.appendChild(option);
+                });
+
+                // Display companies table
+                let html = '<table><thead><tr><th>Company ID</th><th>Name</th><th>Location</th><th>Actions</th></tr></thead><tbody>';
+                companies.forEach(company => {
+                    html += `<tr>
+                        <td><strong>${company.id}</strong></td>
+                        <td>${company.name}</td>
+                        <td>${company.location}</td>
+                        <td><button onclick="viewCompany('${company.id}')" style="padding: 5px 15px; font-size: 14px;">View Details</button></td>
+                    </tr>`;
+                });
+                html += '</tbody></table>';
+                document.getElementById('companiesList').innerHTML = html;
+            } catch (error) {
+                console.error('Error loading companies:', error);
+            }
+        }
+
+        async function createCompany() {
+            const companyId = document.getElementById('newCompanyId').value.trim();
+            const name = document.getElementById('newCompanyName').value.trim();
+            const location = document.getElementById('newCompanyLocation').value.trim();
+            const industry = document.getElementById('newCompanyIndustry').value;
+
+            if (!companyId || !name || !location) {
+                showMessage('createCompanyMessage', 'Please fill all required fields', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/companies`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        company_id: companyId,
+                        name: name,
+                        location: location,
+                        industry_type: industry || null
+                    })
+                });
+
+                if (response.ok) {
+                    showMessage('createCompanyMessage', `Company "${companyId}" created successfully!`, 'success');
+                    document.getElementById('newCompanyId').value = '';
+                    document.getElementById('newCompanyName').value = '';
+                    document.getElementById('newCompanyLocation').value = '';
+                    document.getElementById('newCompanyIndustry').value = '';
+                    loadCompanies();
+                } else {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Failed to create company');
+                }
+            } catch (error) {
+                showMessage('createCompanyMessage', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function loadCollectionPoints() {
+            const companyId = document.getElementById('selectedCompany').value;
+            if (!companyId) {
+                document.getElementById('collectionPointsList').innerHTML = '';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/companies/${companyId}/collection-points`);
+                if (response.ok) {
+                    const points = await response.json();
+                    let html = '<h3>Collection Points for Selected Company</h3>';
+                    if (points.length === 0) {
+                        html += '<p style="color: #666;">No collection points found. Create one above.</p>';
+                    } else {
+                        html += '<table><thead><tr><th>Name</th><th>Location</th></tr></thead><tbody>';
+                        points.forEach(point => {
+                            html += `<tr><td>${point.name}</td><td>${point.location}</td></tr>`;
+                        });
+                        html += '</tbody></table>';
+                    }
+                    document.getElementById('collectionPointsList').innerHTML = html;
+                }
+            } catch (error) {
+                console.error('Error loading collection points:', error);
+            }
+        }
+
+        async function createCollectionPoint() {
+            const companyId = document.getElementById('selectedCompany').value;
+            const name = document.getElementById('newPointName').value.trim();
+            const location = document.getElementById('newPointLocation').value.trim();
+
+            if (!companyId) {
+                showMessage('collectionPointsList', 'Please select a company first', 'error');
+                return;
+            }
+
+            if (!name || !location) {
+                showMessage('collectionPointsList', 'Please fill all required fields', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/companies/${companyId}/collection-points`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: name, location: location })
+                });
+
+                if (response.ok) {
+                    showMessage('collectionPointsList', `Collection Point "${name}" created successfully!`, 'success');
+                    document.getElementById('newPointName').value = '';
+                    document.getElementById('newPointLocation').value = '';
+                    loadCollectionPoints();
+                } else {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Failed to create collection point');
+                }
+            } catch (error) {
+                showMessage('collectionPointsList', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        function showMessage(containerId, message, type) {
+            const container = document.getElementById(containerId);
+            const div = document.createElement('div');
+            div.className = type;
+            div.textContent = message;
+            container.innerHTML = '';
+            container.appendChild(div);
+            setTimeout(() => {
+                div.remove();
+            }, 5000);
+        }
+
+        function viewCompany(companyId) {
+            window.location.href = `index.html?company=${companyId}`;
+        }
+    </script>
+</body>
+</html>
+

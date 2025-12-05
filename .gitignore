@@ -1,0 +1,134 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+db.sqlite3
+waste_ledger.db
+
+# Django
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+/staticfiles/
+/media/
+/static/
+
+# Flask
+instance/
+.webassets-cache
+
+# Environment variables
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+.settings/
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# Reports and generated files
+reports/
+*.pdf
+*.xlsx
+*.csv
+
+# Celery
+celerybeat-schedule
+celerybeat-schedule.*
+celerybeat.pid
+
+# Coverage
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+.tox/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.cache
+
+# Logs
+logs/
+*.log
+
+# Media files (keep structure but ignore content)
+project01_route_opt/media/*
+project03_market_place/media/*
+project02_auditing/static/uploads/*
+
+# Keep media directories but ignore contents
+!project01_route_opt/media/.gitkeep
+!project03_market_place/media/.gitkeep
+!project02_auditing/static/uploads/.gitkeep
+
+# Static files (collected during build)
+project01_route_opt/staticfiles/
+project03_market_place/staticfiles/
+
+# Node modules (if any)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Build artifacts
+*.pyc
+*.pyo
+*.pyd
+

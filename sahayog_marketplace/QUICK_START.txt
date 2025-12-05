@@ -1,0 +1,59 @@
+========================================
+  SAHAYOG AI MARKETPLACE - QUICK START
+========================================
+
+PROBLEM: "ModuleNotFoundError: No module named 'django'"
+SOLUTION: You need to activate the virtual environment first!
+
+========================================
+  CORRECT COMMANDS (Copy & Paste):
+========================================
+
+Step 1: Activate Virtual Environment
+------------------------------------
+venv\Scripts\activate
+
+Step 2: Start Django Server
+---------------------------
+python manage.py runserver 127.0.0.1:8000
+
+========================================
+  OR USE THE BATCH FILE (EASIEST):
+========================================
+
+Just double-click: START_SERVER.bat
+
+This automatically:
+- Activates the virtual environment
+- Starts the Django server
+- Shows you the server URL
+
+========================================
+  WHAT YOU'LL SEE WHEN IT WORKS:
+========================================
+
+Watching for file changes with StatReloader
+Performing system checks...
+System check identified no issues (0 silenced).
+Django version X.X.X, using settings 'sahayog_marketplace.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CTRL-BREAK.
+
+========================================
+  THEN OPEN MARKETPLACE:
+========================================
+
+Double-click: LAUNCH_MARKETPLACE.html
+
+OR
+
+Open browser and go to: http://127.0.0.1:8000
+
+========================================
+  LOGIN CREDENTIALS:
+========================================
+
+Seller: DemoS / demo123
+Buyer:  DemoB / demo123
+
+========================================

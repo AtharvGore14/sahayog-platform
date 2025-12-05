@@ -1,0 +1,3344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🤖 Sahayog AI Marketplace</title>
+    <style>
+        :root { 
+            --primary-color: #6366f1; 
+            --primary-dark: #4f46e5;
+            --primary-light: #818cf8;
+            --secondary-color: #1f2937; 
+            --success-color: #10b981;
+            --success-dark: #059669;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --light-gray: #f3f4f6; 
+            --text-color: #374151; 
+            --text-light: #6b7280;
+            --white: #ffffff;
+            --ai-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --ai-gradient-2: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --ai-gradient-3: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --marketplace-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+        }
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+        }
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow-x: hidden;
+        }
+        body { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            background: var(--marketplace-gradient);
+            background-attachment: fixed;
+            color: var(--text-color); 
+            line-height: 1.6; 
+            min-height: 100vh;
+            position: relative;
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(15, 23, 42, 0.25) 0%, transparent 55%),
+                radial-gradient(circle at 80% 0%, rgba(79, 70, 229, 0.35) 0%, transparent 55%),
+                radial-gradient(circle at 10% 0%, rgba(236, 72, 153, 0.25) 0%, transparent 55%);
+            pointer-events: none;
+            z-index: 0;
+        }
+        .app-container { 
+            width: 100%;
+            max-width: 1320px;
+            margin: 0 auto; 
+            padding: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+        .view { 
+            display: none; 
+            width: 100%;
+            min-height: 100vh;
+            position: relative;
+            z-index: 1;
+        } 
+        .view.active { 
+            display: block; 
+        }
+        
+        /* Login View */
+        #login-view { 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+            width: 100%;
+            padding: 2rem;
+        }
+        .login-card { 
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 3.5rem 4rem; 
+            border-radius: 2rem; 
+            box-shadow: 
+                0 20px 60px rgba(0, 0, 0, 0.3),
+                0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+            width: 100%; 
+            max-width: 500px; 
+            text-align: center;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        .login-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transform: rotate(45deg);
+            animation: shine 3s infinite;
+        }
+        @keyframes shine {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+        .login-card h2 { 
+            font-size: 3rem; 
+            font-weight: 900; 
+            background: var(--marketplace-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.75rem;
+            position: relative;
+            z-index: 1;
+        }
+        .ai-badge {
+            display: inline-block;
+            background: var(--marketplace-gradient);
+            color: white;
+            padding: 0.6rem 1.5rem;
+            border-radius: 2rem;
+            font-size: 0.95rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            animation: pulse 2s infinite;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            position: relative;
+            z-index: 1;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4); }
+            50% { transform: scale(1.05); box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6); }
+        }
+        
+        .form input, .form select { 
+            width: 100%; 
+            padding: 1.2rem 1.5rem; 
+            border: 2px solid rgba(99, 102, 241, 0.2); 
+            border-radius: 1rem; 
+            font-size: 1rem; 
+            margin-bottom: 1.2rem; 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background-color: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            position: relative;
+            z-index: 1;
+        }
+        .form input:focus, .form select:focus { 
+            outline: none; 
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15), 0 4px 12px rgba(99, 102, 241, 0.2);
+            background-color: white;
+            transform: translateY(-2px);
+        }
+        .btn { 
+            display: inline-block; 
+            width: 100%; 
+            padding: 1.2rem 1.5rem; 
+            border: none; 
+            border-radius: 1rem; 
+            font-size: 1.1rem; 
+            font-weight: 700; 
+            color: var(--white); 
+            background: var(--marketplace-gradient);
+            cursor: pointer; 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(102, 126, 241, 0.4);
+            z-index: 1;
+        }
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        .btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+        .btn:hover { 
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(102, 126, 241, 0.5);
+        }
+        .btn:active { transform: translateY(-1px); }
+        .btn:disabled { 
+            background: linear-gradient(135deg, #a5b4fc 0%, #c4b5fd 100%); 
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        /* Header */
+        .app-header { 
+            background: #ffffff;
+            backdrop-filter: blur(18px);
+            padding: 1.5rem 3rem; 
+            box-shadow: 
+                0 4px 20px rgba(0, 0, 0, 0.1),
+                0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 3rem;
+            border-radius: 0 0 2rem 2rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .app-header h1 { 
+            font-size: 2.25rem; 
+            font-weight: 900;
+            letter-spacing: -0.5px;
+            color: #111827;
+        }
+
+        /* Buyer & Seller dashboards */
+        #buyer-dashboard-view,
+        #seller-dashboard-view {
+            background: transparent;
+            min-height: 100vh;
+        }
+        #buyer-dashboard-view .app-container,
+        #seller-dashboard-view .app-container {
+            padding-top: 2.5rem;
+            padding-bottom: 3rem;
+        }
+        #buyer-dashboard-view .section-title,
+        #seller-dashboard-view .section-title {
+            color: #f9fafb;
+            margin-bottom: 1.5rem;
+        }
+        #buyer-dashboard-view p,
+        #seller-dashboard-view p,
+        #seller-dashboard-view label {
+            color: #e5e7eb;
+        }
+        
+        /* Enhanced Buyer Dashboard Styles */
+        #buyer-dashboard-view .listing-card {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            border-radius: 2rem;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        #buyer-dashboard-view .listing-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+        
+        #buyer-dashboard-view .listing-card img {
+            width: 100%;
+            height: 240px;
+            object-fit: cover;
+            object-position: center;
+            display: block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            transition: transform 0.4s ease;
+        }
+        
+        #buyer-dashboard-view .listing-card:hover img {
+            transform: scale(1.08);
+        }
+        
+        /* Enhanced Seller Dashboard Styles */
+        #seller-dashboard-view .seller-listing-item {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        #seller-dashboard-view .seller-listing-item:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+        }
+        
+        #seller-dashboard-view .seller-listing-item img {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+            object-position: center !important;
+            border-radius: 0.75rem;
+            margin-bottom: 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            transition: transform 0.3s ease;
+            display: block !important;
+            position: relative !important;
+            z-index: 2 !important;
+        }
+        
+        #seller-dashboard-view .seller-listing-item:hover img {
+            transform: scale(1.03);
+        }
+        .section-title {
+            margin: 0;
+            font-size: 1.8rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.6rem;
+            position: relative;
+            background: linear-gradient(90deg, #f9fafb, #e5e7eb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .section-title::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: -0.4rem;
+            width: 40%;
+            height: 3px;
+            border-radius: 999px;
+            background: linear-gradient(90deg, #a5b4fc, #f472b6);
+            opacity: 0.9;
+        }
+        .filter-bar {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: #f3f4ff;
+            padding: 0.5rem 0.9rem;
+            border-radius: 999px;
+            border: 1px solid #c7d2fe;
+            box-shadow: 0 6px 18px rgba(129, 140, 248, 0.25);
+        }
+        .filter-bar span {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #4b5563;
+        }
+        .filter-bar select {
+            border-radius: 999px;
+            border: 1px solid #d1d5db;
+            padding: 0.35rem 0.9rem;
+            font-size: 0.85rem;
+            background: #ffffff;
+            color: #111827;
+            outline: none;
+            box-shadow: 0 0 0 1px rgba(255,255,255,0.8);
+        }
+        .filter-bar select:focus {
+            border-color: #6366f1;
+            box-shadow: 0 0 0 2px rgba(99,102,241,0.3);
+        }
+        
+        /* AI Dashboard */
+        .ai-dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+        .ai-card {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            padding: 2rem;
+            border-radius: 1.5rem;
+            box-shadow: 
+                0 10px 30px rgba(0, 0, 0, 0.15),
+                0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        .ai-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--marketplace-gradient);
+            transform: scaleX(0);
+            transition: transform 0.4s ease;
+        }
+        .ai-card:hover::before {
+            transform: scaleX(1);
+        }
+        .ai-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 
+                0 20px 40px rgba(0, 0, 0, 0.2),
+                0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+        }
+        .ai-card h3 {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: var(--marketplace-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        /* Listings Grid */
+        .listings-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); 
+            gap: 2.5rem; 
+        }
+        .listing-card { 
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            border-radius: 2rem; 
+            box-shadow: 
+                0 10px 30px rgba(0, 0, 0, 0.15),
+                0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+            overflow: hidden; 
+            cursor: pointer; 
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            position: relative;
+        }
+        .listing-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--marketplace-gradient);
+            transform: scaleX(0);
+            transition: transform 0.4s ease;
+        }
+        .listing-card:hover::after {
+            transform: scaleX(1);
+        }
+        .listing-card:hover { 
+            transform: translateY(-12px) scale(1.03);
+            box-shadow: 
+                0 25px 50px rgba(0, 0, 0, 0.25),
+                0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+        }
+        .listing-card .image-placeholder { 
+            height: 240px; 
+            background: var(--marketplace-gradient);
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            font-size: 1.5rem; 
+            font-weight: 800; 
+            color: white;
+            position: relative;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* Improved image styling for listings */
+        .listing-card img {
+            width: 100%;
+            height: 240px;
+            object-fit: cover;
+            object-position: center;
+            display: block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            border-radius: 0;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+        
+        .listing-card:hover img {
+            transform: scale(1.05);
+        }
+        
+        .listing-card img[src=""],
+        .listing-card img:not([src]) {
+            display: none;
+        }
+        
+        /* Force images to display - override any conflicting styles */
+        .listing-card img,
+        .seller-listing-item img {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            max-width: 100%;
+        }
+        
+        /* Seller listing images - ensure they display properly */
+        .seller-listing-item img {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+            position: relative !important;
+            z-index: 2 !important;
+        }
+        
+        /* Image error handling - ensure placeholder shows when image fails */
+        .listing-card img[onerror] + .image-placeholder,
+        .seller-listing-item img[onerror] + div.image-placeholder-fallback,
+        .seller-listing-item img[onerror] + div[style*="display:none"] {
+            display: flex !important;
+        }
+        
+        /* Ensure placeholder stays hidden when image loads successfully */
+        .seller-listing-item img:not([style*="display:none"]) + div.image-placeholder-fallback,
+        .seller-listing-item img:not([style*="display:none"]) + div[style*="display:none"] {
+            display: none !important;
+        }
+        
+        /* Detail view image styling */
+        .detail-image-container {
+            width: 100%;
+            max-height: 400px;
+            overflow: hidden;
+            border-radius: 1rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+        }
+        
+        .detail-image-container img {
+            width: 100%;
+            height: auto;
+            max-height: 400px;
+            object-fit: cover;
+            object-position: center;
+            display: block;
+        }
+        
+        /* Image error handling */
+        .listing-card img[onerror],
+        .listing-card img.error {
+            display: none;
+        }
+        
+        .listing-card img.error + .image-placeholder {
+            display: flex;
+        }
+        .quality-badge {
+            position: absolute;
+            top: 1.25rem;
+            right: 1.25rem;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(10px);
+            padding: 0.6rem 1rem;
+            border-radius: 1rem;
+            font-size: 0.85rem;
+            font-weight: 700;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 10;
+        }
+        .quality-excellent { color: var(--success-color); }
+        .quality-good { color: var(--warning-color); }
+        .quality-poor { color: var(--danger-color); }
+        
+        .listing-card .card-content { padding: 2rem; }
+        .listing-card h3 { 
+            font-size: 1.5rem; 
+            font-weight: 800; 
+            margin-bottom: 0.75rem;
+            color: var(--secondary-color);
+        }
+        .ai-insights {
+            display: flex;
+            gap: 0.75rem;
+            margin: 1.25rem 0;
+            flex-wrap: wrap;
+        }
+        .ai-insight {
+            background: var(--marketplace-gradient);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 1rem;
+            font-size: 0.85rem;
+            font-weight: 700;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+        .current-bid { 
+            font-size: 2.5rem; 
+            font-weight: 900; 
+            background: var(--marketplace-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-top: 1rem; 
+        }
+
+        /* AI Market Intelligence price list (seller dashboard) */
+        .ai-price-list {
+            margin-top: 0.9rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        .ai-price-row {
+            padding: 0.85rem 1.1rem;
+            border-radius: 1rem;
+            background: linear-gradient(120deg, rgba(15,23,42,0.94), rgba(30,64,175,0.9));
+            border: 1px solid rgba(129,140,248,0.7);
+            box-shadow: 0 16px 40px rgba(15,23,42,0.65);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            cursor: default;
+            transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+        }
+        .ai-price-row:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 20px 50px rgba(15,23,42,0.85);
+            border-color: rgba(248,250,252,0.9);
+        }
+        .ai-price-main {
+            display: flex;
+            flex-direction: column;
+            gap: 0.15rem;
+        }
+        .ai-price-name {
+            font-weight: 700;
+            font-size: 0.98rem;
+            color: #e5e7eb;
+        }
+        .ai-price-meta {
+            font-size: 0.8rem;
+            color: rgba(209, 213, 219, 0.85);
+        }
+        .ai-price-value {
+            font-weight: 800;
+            font-size: 1.05rem;
+            color: #4ade80;
+            text-shadow: 0 0 12px rgba(74, 222, 128, 0.55);
+        }
+        
+        /* AI Bid Assistant */
+        .ai-bid-assistant {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            padding: 2.5rem;
+            border-radius: 2rem;
+            margin-bottom: 3rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 
+                0 10px 30px rgba(0, 0, 0, 0.15),
+                0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+        }
+        .ai-bid-assistant h3 {
+            font-size: 2rem;
+            font-weight: 900;
+            background: var(--marketplace-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1.5rem;
+        }
+        .ai-suggestion {
+            background: var(--marketplace-gradient);
+            color: white;
+            padding: 2rem;
+            border-radius: 1.5rem;
+            margin: 1.5rem 0;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        .ai-suggestion::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+            animation: rotate 20s linear infinite;
+        }
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .confidence-meter {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        .confidence-meter span {
+            font-weight: 700;
+            font-size: 0.95rem;
+        }
+        .confidence-bar {
+            flex: 1;
+            height: 0.75rem;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 1rem;
+            overflow: hidden;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 1));
+            border-radius: 1rem;
+            transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 8px rgba(255, 255, 255, 0.3);
+        }
+        
+        /* Notifications */
+        .notification-bell {
+            position: relative;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            transition: background-color 0.3s ease;
+        }
+        .notification-bell:hover {
+            background-color: rgba(99, 102, 241, 0.1);
+        }
+        .notification-count {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: var(--danger-color);
+            color: white;
+            border-radius: 50%;
+            width: 1.2rem;
+            height: 1.2rem;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+        
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .fade-in-up {
+            animation: fadeInUp 0.6s ease-out;
+        }
+        
+        /* Additional Styling */
+        h2 {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: white;
+            margin-bottom: 2rem;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+        .alert {
+            padding: 1rem 1.5rem;
+            border-radius: 1rem;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+        }
+        .alert-error {
+            background: rgba(239, 68, 68, 0.2);
+            color: #dc2626;
+            border: 2px solid rgba(239, 68, 68, 0.3);
+        }
+        .alert-success {
+            background: rgba(16, 185, 129, 0.2);
+            color: #059669;
+            border: 2px solid rgba(16, 185, 129, 0.3);
+        }
+        .form-toggle-link {
+            margin-top: 1.5rem;
+            color: var(--primary-color);
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 1;
+        }
+        .form-toggle-link:hover {
+            color: var(--primary-dark);
+            text-decoration: underline;
+        }
+        .form-container {
+            display: none;
+        }
+        .form-container.active {
+            display: block;
+        }
+        .btn-logout {
+            background: rgba(239, 68, 68, 0.9) !important;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3) !important;
+        }
+        .btn-logout:hover {
+            background: rgba(220, 38, 38, 1) !important;
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4) !important;
+        }
+        .btn-back {
+            background: rgba(255, 255, 255, 0.2) !important;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        .btn-back:hover {
+            background: rgba(255, 255, 255, 0.3) !important;
+        }
+        .detail-card {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            border-radius: 2rem;
+            padding: 2.5rem;
+            box-shadow: 
+                0 10px 30px rgba(0, 0, 0, 0.15),
+                0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .app-container {
+                padding: 1.5rem;
+            }
+            .listings-grid {
+                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+                gap: 2rem;
+            }
+        }
+        @media (max-width: 768px) {
+            .app-container {
+                padding: 1rem;
+            }
+            .ai-dashboard {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            .listings-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            .app-header {
+                padding: 1rem 1.5rem;
+                flex-direction: column;
+                gap: 1rem;
+                border-radius: 0 0 1.5rem 1.5rem;
+            }
+            .app-header h1 {
+                font-size: 1.75rem;
+            }
+            .login-card {
+                padding: 2rem 2.5rem;
+            }
+            .login-card h2 {
+                font-size: 2.25rem;
+            }
+            h2 {
+                font-size: 2rem;
+            }
+            .ai-bid-assistant {
+                padding: 1.5rem;
+            }
+            .detail-card {
+                padding: 1.5rem;
+            }
+        }
+        @media (max-width: 480px) {
+            .app-container {
+                padding: 0.75rem;
+            }
+            .login-card {
+                padding: 1.5rem 2rem;
+            }
+            .app-header {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- Login View -->
+        <div id="login-view" class="view active">
+            <div class="login-card fade-in-up">
+                <div id="login-form-container" class="form-container active">
+                    <h2>🤖 Sahayog AI</h2>
+                    <div class="ai-badge">Powered by Advanced AI</div>
+                    <p>Sign in to access AI-powered marketplace intelligence</p>
+                    <form id="login-form" class="form">
+                        <div id="login-alert" class="alert alert-error"></div>
+                        <input type="text" id="username" placeholder="Username" required>
+                        <input type="password" id="password" placeholder="Password" required>
+                        <button type="button" id="login-btn" class="btn">🚀 Sign In</button>
+                    </form>
+                    <p class="form-toggle-link" id="show-signup">Don't have an account? Sign Up</p>
+                </div>
+                <div id="signup-form-container" class="form-container">
+                    <h2>🎯 Join AI Marketplace</h2>
+                    <div class="ai-badge">AI-Enhanced Trading</div>
+                    <p>Experience the future of circular economy trading</p>
+                    <form id="signup-form" class="form">
+                        <div id="signup-alert" class="alert"></div>
+                        <input type="text" id="signup-username" placeholder="Username" required>
+                        <input type="password" id="signup-password" placeholder="Password" required>
+                        <select id="user-type" required>
+                            <option value="" disabled selected>Select your role...</option>
+                            <option value="seller">Waste Generator (Seller)</option>
+                            <option value="buyer">Recycler (Buyer)</option>
+                        </select>
+                        <button type="button" id="signup-btn" class="btn">✨ Create Account</button>
+                    </form>
+                    <p class="form-toggle-link" id="show-login">Already have an account? Sign In</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Buyer Dashboard -->
+        <div id="buyer-dashboard-view" class="view">
+            <header class="app-header">
+                <h1>🤖 AI Buyer Dashboard</h1>
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <div class="notification-bell" id="notification-bell">
+                        🔔
+                        <div class="notification-count" id="notification-count">0</div>
+                    </div>
+                    <a href="/" class="btn" style="width: auto; padding: 0.5rem 1rem; text-decoration: none; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">🏠 Master Portal</a>
+                    <button class="btn btn-logout" style="width: auto; padding: 0.5rem 1rem;">Logout</button>
+                </div>
+            </header>
+            
+            <main class="app-container">
+                <!-- AI Dashboard -->
+                <div class="ai-dashboard">
+                    <div class="ai-card">
+                        <h3>🎯 AI Recommendations</h3>
+                        <div id="ai-recommendations">Loading AI insights...</div>
+                    </div>
+                    <div class="ai-card">
+                        <h3>📊 Market Analytics</h3>
+                        <div id="market-analytics">Loading market data...</div>
+                    </div>
+                    <div class="ai-card">
+                        <h3>💰 Top Opportunities</h3>
+                        <div id="top-opportunities">Finding best deals...</div>
+                    </div>
+                </div>
+
+                <!-- Live Listings -->
+                <div style="display:flex; justify-content: space-between; align-items: flex-end; gap: 1.5rem; margin-bottom: 1rem; flex-wrap: wrap;">
+                    <h2 class="section-title">🔥 Live Auctions</h2>
+                    <div class="filter-bar">
+                        <span>Filter by material:</span>
+                        <select id="buyer-commodity-filter">
+                            <option value="">All materials</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="listings-grid" class="listings-grid"></div>
+                <div id="listings-spinner" class="spinner" style="display: none;"></div>
+            </main>
+        </div>
+
+        <!-- Seller Dashboard -->
+        <div id="seller-dashboard-view" class="view">
+            <header class="app-header">
+                <h1>🤖 AI Seller Dashboard</h1>
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <div class="notification-bell" id="seller-notification-bell">
+                        🔔
+                        <div class="notification-count" id="seller-notification-count">0</div>
+                    </div>
+                    <a href="/" class="btn" style="width: auto; padding: 0.5rem 1rem; text-decoration: none; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">🏠 Master Portal</a>
+                    <button class="btn btn-logout" style="width: auto; padding: 0.5rem 1rem;">Logout</button>
+                </div>
+            </header>
+            
+            <main class="app-container">
+                <div class="ai-dashboard">
+                    <div class="ai-card">
+                        <h3>📈 Performance Analytics</h3>
+                        <div id="seller-analytics">Loading your performance...</div>
+                    </div>
+                    <div class="ai-card">
+                        <h3>🎯 Market Insights</h3>
+                        <div id="seller-market-insights">Analyzing market trends...</div>
+                    </div>
+                </div>
+
+                <h2 class="section-title" style="margin-bottom: 1rem;">✨ Create AI-Optimized Listing</h2>
+                <div id="seller-alert" class="alert"></div>
+                <form id="create-listing-form" class="form" enctype="multipart/form-data" style="max-width:640px; margin-top:1rem;">
+                    <select id="cl-commodity" required></select>
+                    <input type="number" id="cl-quantity" step="0.01" placeholder="Quantity (kg)" required>
+                    <input type="number" id="cl-quality" step="0.01" min="0" max="1" placeholder="Quality score (0-1, AI will analyze if not provided)">
+                    <input type="number" id="cl-starting" step="0.01" min="0" placeholder="Starting price (₹ per kg, AI will suggest if not provided)">
+                    <label style="color:white; font-size:0.9rem;">Auction ends at</label>
+                    <input type="datetime-local" id="cl-ends" required>
+                    <input type="file" id="cl-image" accept="image/*">
+                    <button type="submit" class="btn">🚀 Publish AI-Optimized Listing</button>
+                </form>
+                
+                <div style="margin-top:2rem;">
+                    <h3 class="section-title" style="font-size:1.25rem;">📊 AI Market Intelligence</h3>
+                    <div id="prices" class="ai-price-list"></div>
+                </div>
+                
+                <div style="margin-top:2.5rem; padding: 1.8rem; background: rgba(15,23,42,0.35); border-radius: 1.5rem; border: 1px solid rgba(148,163,184,0.6); box-shadow: 0 18px 40px rgba(15,23,42,0.45); backdrop-filter: blur(18px);">
+                    <div style="display:flex; justify-content: space-between; align-items: flex-end; gap: 1rem; flex-wrap: wrap;">
+                        <h3 class="section-title" style="font-size:1.5rem; margin:0; display: flex; align-items: center; gap: 0.75rem;">
+                            <span style="font-size: 2rem;">📦</span>
+                            <span>My Listings & Bids</span>
+                        </h3>
+                        <div class="filter-bar">
+                            <span>Filter by material:</span>
+                            <select id="seller-commodity-filter">
+                                <option value="">All materials</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="seller-listings" style="margin-top:1rem; min-height: 200px;"></div>
+                </div>
+            </main>
+        </div>
+
+        <!-- Listing Detail with AI Assistant -->
+        <div id="detail-view" class="view">
+            <main class="app-container">
+                <button id="back-btn" class="btn btn-back" style="width: auto; background: rgba(255,255,255,0.2); color: white; margin-bottom: 2rem;">&larr; Back to Listings</button>
+                
+                <!-- AI Bid Assistant -->
+                <div class="ai-bid-assistant" id="ai-bid-assistant" style="display: none;">
+                    <h3>🤖 AI Bid Assistant</h3>
+                    <div id="ai-bid-suggestions">Loading AI analysis...</div>
+                </div>
+                
+                <div id="detail-card" class="detail-card"></div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const API_BASE = 'http://127.0.0.1:8000';
+            const WS_BASE = 'ws://127.0.0.1:8000';
+            let authToken = null;
+            let webSocket = null;
+            let currentUser = null;
+            let userListings = []; // Store user's created listings
+            let buyerAllListings = []; // Cached listings for buyer filters
+            
+            const views = { 
+                login: document.getElementById('login-view'), 
+                buyerDashboard: document.getElementById('buyer-dashboard-view'), 
+                sellerDashboard: document.getElementById('seller-dashboard-view'), 
+                detail: document.getElementById('detail-view') 
+            };
+            
+            // Define login and signup handlers FIRST (before event listeners)
+            async function handleLogin(e) {
+                console.log('🚀🚀🚀 handleLogin function CALLED! 🚀🚀🚀', e);
+                
+                // Always prevent default form submission
+                if (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+                
+                const form = document.getElementById('login-form');
+                const btn = document.getElementById('login-btn');
+                const alertEl = document.getElementById('login-alert');
+                
+                console.log('Form elements:', { form: !!form, btn: !!btn, alertEl: !!alertEl });
+                
+                if (!btn || !alertEl) {
+                    console.error('Login form elements not found', { btn: !!btn, alertEl: !!alertEl });
+                    if (alertEl) {
+                        showAlert(alertEl, '❌ Form elements not found. Please refresh the page.', 'error');
+                    }
+                    return false;
+                }
+                
+                btn.disabled = true;
+                btn.textContent = '🤖 AI Authenticating...';
+                showAlert(alertEl, '');
+                
+                const usernameInput = document.getElementById('username');
+                const passwordInput = document.getElementById('password');
+                
+                if (!usernameInput || !passwordInput) {
+                    showAlert(alertEl, 'Form fields not found', 'error');
+                    btn.disabled = false;
+                    btn.textContent = '🚀 Sign In';
+                    return false;
+                }
+                
+                const username = usernameInput.value.trim();
+                const password = passwordInput.value;
+                
+                if (!username || !password) {
+                    showAlert(alertEl, 'Please enter both username and password', 'error');
+                    btn.disabled = false;
+                    btn.textContent = '🚀 Sign In';
+                    return false;
+                }
+                
+                console.log('Attempting login for:', username);
+                console.log('API_BASE:', API_BASE);
+                console.log('Auth endpoint:', `${API_BASE}/api/marketplace/auth/login/`);
+                
+                try {
+                    // Use custom JSON endpoint for better compatibility
+                    const tokenResponse = await fetch(`${API_BASE}/api/marketplace/auth/login/`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username, password }),
+                    });
+                    
+                    console.log('Token response status:', tokenResponse.status);
+                    console.log('Token response OK:', tokenResponse.ok);
+                    
+                    // Read response - handle both JSON and text responses
+                    let responseData;
+                    const contentType = tokenResponse.headers.get('content-type') || '';
+                    const isJson = contentType.includes('application/json');
+                    
+                    try {
+                        if (isJson) {
+                            responseData = await tokenResponse.json();
+                        } else {
+                            const textData = await tokenResponse.text();
+                            console.error('Non-JSON login response received:', textData.substring(0, 200));
+                            // Try to parse as JSON even if content-type says otherwise
+                            try {
+                                responseData = JSON.parse(textData);
+                            } catch {
+                                throw new Error(`Server returned ${tokenResponse.status}: ${tokenResponse.statusText}. Response: ${textData.substring(0, 100)}`);
+                            }
+                        }
+                    } catch (parseError) {
+                        console.error('Error parsing login response:', parseError);
+                        throw new Error(`Failed to parse server response: ${parseError.message}`);
+                    }
+                    
+                    // Check if response is OK
+                    if (!tokenResponse.ok) {
+                        let errorMsg = 'Authentication failed';
+                        if (tokenResponse.status === 404) {
+                            errorMsg = 'Login endpoint not found (404). Server may need restart.';
+                        } else if (responseData) {
+                            if (responseData.non_field_errors && Array.isArray(responseData.non_field_errors)) {
+                                errorMsg = responseData.non_field_errors[0];
+                            } else if (responseData.error) {
+                                errorMsg = responseData.error;
+                            } else if (responseData.detail) {
+                                errorMsg = responseData.detail;
+                            } else {
+                                errorMsg = `Authentication failed: ${tokenResponse.status} ${tokenResponse.statusText}`;
+                            }
+                        } else {
+                            errorMsg = `Authentication failed: ${tokenResponse.status} ${tokenResponse.statusText}`;
+                        }
+                        throw new Error(errorMsg);
+                    }
+                    
+                    // Extract token
+                    const tokenData = responseData;
+                    
+                    console.log('Token data received:', tokenData);
+                    
+                    if (!tokenData || !tokenData.token) {
+                        throw new Error('No token received from server. Response: ' + JSON.stringify(tokenData));
+                    }
+                    
+                    authToken = tokenData.token;
+                    console.log('Auth token set successfully');
+
+                    const profileResponse = await fetch(`${API_BASE}/api/marketplace/me/profile/`, {
+                        headers: { 'Authorization': `Token ${authToken}` }
+                    });
+                    
+                    if (!profileResponse.ok) {
+                        throw new Error('Could not fetch user profile.');
+                    }
+                    
+                    const profileData = await profileResponse.json();
+                    console.log('Profile data received:', profileData);
+                    
+                    // Ensure username is set (use from profile or fallback to login username)
+                    if (!profileData.username) {
+                        profileData.username = username;
+                    }
+                    
+                    currentUser = { profile: profileData };
+                    // Store in localStorage for persistence
+                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    localStorage.setItem('authToken', authToken);
+                    
+                    // Clear userListings when a new user logs in (to avoid showing previous user's listings)
+                    const previousUsername = userListings.length > 0 ? userListings[0]?.seller_username : null;
+                    const newUsername = profileData.username || username;
+                    if (previousUsername && previousUsername !== newUsername) {
+                        userListings = [];
+                        localStorage.removeItem('userListings');
+                        console.log('Cleared userListings for new user login');
+                    }
+                    
+                    // Show success message
+                    showAlert(alertEl, '✅ Successfully signed in!', 'success');
+                    
+                    // Navigate to appropriate dashboard
+                    setTimeout(() => {
+                    if (profileData.user_type === 'seller') {
+                        showView('sellerDashboard');
+                    } else {
+                        showView('buyerDashboard');
+                    }
+                    }, 500);
+                    
+                } catch (error) {
+                    console.error('Login error:', error);
+                    console.error('Error details:', {
+                        message: error.message,
+                        stack: error.stack,
+                        username: username
+                    });
+                    
+                    // Show the actual error message to user
+                    showAlert(alertEl, `❌ ${error.message || 'Login failed. Please check your credentials.'}`, 'error');
+                    
+                    // Only fall back to demo mode if it's a network/server error, not auth failure
+                    if (error.message.includes('Server not available') || 
+                        error.message.includes('fetch') ||
+                        error.message.includes('Failed to fetch') ||
+                        error.message.includes('NetworkError') ||
+                        error.message.includes('endpoint not found') ||
+                        error.message.includes('404')) {
+                        console.log('Server unavailable, trying demo mode');
+                    authToken = 'demo-token';
+                    
+                    // Demo users
+                    const demoUsers = {
+                        'admin': { user_type: 'buyer', username: 'admin' },
+                        'eco_seller': { user_type: 'seller', username: 'eco_seller' },
+                        'green_recycler': { user_type: 'buyer', username: 'green_recycler' },
+                        'waste_warrior': { user_type: 'seller', username: 'waste_warrior' },
+                        'circular_buyer': { user_type: 'buyer', username: 'circular_buyer' },
+                        'sustainable_seller': { user_type: 'seller', username: 'sustainable_seller' },
+                        'DemoS': { user_type: 'seller', username: 'DemoS' },
+                        'DemoB': { user_type: 'buyer', username: 'DemoB' }
+                    };
+                    
+                    if (demoUsers[username]) {
+                        currentUser = { profile: demoUsers[username] };
+                        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                        const previousUsername = userListings.length > 0 ? userListings[0]?.seller_username : null;
+                        const newUsername = demoUsers[username].username;
+                        if (previousUsername && previousUsername !== newUsername) {
+                            userListings = [];
+                            localStorage.removeItem('userListings');
+                        }
+                        
+                        if (demoUsers[username].user_type === 'seller') {
+                            showView('sellerDashboard');
+                        } else {
+                            showView('buyerDashboard');
+                        }
+                        
+                        showAlert(alertEl, '🎭 Demo Mode: Successfully logged in!', 'success');
+                    } else {
+                            showAlert(alertEl, 'Server unavailable. Try demo users: admin, eco_seller, DemoS, DemoB', 'error');
+                        }
+                    }
+                } finally {
+                    if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = '🚀 Sign In';
+                }
+                }
+                
+                return false; // Prevent form submission
+            }
+
+            async function handleSignup(e) {
+                console.log('handleSignup function called', e);
+                
+                if (e) {
+                e.preventDefault();
+                    e.stopPropagation();
+                }
+                
+                const form = document.getElementById('signup-form');
+                const btn = document.getElementById('signup-btn');
+                const alertEl = document.getElementById('signup-alert');
+                
+                console.log('Signup form elements:', { form: !!form, btn: !!btn, alertEl: !!alertEl });
+                
+                if (!btn || !alertEl) {
+                    console.error('Signup form elements not found');
+                    if (alertEl) {
+                        showAlert(alertEl, '❌ Form elements not found. Please refresh the page.', 'error');
+                    }
+                    return false;
+                }
+                
+                btn.disabled = true;
+                btn.textContent = '✨ Creating AI Profile...';
+                showAlert(alertEl, '');
+                
+                const usernameInput = document.getElementById('signup-username');
+                const passwordInput = document.getElementById('signup-password');
+                const userTypeInput = document.getElementById('user-type');
+                
+                if (!usernameInput || !passwordInput || !userTypeInput) {
+                    showAlert(alertEl, 'Form fields not found', 'error');
+                    btn.disabled = false;
+                    btn.textContent = '✨ Create Account';
+                    return false;
+                }
+                
+                const username = usernameInput.value.trim();
+                const password = passwordInput.value;
+                const userType = userTypeInput.value;
+                
+                if (!username || !password || !userType) {
+                    showAlert(alertEl, 'Please fill in all fields', 'error');
+                    btn.disabled = false;
+                    btn.textContent = '✨ Create Account';
+                    return false;
+                }
+                
+                console.log('Attempting signup for:', username, 'Type:', userType);
+                console.log('Signup endpoint:', `${API_BASE}/api/marketplace/users/`);
+                
+                try {
+                    const response = await fetch(`${API_BASE}/api/marketplace/users/`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            username: username,
+                            password: password,
+                            user_type: userType
+                        }),
+                    });
+                    
+                    console.log('Signup response status:', response.status);
+                    console.log('Signup response OK:', response.ok);
+                    
+                    // Read response - handle both JSON and text responses
+                    let responseData;
+                    const contentType = response.headers.get('content-type') || '';
+                    const isJson = contentType.includes('application/json');
+                    
+                    try {
+                        if (isJson) {
+                            responseData = await response.json();
+                        } else {
+                            const textData = await response.text();
+                            console.error('Non-JSON signup response:', textData.substring(0, 200));
+                            // Try to parse as JSON even if content-type says otherwise
+                            try {
+                                responseData = JSON.parse(textData);
+                            } catch {
+                                throw new Error(`Server returned ${response.status}: ${response.statusText}. Response: ${textData.substring(0, 100)}`);
+                            }
+                        }
+                    } catch (parseError) {
+                        console.error('Error parsing signup response:', parseError);
+                        throw new Error(`Failed to parse server response: ${parseError.message}`);
+                    }
+                    
+                    if (!response.ok) {
+                        // Extract error message from response
+                        let errorMsg = 'Registration failed';
+                        if (responseData) {
+                            if (Array.isArray(responseData)) {
+                                errorMsg = responseData[0] || errorMsg;
+                            } else if (typeof responseData === 'object') {
+                                const firstError = Object.values(responseData)[0];
+                                if (Array.isArray(firstError)) {
+                                    errorMsg = firstError[0] || errorMsg;
+                                } else if (typeof firstError === 'string') {
+                                    errorMsg = firstError;
+                                } else {
+                                    errorMsg = JSON.stringify(responseData);
+                                }
+                            } else {
+                                errorMsg = String(responseData);
+                            }
+                        }
+                        throw new Error(errorMsg);
+                    }
+                    
+                    console.log('Signup successful:', responseData);
+                    showAlert(alertEl, '🎉 Account created successfully! Please sign in.', 'success');
+                    document.getElementById('signup-form').reset();
+                    
+                    // Switch to login form after a short delay
+                    setTimeout(() => {
+                        const showLoginBtn = document.getElementById('show-login');
+                        if (showLoginBtn) {
+                            showLoginBtn.click();
+                        }
+                    }, 1000);
+                    
+                } catch (error) {
+                    console.error('Signup error:', error);
+                    console.error('Error details:', {
+                        message: error.message,
+                        stack: error.stack
+                    });
+                    showAlert(alertEl, `❌ ${error.message || 'Registration failed. Please try again.'}`, 'error');
+                } finally {
+                    if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = '✨ Create Account';
+                    }
+                }
+                
+                return false; // Prevent form submission
+            }
+
+            // Initialize
+            initializeEventListeners();
+            
+            // Try to restore currentUser from localStorage
+            try {
+                const storedUser = localStorage.getItem('currentUser');
+                if (storedUser) {
+                    currentUser = JSON.parse(storedUser);
+                    console.log('Restored currentUser from localStorage:', currentUser);
+                }
+            } catch (e) {
+                console.warn('Could not restore currentUser from localStorage:', e);
+            }
+            
+            // Try to restore userListings from localStorage
+            try {
+                const storedListings = localStorage.getItem('userListings');
+                if (storedListings) {
+                    userListings = JSON.parse(storedListings);
+                    console.log('Restored userListings from localStorage:', userListings.length);
+                }
+            } catch (e) {
+                console.warn('Could not restore userListings from localStorage:', e);
+            }
+            
+            showView('login');
+
+            function initializeEventListeners() {
+                document.getElementById('show-signup').addEventListener('click', () => {
+                    document.getElementById('login-form-container').classList.remove('active');
+                    document.getElementById('signup-form-container').classList.add('active');
+                });
+                
+                document.getElementById('show-login').addEventListener('click', () => {
+                    document.getElementById('signup-form-container').classList.remove('active');
+                    document.getElementById('login-form-container').classList.add('active');
+                });
+                
+                // Handle login form submission and button click
+                const loginForm = document.getElementById('login-form');
+                const loginBtn = document.getElementById('login-btn');
+                
+                // Handle form submission
+                loginForm.addEventListener('submit', (e) => {
+                    console.log('Login form submit event triggered');
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleLogin(e);
+                });
+                
+                // Handle button click directly (primary handler)
+                if (loginBtn) {
+                    console.log('✅ Login button found! Attaching click handler...');
+                    loginBtn.addEventListener('click', function(e) {
+                        console.log('🔥 LOGIN BUTTON CLICKED! Event:', e);
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('Calling handleLogin function...');
+                        handleLogin(e).catch(err => {
+                            console.error('Error in handleLogin:', err);
+                        });
+                    });
+                    console.log('✅ Login button click handler attached successfully');
+                } else {
+                    console.error('❌ Login button not found!');
+                    alert('ERROR: Login button not found!');
+                }
+                
+                // Handle signup form submission and button click
+                const signupForm = document.getElementById('signup-form');
+                const signupBtn = document.getElementById('signup-btn');
+                
+                // Handle form submission
+                signupForm.addEventListener('submit', (e) => {
+                    console.log('Signup form submit event triggered');
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleSignup(e);
+                });
+                
+                // Handle button click directly (primary handler)
+                if (signupBtn) {
+                    signupBtn.addEventListener('click', (e) => {
+                        console.log('Signup button clicked');
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleSignup(e);
+                    });
+                } else {
+                    console.error('Signup button not found!');
+                }
+                
+                document.querySelectorAll('.btn-logout').forEach(btn => 
+                    btn.addEventListener('click', handleLogout)
+                );
+                
+                document.getElementById('back-btn').addEventListener('click', () => {
+                    if (currentUser?.profile?.user_type === 'seller') {
+                        showView('sellerDashboard');
+                    } else {
+                        showView('buyerDashboard');
+                    }
+                });
+                
+                document.getElementById('create-listing-form').addEventListener('submit', handleCreateListing);
+                
+                // Filtering controls
+                const buyerFilter = document.getElementById('buyer-commodity-filter');
+                if (buyerFilter) {
+                    buyerFilter.addEventListener('change', applyBuyerFilter);
+                }
+                const sellerFilter = document.getElementById('seller-commodity-filter');
+                if (sellerFilter) {
+                    sellerFilter.addEventListener('change', () => loadSellerListings());
+                }
+                
+                // Notification bells
+                document.getElementById('notification-bell').addEventListener('click', showNotifications);
+                document.getElementById('seller-notification-bell').addEventListener('click', showNotifications);
+            }
+
+            function showView(viewName) {
+                Object.values(views).forEach(view => {
+                    view.style.display = 'none';
+                    view.classList.remove('active');
+                });
+                
+                if (views[viewName]) {
+                    views[viewName].style.display = 'block';
+                    views[viewName].classList.add('active');
+                    
+                    if (viewName === 'login') {
+                        views[viewName].style.display = 'flex';
+                    }
+                }
+                
+                // Load view-specific data
+                if (viewName === 'buyerDashboard') {
+                    loadBuyerDashboard();
+                } else if (viewName === 'sellerDashboard') {
+                    loadSellerDashboard();
+                }
+            }
+
+            async function loadBuyerDashboard() {
+                // Load listings immediately (no delay)
+                fetchListings();
+                
+                // Load other data in background (non-blocking)
+                Promise.all([
+                    loadAIRecommendations(),
+                    loadMarketAnalytics(),
+                    loadTopOpportunities(),
+                    loadNotifications()
+                ]).catch(err => console.error('Error loading dashboard data:', err));
+            }
+
+            // Helper function to save userListings to localStorage
+            function saveUserListingsToStorage() {
+                try {
+                    localStorage.setItem('userListings', JSON.stringify(userListings));
+                    console.log('Saved userListings to localStorage:', userListings.length);
+                } catch (e) {
+                    console.warn('Could not save userListings to localStorage:', e);
+                }
+            }
+
+            async function loadSellerDashboard() {
+                await Promise.all([
+                    loadCommodities(),
+                    loadPrices(),
+                    loadSellerAnalytics(),
+                    loadSellerMarketInsights(),
+                    loadNotifications(),
+                    loadSellerListings()
+                ]);
+            }
+            
+            async function loadSellerListings() {
+                const container = document.getElementById('seller-listings');
+                if (!container) {
+                    console.error('Seller listings container not found');
+                    return;
+                }
+                
+                // Restore currentUser from localStorage if it's missing
+                if (!currentUser) {
+                    try {
+                        const storedUser = localStorage.getItem('currentUser');
+                        if (storedUser) {
+                            currentUser = JSON.parse(storedUser);
+                            console.log('Restored currentUser in loadSellerListings:', currentUser);
+                        }
+                    } catch (e) {
+                        console.warn('Could not restore currentUser in loadSellerListings:', e);
+                    }
+                }
+                
+                // Restore userListings from localStorage if it's empty
+                if (userListings.length === 0) {
+                    try {
+                        const storedListings = localStorage.getItem('userListings');
+                        if (storedListings) {
+                            userListings = JSON.parse(storedListings);
+                            console.log('Restored userListings in loadSellerListings:', userListings.length);
+                        }
+                    } catch (e) {
+                        console.warn('Could not restore userListings in loadSellerListings:', e);
+                    }
+                }
+                
+                try {
+                    let apiListings = [];
+                    try {
+                        const response = await fetch(`${API_BASE}/api/marketplace/listings/`, {
+                            headers: { 'Authorization': `Token ${authToken}` }
+                        });
+                        
+                        if (response.ok) {
+                            apiListings = await response.json();
+                        }
+                    } catch (apiError) {
+                        console.log('API not available, using local listings only');
+                    }
+                    
+                    // Get current seller's username - normalize it with multiple fallbacks
+                    let sellerUsername = 'Unknown';
+                    if (currentUser) {
+                        sellerUsername = (currentUser.profile?.username || 
+                                        currentUser.profile?.user?.username || 
+                                        currentUser.username || 
+                                        'Unknown').trim().toLowerCase();
+                    }
+                    
+                    // If still unknown, try to get from localStorage or use a more permissive approach
+                    if (sellerUsername === 'unknown' || !sellerUsername) {
+                        const storedUser = localStorage.getItem('currentUser');
+                        if (storedUser) {
+                            try {
+                                const parsed = JSON.parse(storedUser);
+                                sellerUsername = (parsed.profile?.username || parsed.username || 'Unknown').trim().toLowerCase();
+                            } catch (e) {
+                                console.warn('Could not parse stored user');
+                            }
+                        }
+                    }
+                    
+                    console.log('=== LOADING SELLER LISTINGS ===');
+                    console.log('Current seller username:', sellerUsername);
+                    console.log('Current user object:', currentUser);
+                    console.log('Total userListings:', userListings.length);
+                    console.log('All userListings:', userListings.map(l => ({
+                        id: l.id,
+                        commodity: l.commodity_name,
+                        seller: l.seller_username,
+                        sellerLower: (l.seller_username || '').trim().toLowerCase()
+                    })));
+                    console.log('API listings:', apiListings.length);
+                    
+                    // Filter API listings to show only current seller's listings - case-insensitive comparison
+                    // Also filter out EXPIRED listings and old listings
+                    const now = new Date();
+                    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                    const sellerApiListings = apiListings.filter(listing => {
+                        // Exclude EXPIRED listings
+                        if (listing.status === 'EXPIRED') return false;
+                        // Only show LIVE or SOLD listings for sellers (recent ones)
+                        if (listing.status !== 'LIVE' && listing.status !== 'SOLD') return false;
+                        // Check if listing is recent (created within last 7 days)
+                        if (listing.created_at) {
+                            const createdDate = new Date(listing.created_at);
+                            if (createdDate < sevenDaysAgo) return false;
+                        }
+                        // Match seller username
+                        const listingSeller = (listing.seller_username || listing.seller?.username || '').trim().toLowerCase();
+                        const matches = listingSeller === sellerUsername;
+                        console.log('API Listing check:', listingSeller, '===', sellerUsername, '?', matches, 'Status:', listing.status);
+                        return matches;
+                    });
+                    
+                    // Get userListings created by this seller - case-insensitive comparison
+                    // If username is unknown, show ALL userListings (they're all created by the current user)
+                    let myUserListings = [];
+                    if (sellerUsername === 'unknown' || !sellerUsername || sellerUsername === '') {
+                        console.warn('⚠️ Username is unknown - showing ALL userListings as fallback');
+                        myUserListings = [...userListings];
+                    } else {
+                        myUserListings = userListings.filter(listing => {
+                            const listingSeller = (listing.seller_username || 'Unknown').trim().toLowerCase();
+                            const matches = listingSeller === sellerUsername;
+                            console.log('User Listing check:', listingSeller, '===', sellerUsername, '?', matches, '| Listing:', listing.commodity_name);
+                            return matches;
+                        });
+                    }
+                    
+                    console.log('Filtered seller API listings:', sellerApiListings.length);
+                    console.log('Filtered user listings:', myUserListings.length);
+                    console.log('=== END LOADING SELLER LISTINGS ===');
+                    
+                    // Filter out EXPIRED listings from local userListings as well
+                    // Reuse 'now' and 'sevenDaysAgo' from above (line 1553)
+                    const filteredMyUserListings = myUserListings.filter(listing => {
+                        // Exclude EXPIRED listings
+                        if (listing.status === 'EXPIRED') return false;
+                        // Only show LIVE or SOLD listings (recent ones)
+                        if (listing.status !== 'LIVE' && listing.status !== 'SOLD') return false;
+                        // Check if listing is recent
+                        if (listing.created_at) {
+                            const createdDate = new Date(listing.created_at);
+                            if (createdDate < sevenDaysAgo) return false;
+                        }
+                        return true;
+                    });
+                    
+                    // Combine and remove duplicates by ID
+                    const allSellerListings = [...sellerApiListings, ...filteredMyUserListings];
+                    const uniqueListings = [];
+                    const seenIds = new Set();
+                    
+                    allSellerListings.forEach(listing => {
+                        const id = listing.id || listing.pk;
+                        if (!seenIds.has(id)) {
+                            seenIds.add(id);
+                            uniqueListings.push(listing);
+                        }
+                    });
+                    
+                    console.log('Final unique listings:', uniqueListings.length);
+                    
+                    // DEBUG / SAFETY FALLBACKS: If no listings found, try to recover sensibly
+                    if (uniqueListings.length === 0) {
+                        // 1) If we still have local userListings, use them
+                        if (userListings.length > 0) {
+                            console.warn('⚠️ No listings matched seller username. Showing ALL local userListings as fallback.');
+                            console.warn('Seller username searched:', sellerUsername);
+                            console.warn('All userListings seller usernames:', userListings.map(l => ({
+                                id: l.id,
+                                commodity: l.commodity_name,
+                                seller: l.seller_username,
+                                sellerLower: (l.seller_username || '').trim().toLowerCase()
+                            })));
+                            
+                            // If username is "unknown" or we can't determine it, show all listings
+                            // Otherwise, try partial matching but never show empty when we have local data
+                            if (sellerUsername === 'unknown' || sellerUsername === '') {
+                                console.warn('⚠️ Username is unknown or empty - showing ALL local listings');
+                                uniqueListings.push(...userListings);
+                            } else {
+                                console.warn('⚠️ Trying to match by partial username on local listings...');
+                                const partialMatches = userListings.filter(l => {
+                                    const listingSeller = (l.seller_username || '').trim().toLowerCase();
+                                    return listingSeller.includes(sellerUsername) || sellerUsername.includes(listingSeller);
+                                });
+                                
+                                if (partialMatches.length > 0) {
+                                    console.warn('✅ Found partial matches:', partialMatches.length);
+                                    uniqueListings.push(...partialMatches);
+                                } else {
+                                    console.warn('⚠️ No partial matches - showing ALL local listings as fallback');
+                                    uniqueListings.push(...userListings);
+                                }
+                            }
+                        }
+                        // 2) If we have API listings but nothing matched, show ALL API listings
+                        else if (apiListings.length > 0) {
+                            console.warn('⚠️ No listings matched but API returned listings. Showing ALL API listings as fallback.');
+                            uniqueListings.push(...apiListings);
+                        }
+                    }
+                    
+                    // Apply seller filter by commodity
+                    const sellerFilterSelect = document.getElementById('seller-commodity-filter');
+                    const sellerFilterValue = sellerFilterSelect ? sellerFilterSelect.value : '';
+                    
+                    // Populate seller filter options
+                    if (sellerFilterSelect) {
+                        const commodities = Array.from(new Set(
+                            uniqueListings.map(l => l.commodity_name || l.commodity?.name).filter(Boolean)
+                        )).sort((a, b) => a.localeCompare(b));
+                        
+                        const previousValue = sellerFilterSelect.value;
+                        sellerFilterSelect.innerHTML = '<option value=\"\">All materials</option>' +
+                            commodities.map(name => `<option value=\"${name}\">${name}</option>`).join('');
+                        
+                        if (previousValue && commodities.includes(previousValue)) {
+                            sellerFilterSelect.value = previousValue;
+                        }
+                    }
+                    
+                    const filteredSellerListings = sellerFilterValue
+                        ? uniqueListings.filter(l => (l.commodity_name || l.commodity?.name) === sellerFilterValue)
+                        : uniqueListings;
+                    
+                    // Display listings with improved CSS
+                    if (filteredSellerListings.length === 0) {
+                        container.innerHTML = `
+                            <div style="text-align: center; padding: 3rem; background: rgba(255, 255, 255, 0.1); border-radius: 1rem; border: 2px dashed rgba(255, 255, 255, 0.3);">
+                                <div style="font-size: 4rem; margin-bottom: 1rem;">📦</div>
+                                <h3 style="color: white; font-size: 1.5rem; margin-bottom: 0.5rem;">No Listings Yet</h3>
+                                <p style="color: rgba(255, 255, 255, 0.7);">Create your first listing to start selling!</p>
+                            </div>
+                        `;
+                    } else {
+                        container.innerHTML = filteredSellerListings.map(listing => {
+                            // Sort bids by amount (highest first)
+                            const sortedBids = (listing.bids || []).sort((a, b) => parseFloat(b.amount) - parseFloat(a.amount));
+                            const highestBid = sortedBids[0];
+                            const bidCount = sortedBids.length;
+                            
+                            // Handle image - prioritize image_url (full URL) over image (relative)
+                            const imgSrc = listing.image_url || listing.image;
+                            let finalImgSrc = null;
+                            if (imgSrc) {
+                                if (imgSrc.startsWith('data:') || /^https?:/.test(imgSrc)) {
+                                    // Data URL or full HTTP URL - use directly
+                                    finalImgSrc = imgSrc;
+                                    // Fix port if it's pointing to Django internal port (9100)
+                                    if (finalImgSrc.includes(':9100')) {
+                                        finalImgSrc = finalImgSrc.replace(':9100', ':8000');
+                                    }
+                                } else if (imgSrc.startsWith('/media/')) {
+                                    // Media file - prepend API base
+                                    finalImgSrc = `${API_BASE}${imgSrc}`;
+                                } else {
+                                    // Other relative path - prepend API base
+                                    finalImgSrc = `${API_BASE}${imgSrc}`;
+                                }
+                            }
+                            console.log('Seller listing image - imgSrc:', imgSrc, 'finalImgSrc:', finalImgSrc, 'for:', listing.commodity_name);
+                            const imgHtml = finalImgSrc ? 
+                                `<div style="width:100%;height:220px;overflow:hidden;border-radius:0.75rem;margin-bottom:1rem;position:relative;background:linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);box-shadow:0 4px 16px rgba(0,0,0,0.15);">
+                                    <img src="${finalImgSrc}" 
+                                         alt="${listing.commodity_name}" 
+                                         style="width:100%;height:100%;object-fit:cover;object-position:center;display:block !important;cursor:pointer;transition:transform 0.3s ease;position:relative;z-index:2;"
+                                         onerror="console.error('Image failed to load:', '${finalImgSrc}'); this.onerror=null; this.style.display='none'; const placeholder = this.nextElementSibling; if(placeholder) { placeholder.style.display='flex'; placeholder.style.zIndex='3'; }"
+                                         onload="console.log('Image loaded successfully:', '${finalImgSrc}'); const placeholder = this.nextElementSibling; if(placeholder) { placeholder.style.display='none'; }"
+                                         onclick="if(this.src && this.style.display !== 'none') window.open(this.src, '_blank');"
+                                         loading="lazy">
+                                    <div class="image-placeholder-fallback" style="width:100%;height:100%;background:linear-gradient(135deg, var(--primary-color), #7c3aed);border-radius:0.75rem;display:none;align-items:center;justify-content:center;color:white;font-size:1.5rem;font-weight:700;position:absolute;top:0;left:0;z-index:1;">${listing.commodity_name}</div>
+                                </div>` : 
+                                `<div style="width:100%;height:220px;background:linear-gradient(135deg, var(--primary-color), #7c3aed);border-radius:0.75rem;display:flex;align-items:center;justify-content:center;color:white;font-size:1.5rem;font-weight:700;margin-bottom:1rem;box-shadow:0 4px 16px rgba(0,0,0,0.15);">${listing.commodity_name}</div>`;
+                            
+                            // Time remaining
+                            const timeRemaining = listing.time_remaining_seconds || Math.floor((new Date(listing.auction_ends_at) - new Date()) / 1000);
+                            const timeRemainingText = timeRemaining > 0 ? 
+                                `${Math.floor(timeRemaining / 3600)}h ${Math.floor((timeRemaining % 3600) / 60)}m left` : 'Auction Ended';
+                            
+                            return `
+                                <div class="seller-listing-item">
+                                    ${imgHtml}
+                                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                                        <div style="flex: 1;">
+                                            <h3 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 0.5rem; color: #1f2937;">${listing.commodity_name}</h3>
+                                            <p style="color: #6b7280; font-size: 0.95rem; margin-bottom: 0.25rem;">📦 ${listing.quantity_kg} kg</p>
+                                            <p style="color: #6b7280; font-size: 0.95rem; margin-bottom: 0.25rem;">💰 Starting: ₹${listing.starting_price}/kg</p>
+                                            <p style="color: #6b7280; font-size: 0.95rem;">⏰ ${timeRemainingText}</p>
+                                        </div>
+                                        <div style="text-align: right; margin-left: 1rem;">
+                                            <div style="font-size: 2rem; font-weight: 900; color: var(--primary-color); margin-bottom: 0.25rem;">
+                                                ₹${highestBid?.amount || listing.starting_price}
+                                            </div>
+                                            <p style="font-size: 0.85rem; color: #6b7280; background: rgba(99, 102, 241, 0.1); padding: 0.25rem 0.5rem; border-radius: 0.5rem; display: inline-block;">
+                                                ${bidCount} bid${bidCount !== 1 ? 's' : ''}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    
+                                    ${bidCount > 0 ? `
+                                        <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 2px solid #e5e7eb;">
+                                            <h4 style="font-size: 1rem; font-weight: 700; margin-bottom: 1rem; color: var(--primary-color); display: flex; align-items: center; gap: 0.5rem;">
+                                                <span>👥</span>
+                                                <span>Bids from Buyers (${bidCount})</span>
+                                            </h4>
+                                            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                                                ${sortedBids.map((bid, index) => {
+                                                    const isHighest = index === 0;
+                                                    const bidderName = bid.bidder_username || bid.bidder || 'Unknown Buyer';
+                                                    const bidTime = bid.created_at ? new Date(bid.created_at).toLocaleString() : 'Recently';
+                                                    
+                                                    return `
+                                                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: ${isHighest ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(16, 185, 129, 0.1))' : 'rgba(99, 102, 241, 0.1)'}; border-radius: 0.75rem; border-left: 4px solid ${isHighest ? 'var(--success-color)' : 'var(--primary-color)'};">
+                                                            <div style="flex: 1;">
+                                                                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.25rem;">
+                                                                    <span style="font-weight: 700; font-size: 1rem; color: #1f2937;">${bidderName}</span>
+                                                                    ${isHighest ? '<span style="background: var(--success-color); color: white; padding: 0.25rem 0.75rem; border-radius: 0.5rem; font-size: 0.75rem; font-weight: 600;">🏆 HIGHEST BID</span>' : ''}
+                                                                </div>
+                                                                <p style="font-size: 0.85rem; color: #6b7280; margin: 0;">${bidTime}</p>
+                                                            </div>
+                                                            <div style="text-align: right;">
+                                                                <div style="font-size: 1.5rem; font-weight: 900; color: ${isHighest ? 'var(--success-color)' : 'var(--primary-color)'};">
+                                                                    ₹${bid.amount}
+                                                                </div>
+                                                                <p style="font-size: 0.75rem; color: #6b7280; margin-top: 0.25rem;">per kg</p>
+                                                            </div>
+                                                        </div>
+                                                    `;
+                                                }).join('')}
+                                            </div>
+                                        </div>
+                                    ` : `
+                                        <div style="margin-top: 1.5rem; padding: 1.5rem; background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(245, 158, 11, 0.05)); border-radius: 0.75rem; text-align: center; border: 2px dashed rgba(245, 158, 11, 0.3);">
+                                            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">⏳</div>
+                                            <p style="color: #92400e; font-weight: 600; font-size: 1rem;">No bids yet. Waiting for buyers...</p>
+                                            <p style="color: #a16207; font-size: 0.85rem; margin-top: 0.25rem;">Share your listing to attract more buyers!</p>
+                                        </div>
+                                    `}
+                                </div>
+                            `;
+                        }).join('');
+                    }
+                } catch (error) {
+                    console.error('Error loading seller listings:', error);
+                    // Even on error, try to show userListings
+                    const sellerUsername = currentUser?.profile?.username || currentUser?.username || 'Unknown';
+                    const myUserListings = userListings.filter(listing => 
+                        (listing.seller_username || 'Unknown') === sellerUsername
+                    );
+                    
+                    if (myUserListings.length > 0) {
+                        container.innerHTML = `<p style="color: white; padding: 1rem;">Showing ${myUserListings.length} local listing(s). API unavailable.</p>`;
+                        // Re-render with local listings
+                        setTimeout(() => loadSellerListings(), 100);
+                    } else {
+                        container.innerHTML = `
+                            <div style="text-align: center; padding: 2rem; color: rgba(255, 255, 255, 0.7); background: rgba(255, 0, 0, 0.1); border-radius: 1rem;">
+                                <p>Error loading listings. Please refresh the page.</p>
+                            </div>
+                        `;
+                    }
+                }
+            }
+
+            async function loadAIRecommendations() {
+                try {
+                    const response = await fetch(`${API_BASE}/api/marketplace/ai/recommendations/`, {
+                        headers: { 'Authorization': `Token ${authToken}` }
+                    });
+                    
+                    if (response.ok) {
+                        const recommendations = await response.json();
+                        const container = document.getElementById('ai-recommendations');
+                        
+                        if (recommendations.length > 0) {
+                            container.innerHTML = recommendations.slice(0, 3).map(rec => `
+                                <div class="ai-suggestion">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                        <strong>${rec.listing_title}</strong>
+                                        <span style="background: rgba(255,255,255,0.2); padding: 0.25rem 0.5rem; border-radius: 0.5rem; font-size: 0.8rem;">
+                                            ${(rec.confidence_score * 100).toFixed(0)}% confidence
+                                        </span>
+                                    </div>
+                                    <div class="confidence-meter">
+                                        <span>Confidence:</span>
+                                        <div class="confidence-bar">
+                                            <div class="confidence-fill" style="width: ${rec.confidence_score * 100}%"></div>
+                                        </div>
+                                    </div>
+                                    <p style="font-size: 0.9rem; margin-top: 0.5rem;">${rec.reason}</p>
+                                </div>
+                            `).join('');
+                        } else {
+                            container.innerHTML = '<p style="color: #6b7280;">No AI recommendations available yet. Create some listings to get personalized suggestions!</p>';
+                        }
+                    } else {
+                        console.error('AI Recommendations API Error:', response.status);
+                        document.getElementById('ai-recommendations').innerHTML = '<p style="color: #6b7280;">AI recommendations will be available once you start bidding!</p>';
+                    }
+                } catch (error) {
+                    console.error('Error loading AI recommendations:', error);
+                    // Generate recommendations from actual listings
+                    const allListings = [...userListings];
+                    const container = document.getElementById('ai-recommendations');
+                    
+                    if (allListings.length > 0) {
+                        const topListings = allListings
+                            .filter(l => l.quality_score > 0.7)
+                            .sort((a, b) => (b.quality_score * b.ai_competitiveness_score) - (a.quality_score * a.ai_competitiveness_score))
+                            .slice(0, 3);
+                        
+                        if (topListings.length > 0) {
+                            container.innerHTML = topListings.map(listing => {
+                                const confidence = Math.min(95, (listing.quality_score * 100) + (listing.ai_competitiveness_score * 20));
+                                return `
+                                    <div class="ai-suggestion">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                            <strong>${listing.commodity_name}</strong>
+                                            <span style="background: rgba(255,255,255,0.2); padding: 0.25rem 0.5rem; border-radius: 0.5rem; font-size: 0.8rem;">
+                                                ${confidence.toFixed(0)}% match
+                                            </span>
+                                        </div>
+                                        <div class="confidence-meter">
+                                            <span>Confidence:</span>
+                                            <div class="confidence-bar">
+                                                <div class="confidence-fill" style="width: ${confidence}%"></div>
+                                            </div>
+                                        </div>
+                                        <p style="font-size: 0.9rem; margin-top: 0.5rem;">Quality: ${(listing.quality_score * 100).toFixed(0)}% | Price: ₹${listing.starting_price}/kg</p>
+                                    </div>
+                                `;
+                            }).join('');
+                        } else {
+                            container.innerHTML = '<p style="color: #6b7280;">No AI recommendations available yet.</p>';
+                        }
+                    } else {
+                        container.innerHTML = '<p style="color: #6b7280;">AI recommendations will be available once listings are created!</p>';
+                    }
+                }
+            }
+
+            async function loadMarketAnalytics() {
+                try {
+                    const response = await fetch(`${API_BASE}/api/marketplace/ai/market-analytics/`, {
+                        headers: { 'Authorization': `Token ${authToken}` }
+                    });
+                    
+                    if (response.ok) {
+                        const analytics = await response.json();
+                        const container = document.getElementById('market-analytics');
+                        
+                        container.innerHTML = analytics.slice(0, 3).map(anal => `
+                            <div style="margin-bottom: 1rem; padding: 0.75rem; background: rgba(99, 102, 241, 0.1); border-radius: 0.5rem;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <strong>${anal.commodity_name}</strong>
+                                    <span style="font-size: 0.8rem; color: #6b7280;">${anal.date}</span>
+                                </div>
+                                <div style="margin-top: 0.5rem;">
+                                    <div>Trend: <span style="color: var(--primary-color); font-weight: 600;">${anal.demand_trend}</span></div>
+                                    <div>Sentiment: <span style="color: var(--primary-color); font-weight: 600;">${anal.market_sentiment}</span></div>
+                                    <div>7-day Prediction: ₹${anal.predicted_price_7d}</div>
+                                </div>
+                            </div>
+                        `).join('');
+                    }
+                } catch (error) {
+                    console.error('Error loading market analytics:', error);
+                    document.getElementById('market-analytics').innerHTML = `
+                        <div style="text-align: center; padding: 2rem; color: #6b7280;">
+                            <div style="font-size: 2rem; margin-bottom: 1rem;">📊</div>
+                            <p>Market analytics will be available with real data.</p>
+                            <p style="font-size: 0.9rem; margin-top: 0.5rem;">Start the Django server for AI insights.</p>
+                        </div>
+                    `;
+                }
+            }
+
+            async function loadTopOpportunities() {
+                try {
+                    const response = await fetch(`${API_BASE}/api/marketplace/ai/market-insights/`, {
+                        headers: { 'Authorization': `Token ${authToken}` }
+                    });
+                    
+                    if (response.ok) {
+                        const insights = await response.json();
+                        const container = document.getElementById('top-opportunities');
+                        
+                        if (insights.top_opportunities && insights.top_opportunities.length > 0) {
+                            container.innerHTML = insights.top_opportunities.slice(0, 3).map(opp => `
+                                <div style="margin-bottom: 1rem; padding: 0.75rem; background: rgba(16, 185, 129, 0.1); border-radius: 0.5rem; border-left: 4px solid var(--success-color);">
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <strong>${opp.commodity}</strong>
+                                        <span style="color: var(--success-color); font-weight: 600;">${opp.price_advantage}% off</span>
+                                    </div>
+                                    <div style="margin-top: 0.5rem; font-size: 0.9rem;">
+                                        <div>Quality: ${(opp.quality_score * 100).toFixed(0)}%</div>
+                                        <div>Time left: ${Math.floor(opp.time_remaining / 3600)}h</div>
+                                    </div>
+                                </div>
+                            `).join('');
+                        } else {
+                            container.innerHTML = '<p style="color: #6b7280;">No top opportunities found at the moment.</p>';
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error loading top opportunities:', error);
+                    document.getElementById('top-opportunities').innerHTML = `
+                        <div style="text-align: center; padding: 2rem; color: #6b7280;">
+                            <div style="font-size: 2rem; margin-bottom: 1rem;">🎯</div>
+                            <p>Top opportunities will be available with real listings.</p>
+                            <p style="font-size: 0.9rem; margin-top: 0.5rem;">Create listings to see AI-identified deals.</p>
+                        </div>
+                    `;
+                }
+            }
+
+            async function loadSellerAnalytics() {
+                try {
+                    const container = document.getElementById('seller-analytics');
+                    container.innerHTML = `
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1rem;">
+                            <div style="text-align: center; padding: 1rem; background: rgba(99, 102, 241, 0.1); border-radius: 0.5rem;">
+                                <div style="font-size: 2rem; font-weight: 900; color: var(--primary-color);">0</div>
+                                <div style="font-size: 0.9rem; color: #6b7280;">Active Listings</div>
+                            </div>
+                            <div style="text-align: center; padding: 1rem; background: rgba(16, 185, 129, 0.1); border-radius: 0.5rem;">
+                                <div style="font-size: 2rem; font-weight: 900; color: var(--success-color);">₹0</div>
+                                <div style="font-size: 0.9rem; color: #6b7280;">Total Sales</div>
+                            </div>
+                            <div style="text-align: center; padding: 1rem; background: rgba(245, 158, 11, 0.1); border-radius: 0.5rem;">
+                                <div style="font-size: 2rem; font-weight: 900; color: var(--warning-color);">0%</div>
+                                <div style="font-size: 0.9rem; color: #6b7280;">Success Rate</div>
+                            </div>
+                        </div>
+                    `;
+                } catch (error) {
+                    console.error('Error loading seller analytics:', error);
+                }
+            }
+
+            async function loadSellerMarketInsights() {
+                try {
+                    const container = document.getElementById('seller-market-insights');
+                    container.innerHTML = `
+                        <div style="color: #6b7280;">
+                            <p>🤖 AI is analyzing market trends...</p>
+                            <p>📊 Optimizing your listing strategy...</p>
+                            <p>🎯 Identifying best-selling commodities...</p>
+                        </div>
+                    `;
+                } catch (error) {
+                    console.error('Error loading seller market insights:', error);
+                }
+            }
+
+            async function loadNotifications() {
+                try {
+                    const response = await fetch(`${API_BASE}/api/marketplace/notifications/`, {
+                        headers: { 'Authorization': `Token ${authToken}` }
+                    });
+                    
+                    if (response.ok) {
+                        const notifications = await response.json();
+                        const unreadCount = notifications.filter(n => !n.is_read).length;
+                        
+                        document.getElementById('notification-count').textContent = unreadCount;
+                        document.getElementById('seller-notification-count').textContent = unreadCount;
+                    }
+                } catch (error) {
+                    console.error('Error loading notifications:', error);
+                }
+            }
+
+            async function fetchListings() {
+                const spinner = document.getElementById('listings-spinner');
+                const grid = document.getElementById('listings-grid');
+                
+                // Don't change view - just update listings if buyer dashboard is already open
+                if (views.buyerDashboard.style.display === 'none') {
+                    return; // Don't fetch if buyer dashboard is not visible
+                }
+                
+                // Show local listings immediately (no delay)
+                // Ensure userListings have status='LIVE' and created_at set
+                const liveUserListings = userListings.map(l => {
+                    if (!l.status) l.status = 'LIVE';
+                    if (!l.created_at) l.created_at = new Date().toISOString();
+                    return l;
+                }).filter(l => l.status === 'LIVE');
+                
+                if (liveUserListings.length > 0) {
+                    buyerAllListings = [...liveUserListings];
+                    console.log('Showing', liveUserListings.length, 'local LIVE listings immediately');
+                    applyBuyerFilter();
+                    spinner.style.display = 'none';
+                } else {
+                spinner.style.display = 'block';
+                grid.innerHTML = '';
+                }
+                
+                // Then try to fetch from server and update
+                try {
+                    const response = await fetch(`${API_BASE}/api/marketplace/listings/`, {
+                        headers: { 'Authorization': `Token ${authToken}` }
+                    });
+                    
+                    if (!response.ok) {
+                        console.error('API Error:', response.status, response.statusText);
+                        throw new Error(`Server error: ${response.status}. Make sure Django server is running on port 8000.`);
+                    }
+                    
+                    const listings = await response.json();
+                    console.log('Fetched listings:', listings);
+                    // Filter out EXPIRED listings and only keep recent ones
+                    const now = new Date();
+                    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                    const validListings = listings.filter(l => {
+                        // Exclude EXPIRED listings
+                        if (l.status === 'EXPIRED') return false;
+                        // Only show LIVE listings (recent ones are already filtered by backend)
+                        if (l.status !== 'LIVE') return false;
+                        // Additional check: ensure listing is recent (created within last 7 days)
+                        // If created_at is missing, assume it's new and show it
+                        if (l.created_at) {
+                            const createdDate = new Date(l.created_at);
+                            if (createdDate < sevenDaysAgo) return false;
+                        }
+                        // If no created_at, assume it's a new listing and show it
+                        return true;
+                    });
+                    console.log('Total listings from API:', listings.length);
+                    console.log('Valid LIVE listings after filtering:', validListings.length);
+                    console.log('Sample listing:', validListings[0]);
+                    console.log('Filtered listings (removed expired/old):', validListings.length);
+                    // Combine server listings with user listings (avoid duplicates)
+                    // Ensure userListings have status='LIVE' and created_at set for proper filtering
+                    const processedUserListings = userListings.map(l => {
+                        if (!l.status) l.status = 'LIVE';
+                        if (!l.created_at) l.created_at = new Date().toISOString();
+                        return l;
+                    }).filter(l => l.status === 'LIVE'); // Only include LIVE listings
+                    
+                    const existingIds = new Set(processedUserListings.map(l => l.id));
+                    const newServerListings = validListings.filter(l => !existingIds.has(l.id));
+                    buyerAllListings = [...processedUserListings, ...newServerListings];
+                    console.log('Combined listings - User:', processedUserListings.length, 'Server:', newServerListings.length, 'Total:', buyerAllListings.length);
+                    applyBuyerFilter();
+                    
+                } catch (error) {
+                    console.error('Fetch error:', error);
+                    
+                    // If no user listings, show empty state
+                    if (userListings.length === 0) {
+                        grid.innerHTML = `
+                            <div style="text-align: center; padding: 3rem; color: #6b7280;">
+                                <div style="font-size: 3rem; margin-bottom: 1rem;">📦</div>
+                                <h3>No Listings Available</h3>
+                                <p style="margin-top: 1rem;">Start the Django server to create and view real listings.</p>
+                                <p style="font-size: 0.9rem; margin-top: 0.5rem; color: var(--warning-color);">
+                                    Server Error: ${error.message}
+                                </p>
+                                <div style="margin-top: 2rem; padding: 1rem; background: rgba(99, 102, 241, 0.1); border-radius: 0.5rem;">
+                                    <p><strong>To start the server:</strong></p>
+                                    <p style="font-family: monospace; margin-top: 0.5rem;">
+                                        1. Open Command Prompt<br>
+                                        2. cd to your project folder<br>
+                                        3. venv\Scripts\activate<br>
+                                        4. python manage.py runserver 127.0.0.1:8000
+                                    </p>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    // If user listings exist, they're already shown above
+                } finally {
+                    spinner.style.display = 'none';
+                }
+            }
+            
+            function applyBuyerFilter() {
+                const grid = document.getElementById('listings-grid');
+                if (!grid) return;
+                
+                const select = document.getElementById('buyer-commodity-filter');
+                const filterValue = select ? select.value : '';
+                
+                // Update filter options based on current data
+                if (buyerAllListings && buyerAllListings.length > 0) {
+                    const names = Array.from(new Set(
+                        buyerAllListings.map(l => l.commodity_name || l.commodity?.name).filter(Boolean)
+                    )).sort((a, b) => a.localeCompare(b));
+                    if (select && select.options.length <= 1) {
+                        select.innerHTML = '<option value=\"\">All materials</option>' +
+                            names.map(name => `<option value=\"${name}\">${name}</option>`).join('');
+                    }
+                }
+                
+                const source = (buyerAllListings && buyerAllListings.length > 0)
+                    ? buyerAllListings
+                    : userListings;
+                
+                if (!source || source.length === 0) {
+                    renderListings([]);
+                    return;
+                }
+                
+                const filtered = filterValue
+                    ? source.filter(l => (l.commodity_name || l.commodity?.name) === filterValue)
+                    : source;
+                
+                renderListings(filtered);
+            }
+            
+            function renderBiddingHistory(listing) {
+                const bids = listing.bids || [];
+                const sortedBids = bids.sort((a, b) => parseFloat(b.amount) - parseFloat(a.amount));
+                
+                if (sortedBids.length === 0) {
+                    return `
+                        <div style="text-align: center; padding: 2rem; color: #6b7280;">
+                            <div style="font-size: 2rem; margin-bottom: 1rem;">📝</div>
+                            <p>No bids placed yet</p>
+                            <p style="font-size: 0.9rem; margin-top: 0.5rem;">Be the first to bid!</p>
+                        </div>
+                    `;
+                }
+                
+                let historyHtml = '';
+                
+                // Add starting price
+                historyHtml += `
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: rgba(99, 102, 241, 0.1); border-radius: 0.5rem; margin-bottom: 0.5rem;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="background: var(--primary-color); color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.8rem;">START</span>
+                            <span style="font-weight: 600;">Starting Price</span>
+                        </div>
+                        <div style="font-weight: 700; color: var(--primary-color);">₹${listing.starting_price}</div>
+                    </div>
+                `;
+                
+                // Add all bids
+                sortedBids.forEach((bid, index) => {
+                    const isHighest = index === 0;
+                    const isNew = index === 0 && bid.timestamp && (new Date() - new Date(bid.timestamp)) < 60000; // New if less than 1 minute old
+                    const bidderName = bid.bidder_username || bid.bidder || 'Unknown Buyer';
+                    const isSellerBid = bidderName === listing.seller_username;
+                    const bidderType = isSellerBid ? 'SELLER' : 'BUYER';
+                    
+                    historyHtml += `
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: ${isHighest ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.1)'}; border-radius: 0.5rem; margin-bottom: 0.5rem; border-left: 4px solid ${isHighest ? 'var(--success-color)' : 'var(--primary-color)'};">
+                            <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                                <span style="background: ${bidderType === 'SELLER' ? 'var(--warning-color)' : 'var(--primary-color)'}; color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.8rem;">${bidderType}</span>
+                                <span style="font-weight: 600;">${bidderName}</span>
+                                ${isHighest ? '<span style="background: var(--success-color); color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.8rem;">WINNING</span>' : ''}
+                                ${isNew ? '<span style="background: var(--success-color); color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.8rem;">NEW</span>' : ''}
+                            </div>
+                            <div style="font-weight: 700; color: ${isHighest ? 'var(--success-color)' : 'var(--primary-color)'};">
+                                ₹${bid.amount}
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                return historyHtml;
+            }
+
+            function renderListings(listings) {
+                const listingsGrid = document.getElementById('listings-grid');
+                listingsGrid.innerHTML = '';
+                
+                if (listings.length === 0) {
+                    listingsGrid.innerHTML = '<p style="text-align: center; color: white;">No listings available yet. Be the first to create one!</p>';
+                    return;
+                }
+                
+                listings.forEach(listing => {
+                    const highestBid = listing.bids?.sort((a,b) => parseFloat(b.amount) - parseFloat(a.amount))[0]?.amount || (listing.starting_price ?? '0.00');
+                    const card = document.createElement('div');
+                    card.className = 'listing-card fade-in-up';
+                    
+                    // Handle image - prioritize image_url (full URL) over image (relative)
+                    const imageSource = listing.image_url || listing.image;
+                    let imgSrc = null;
+                    if (imageSource) {
+                        if (imageSource.startsWith('data:') || /^https?:/.test(imageSource)) {
+                            // Data URL or full HTTP URL - use directly
+                            imgSrc = imageSource;
+                            // Fix port if it's pointing to Django internal port (9100)
+                            if (imgSrc.includes(':9100')) {
+                                imgSrc = imgSrc.replace(':9100', ':8000');
+                            }
+                        } else if (imageSource.startsWith('/media/')) {
+                            // Media file - prepend API base
+                            imgSrc = `${API_BASE}${imageSource}`;
+                        } else {
+                            // Other relative path - prepend API base
+                            imgSrc = `${API_BASE}${imageSource}`;
+                        }
+                    }
+                    console.log('Buyer listing image - imageSource:', imageSource, 'final imgSrc:', imgSrc, 'for:', listing.commodity_name);
+                    const imgHtml = imgSrc ? 
+                        `<div style="width:100%;height:260px;overflow:hidden;position:relative;background:linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);">
+                            <img src="${imgSrc}" 
+                                 alt="${listing.commodity_name}" 
+                                 style="width:100%;height:100%;object-fit:cover;object-position:center;display:block !important;cursor:pointer;transition:transform 0.4s ease;position:relative;z-index:2;visibility:visible !important;opacity:1 !important;"
+                                 onerror="console.error('Image failed to load:', '${imgSrc}'); this.onerror=null; this.style.display='none'; const placeholder = this.nextElementSibling; if(placeholder) { placeholder.style.display='flex'; placeholder.style.zIndex='3'; }"
+                                 onload="console.log('Image loaded successfully:', '${imgSrc}'); const placeholder = this.nextElementSibling; if(placeholder) { placeholder.style.display='none'; } this.style.display='block'; this.style.visibility='visible'; this.style.opacity='1';"
+                                 onclick="if(this.src && this.style.display !== 'none') window.open(this.src, '_blank');"
+                                 loading="lazy">
+                            <div class="image-placeholder" style="display:none;position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;">${listing.commodity_name}</div>
+                        </div>` : 
+                        `<div class="image-placeholder" style="height:260px;">${listing.commodity_name}</div>`;
+                    
+                    const qualityScore = listing.quality_score || 0;
+                    const qualityClass = qualityScore > 0.8 ? 'quality-excellent' : qualityScore > 0.6 ? 'quality-good' : 'quality-poor';
+                    const qualityText = qualityScore > 0.8 ? 'Excellent' : qualityScore > 0.6 ? 'Good' : 'Fair';
+                    
+                    const aiInsights = [];
+                    if (listing.ai_suggested_price && listing.ai_suggested_price !== listing.starting_price) {
+                        aiInsights.push('AI Optimized');
+                    }
+                    if (listing.ai_competitiveness_score > 0.7) {
+                        aiInsights.push('High Demand');
+                    }
+                    if (listing.urgency_factor > 1.1) {
+                        aiInsights.push('Urgent');
+                    }
+                    
+                    card.innerHTML = `
+                        ${imgHtml}
+                        <div class="quality-badge ${qualityClass}">${qualityText}</div>
+                        <div class="card-content">
+                            <h3>${listing.commodity_name}</h3>
+                            <p>${listing.quantity_kg} kg • Quality: ${(qualityScore * 100).toFixed(0)}%</p>
+                            <div class="ai-insights">
+                                ${aiInsights.map(insight => `<div class="ai-insight">${insight}</div>`).join('')}
+                            </div>
+                            <div style="font-size:0.9rem;color:#6b7280; margin-top: 1rem;">
+                                ${listing.bids?.length ? 'Current' : 'Starting'} price
+                            </div>
+                            <div class="current-bid">₹${highestBid}</div>
+                            <p style="font-size: 0.8rem; color: #6b7280; margin-top: 1rem;">
+                                Seller: ${listing.seller_username || listing.seller || listing.seller_name || 'Unknown Seller'}
+                            </p>
+                            <div style="font-size: 0.8rem; color: #6b7280; margin-top: 0.5rem;">
+                                ${Math.floor(listing.time_remaining_seconds / 3600)}h ${Math.floor((listing.time_remaining_seconds % 3600) / 60)}m left
+                            </div>
+                        </div>
+                    `;
+                    
+                    card.addEventListener('click', () => showDetailView(listing));
+                    listingsGrid.appendChild(card);
+                });
+            }
+
+            function showDetailView(listing) {
+                window.currentListingDetail = listing; // Store for WebSocket updates
+                renderDetail(listing);
+                loadAIBidSuggestions(listing.id, listing);
+                connectWebSocket(listing.id);
+                showView('detail');
+            }
+
+            async function loadAIBidSuggestions(listingId, listing) {
+                try {
+                    const response = await fetch(`${API_BASE}/api/marketplace/ai/bid-suggestions/${listingId}/`, {
+                        headers: { 'Authorization': `Token ${authToken}` }
+                    });
+                    
+                    if (response.ok) {
+                        const suggestions = await response.json();
+                        const assistant = document.getElementById('ai-bid-assistant');
+                        const container = document.getElementById('ai-bid-suggestions');
+                        
+                        assistant.style.display = 'block';
+                        
+                        // Extract values with proper fallbacks
+                        const optimalRange = suggestions.optimal_range || {};
+                        const recommended = optimalRange.recommended || listing.starting_price || '0.00';
+                        const minBid = optimalRange.min || (parseFloat(listing.starting_price) * 0.95).toFixed(2);
+                        const maxBid = optimalRange.max || (parseFloat(listing.starting_price) * 1.2).toFixed(2);
+                        
+                        const marketConditions = suggestions.market_conditions || {};
+                        const trend = marketConditions.trend || 'STABLE';
+                        const demand = marketConditions.demand || '50%';
+                        
+                        const listingAnalysis = suggestions.listing_analysis || {};
+                        const qualityScore = listingAnalysis.quality_score || listing.quality_score || 0.5;
+                        const urgencyFactor = listingAnalysis.urgency_factor || 1.0;
+                        
+                        const confidence = suggestions.confidence_score || 85;
+                        
+                        container.innerHTML = `
+                            <div class="ai-suggestion" style="position: relative; z-index: 1;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; position: relative; z-index: 2;">
+                                    <strong style="font-size: 1.5rem;">🎯 AI Bid Recommendation</strong>
+                                    <span style="background: rgba(255,255,255,0.3); padding: 0.5rem 1rem; border-radius: 1rem; font-size: 0.9rem; font-weight: 700; backdrop-filter: blur(10px);">
+                                        Optimal Range
+                                    </span>
+                                </div>
+                                <div style="margin-bottom: 1.5rem; position: relative; z-index: 2;">
+                                    <div style="font-size: 3rem; font-weight: 900; margin-bottom: 0.5rem; text-shadow: 0 2px 10px rgba(0,0,0,0.2);">
+                                        ₹${parseFloat(recommended).toFixed(2)}
+                                </div>
+                                    <div style="font-size: 1rem; opacity: 0.9; margin-bottom: 1rem;">AI Recommended Bid</div>
+                                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                                        <div style="background: rgba(255,255,255,0.2); padding: 0.75rem 1.25rem; border-radius: 0.75rem; backdrop-filter: blur(10px);">
+                                            <div style="font-size: 0.85rem; opacity: 0.9; margin-bottom: 0.25rem;">Min</div>
+                                            <div style="font-size: 1.25rem; font-weight: 700;">₹${parseFloat(minBid).toFixed(2)}</div>
+                                </div>
+                                        <div style="background: rgba(255,255,255,0.2); padding: 0.75rem 1.25rem; border-radius: 0.75rem; backdrop-filter: blur(10px);">
+                                            <div style="font-size: 0.85rem; opacity: 0.9; margin-bottom: 0.25rem;">Max</div>
+                                            <div style="font-size: 1.25rem; font-weight: 700;">₹${parseFloat(maxBid).toFixed(2)}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="margin-bottom: 1.5rem; position: relative; z-index: 2;">
+                                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                                        <div style="background: rgba(255,255,255,0.15); padding: 1rem; border-radius: 0.75rem; backdrop-filter: blur(10px);">
+                                            <div style="font-size: 0.85rem; opacity: 0.9; margin-bottom: 0.5rem;">Market Trend</div>
+                                            <div style="font-size: 1.1rem; font-weight: 700;">${trend}</div>
+                                        </div>
+                                        <div style="background: rgba(255,255,255,0.15); padding: 1rem; border-radius: 0.75rem; backdrop-filter: blur(10px);">
+                                            <div style="font-size: 0.85rem; opacity: 0.9; margin-bottom: 0.5rem;">Quality Score</div>
+                                            <div style="font-size: 1.1rem; font-weight: 700;">${(qualityScore * 100).toFixed(0)}%</div>
+                                        </div>
+                                        <div style="background: rgba(255,255,255,0.15); padding: 1rem; border-radius: 0.75rem; backdrop-filter: blur(10px);">
+                                            <div style="font-size: 0.85rem; opacity: 0.9; margin-bottom: 0.5rem;">Urgency</div>
+                                            <div style="font-size: 1.1rem; font-weight: 700;">${urgencyFactor.toFixed(1)}x</div>
+                                        </div>
+                                        <div style="background: rgba(255,255,255,0.15); padding: 1rem; border-radius: 0.75rem; backdrop-filter: blur(10px);">
+                                            <div style="font-size: 0.85rem; opacity: 0.9; margin-bottom: 0.5rem;">Demand</div>
+                                            <div style="font-size: 1.1rem; font-weight: 700;">${demand}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="confidence-meter" style="position: relative; z-index: 2;">
+                                    <span style="font-weight: 700;">AI Confidence:</span>
+                                    <div class="confidence-bar">
+                                        <div class="confidence-fill" style="width: ${confidence}%"></div>
+                                    </div>
+                                    <span style="font-weight: 700; margin-left: 0.5rem;">${confidence}%</span>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        throw new Error('API not available');
+                    }
+                } catch (error) {
+                    console.error('Error loading AI bid suggestions:', error);
+                    
+                    // Generate AI recommendations based on listing data
+                    const assistant = document.getElementById('ai-bid-assistant');
+                    const container = document.getElementById('ai-bid-suggestions');
+                    
+                    assistant.style.display = 'block';
+                    
+                    // Enhanced AI calculation based on quality, market price, competition, and image analysis
+                    const currentBid = listing.bids?.sort((a,b) => parseFloat(b.amount) - parseFloat(a.amount))[0]?.amount || listing.starting_price;
+                    const qualityScore = listing.quality_score || 0.5;
+                    const marketPrice = parseFloat(listing.commodity?.market_price || listing.ai_suggested_price || listing.starting_price || 15);
+                    const bidCount = listing.bids?.length || 0;
+                    const timeRemaining = listing.time_remaining_seconds || 86400;
+                    const hasImage = listing.image || listing.image_url;
+                    
+                    // Advanced AI calculations
+                    const basePrice = parseFloat(currentBid);
+                    
+                    // Quality multiplier (0.85-1.25) - higher quality = higher multiplier
+                    const qualityMultiplier = 0.85 + (qualityScore * 0.4);
+                    
+                    // Competition factor based on actual bid count (1.0-1.3)
+                    const competitionFactor = bidCount === 0 ? 1.0 : (1.0 + Math.min(bidCount * 0.05, 0.3));
+                    
+                    // Urgency factor based on time remaining (1.0-1.4)
+                    const urgencyFactor = timeRemaining < 3600 ? 1.4 : timeRemaining < 7200 ? 1.2 : 1.0;
+                    
+                    // Image quality bonus (if image exists, assume better quality assessment)
+                    const imageBonus = hasImage ? 1.05 : 1.0;
+                    
+                    // Market position adjustment
+                    const marketPosition = basePrice < marketPrice ? 1.1 : 1.0; // Below market = advantage
+                    
+                    // Calculate recommended bid with all factors
+                    const recommendedBid = (basePrice * qualityMultiplier * competitionFactor * imageBonus * marketPosition).toFixed(2);
+                    const minBid = (basePrice * 1.05).toFixed(2); // Minimum 5% above current
+                    const maxBid = (basePrice * qualityMultiplier * competitionFactor * urgencyFactor * imageBonus * 1.2).toFixed(2);
+                    
+                    // Confidence calculation based on data quality
+                    let confidence = (qualityScore * 70); // Base confidence from quality
+                    confidence += hasImage ? 15 : 0; // Image adds confidence
+                    confidence += bidCount > 0 ? 10 : 0; // Competition data adds confidence
+                    confidence = Math.min(95, confidence);
+                    
+                    // Determine market trend
+                    const marketTrend = basePrice < marketPrice ? 'INCREASING' : basePrice > marketPrice * 1.1 ? 'DECREASING' : 'STABLE';
+                    const demandLevel = bidCount > 2 ? '80%' : bidCount > 0 ? '60%' : '40%';
+                    
+                    container.innerHTML = `
+                        <div class="ai-suggestion" style="position: relative; z-index: 1;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; position: relative; z-index: 2;">
+                                <strong style="font-size: 1.5rem;">🤖 AI Bid Strategy</strong>
+                                <span style="background: rgba(255,255,255,0.3); padding: 0.5rem 1rem; border-radius: 1rem; font-size: 0.9rem; font-weight: 700; backdrop-filter: blur(10px);">
+                                    ${confidence.toFixed(0)}% confidence
+                                </span>
+                            </div>
+                            
+                            <div style="margin-bottom: 1.5rem; position: relative; z-index: 2;">
+                                <div style="font-size: 3rem; font-weight: 900; margin-bottom: 0.5rem; text-shadow: 0 2px 10px rgba(0,0,0,0.2);">
+                                    ₹${parseFloat(recommendedBid).toFixed(2)}
+                                </div>
+                                <div style="font-size: 1rem; opacity: 0.9; margin-bottom: 1rem;">AI Recommended Bid</div>
+                                <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                                    <div style="background: rgba(255,255,255,0.2); padding: 0.75rem 1.25rem; border-radius: 0.75rem; backdrop-filter: blur(10px);">
+                                        <div style="font-size: 0.85rem; opacity: 0.9; margin-bottom: 0.25rem;">Conservative</div>
+                                        <div style="font-size: 1.25rem; font-weight: 700;">₹${parseFloat(minBid).toFixed(2)}</div>
+                                    </div>
+                                    <div style="background: rgba(255,255,255,0.2); padding: 0.75rem 1.25rem; border-radius: 0.75rem; backdrop-filter: blur(10px);">
+                                        <div style="font-size: 0.85rem; opacity: 0.9; margin-bottom: 0.25rem;">Aggressive</div>
+                                        <div style="font-size: 1.25rem; font-weight: 700;">₹${parseFloat(maxBid).toFixed(2)}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div style="margin-bottom: 1.5rem; position: relative; z-index: 2;">
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                                    <div style="background: rgba(255,255,255,0.15); padding: 1rem; border-radius: 0.75rem; backdrop-filter: blur(10px);">
+                                        <div style="font-size: 0.85rem; opacity: 0.9; margin-bottom: 0.5rem;">Market Trend</div>
+                                        <div style="font-size: 1.1rem; font-weight: 700;">${marketTrend}</div>
+                                    </div>
+                                    <div style="background: rgba(255,255,255,0.15); padding: 1rem; border-radius: 0.75rem; backdrop-filter: blur(10px);">
+                                        <div style="font-size: 0.85rem; opacity: 0.9; margin-bottom: 0.5rem;">Quality Score</div>
+                                        <div style="font-size: 1.1rem; font-weight: 700;">${(qualityScore * 100).toFixed(0)}%</div>
+                                        <div style="font-size: 0.75rem; opacity: 0.8; margin-top: 0.25rem;">${qualityScore > 0.8 ? 'Excellent' : qualityScore > 0.6 ? 'Good' : 'Fair'}</div>
+                                    </div>
+                                    <div style="background: rgba(255,255,255,0.15); padding: 1rem; border-radius: 0.75rem; backdrop-filter: blur(10px);">
+                                        <div style="font-size: 0.85rem; opacity: 0.9; margin-bottom: 0.5rem;">Competition</div>
+                                        <div style="font-size: 1.1rem; font-weight: 700;">${listing.bids?.length > 2 ? 'High' : listing.bids?.length > 0 ? 'Medium' : 'Low'}</div>
+                                        <div style="font-size: 0.75rem; opacity: 0.8; margin-top: 0.25rem;">${bidCount} bid${bidCount !== 1 ? 's' : ''}</div>
+                                    </div>
+                                    <div style="background: rgba(255,255,255,0.15); padding: 1rem; border-radius: 0.75rem; backdrop-filter: blur(10px);">
+                                        <div style="font-size: 0.85rem; opacity: 0.9; margin-bottom: 0.5rem;">Urgency</div>
+                                        <div style="font-size: 1.1rem; font-weight: 700;">${urgencyFactor.toFixed(1)}x</div>
+                                        <div style="font-size: 0.75rem; opacity: 0.8; margin-top: 0.25rem;">${urgencyFactor > 1.1 ? 'High' : 'Normal'}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div style="margin-bottom: 1.5rem; position: relative; z-index: 2; background: rgba(255,255,255,0.15); padding: 1.25rem; border-radius: 0.75rem; backdrop-filter: blur(10px);">
+                                <div style="font-weight: 700; margin-bottom: 0.75rem; font-size: 1.1rem;">💡 AI Strategy</div>
+                                <div style="margin-bottom: 0.5rem;">${qualityScore > 0.8 ? '✅ High quality item - bid competitively to win' : qualityScore > 0.6 ? '⚡ Good quality - moderate bid recommended' : '⚠️ Fair quality - conservative bid advised'}</div>
+                                <div>${listing.time_remaining_seconds < 3600 ? '⏰ Time sensitive - consider higher bid for better chance' : '⏳ Normal timing - strategic bidding recommended'}</div>
+                                <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid rgba(255,255,255,0.2);">
+                                    <strong>🔮 AI Prediction:</strong> ${confidence > 80 ? 'High chance of winning with recommended bid' : confidence > 60 ? 'Good chance with strategic bidding' : 'Consider market conditions carefully before bidding'}
+                                </div>
+                            </div>
+                            
+                            <div class="confidence-meter" style="position: relative; z-index: 2;">
+                                <span style="font-weight: 700;">AI Confidence:</span>
+                                <div class="confidence-bar">
+                                    <div class="confidence-fill" style="width: ${confidence}%"></div>
+                                </div>
+                                <span style="font-weight: 700; margin-left: 0.5rem;">${confidence.toFixed(0)}%</span>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+
+            async function renderDetail(listing) {
+                const highestBid = listing.bids?.sort((a,b) => parseFloat(b.amount) - parseFloat(a.amount))[0]?.amount || (listing.starting_price ?? '0.00');
+                
+                const endsAt = new Date(listing.auction_ends_at);
+                // Handle image - prioritize image_url (full URL) over image (relative)
+                const imageSource = listing.image_url || listing.image;
+                let detailImgSrc = null;
+                if (imageSource) {
+                    if (imageSource.startsWith('data:') || /^https?:/.test(imageSource)) {
+                        // Data URL or full HTTP URL - use directly
+                        detailImgSrc = imageSource;
+                        // Fix port if it's pointing to Django internal port (9100)
+                        if (detailImgSrc.includes(':9100')) {
+                            detailImgSrc = detailImgSrc.replace(':9100', ':8000');
+                        }
+                    } else if (imageSource.startsWith('/media/')) {
+                        // Media file - prepend API base
+                        detailImgSrc = `${API_BASE}${imageSource}`;
+                    } else {
+                        // Other relative path - prepend API base
+                        detailImgSrc = `${API_BASE}${imageSource}`;
+                    }
+                }
+                console.log('Detail view image - imageSource:', imageSource, 'final:', detailImgSrc, 'for:', listing.commodity_name);
+                const imgHtml = detailImgSrc ? 
+                    `<div class="detail-image-container">
+                        <img src="${detailImgSrc}" 
+                             alt="${listing.commodity_name}" 
+                             style="width:100%;max-height:450px;object-fit:cover;object-position:center;display:block;cursor:pointer;border-radius:1rem;box-shadow:0 8px 24px rgba(0,0,0,0.2);transition:transform 0.3s ease;"
+                             onerror="console.error('Detail image failed to load:', '${detailImgSrc}'); this.onerror=null; this.style.display='none'; const placeholder = this.nextElementSibling; if(placeholder) { placeholder.style.display='flex'; }"
+                             onload="console.log('Detail image loaded successfully:', '${detailImgSrc}');"
+                             onclick="if(this.src && this.style.display !== 'none') window.open(this.src, '_blank');"
+                             onmouseover="this.style.transform='scale(1.02)'"
+                             onmouseout="this.style.transform='scale(1)'"
+                             loading="lazy">
+                        <div class="image-placeholder" style="display:none;height:450px;border-radius:1rem;">${listing.commodity_name}</div>
+                    </div>` : 
+                    `<div class="image-placeholder" style="height:350px;border-radius:1rem;margin-bottom:1.5rem;box-shadow:0 8px 24px rgba(0,0,0,0.15);">${listing.commodity_name}</div>`;
+                
+                const qualityScore = listing.quality_score || 0;
+                const qualityClass = qualityScore > 0.8 ? 'quality-excellent' : qualityScore > 0.6 ? 'quality-good' : 'quality-poor';
+                
+                document.getElementById('detail-card').innerHTML = `
+                    <div style="background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-radius: 1rem; padding: 2rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                            <div>
+                                ${imgHtml}
+                                <h2 style="font-size: 2rem; font-weight: 900; margin-bottom: 1rem;">${listing.commodity_name}</h2>
+                                <div style="margin-bottom: 1rem;">
+                                    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
+                                        <span>Quality Score:</span>
+                                        <span class="${qualityClass}" style="font-weight: 600;">${(qualityScore * 100).toFixed(0)}%</span>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
+                                        <span>Quantity:</span>
+                                        <span style="font-weight: 600;">${listing.quantity_kg} kg</span>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
+                                        <span>Seller:</span>
+                                        <span style="font-weight: 600;">${listing.seller_username}</span>
+                                    </div>
+                                    <div style="margin-top: 1rem; color:#6b7280;">
+                                        Ends in: <span id="countdown" style="font-weight: 600;"></span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Bidding History -->
+                                <div style="margin-top: 2rem;">
+                                    <h3 style="margin-bottom: 1rem; color: var(--primary-color);">📊 Bidding History</h3>
+                                    <div id="bidding-history" style="max-height: 300px; overflow-y: auto;">
+                                        ${renderBiddingHistory(listing)}
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="background: rgba(99, 102, 241, 0.1); padding: 2rem; border-radius: 0.75rem;">
+                                <div style="margin-bottom: 2rem;">
+                                    <p style="font-size: 1rem; color: #6b7280; margin-bottom: 0.5rem;">
+                                        ${listing.bids?.length ? 'Current Highest Bid' : 'Starting Price'}
+                                    </p>
+                                    <div style="font-size: 3rem; font-weight: 900; color: var(--primary-color);" id="detail-highest-bid">
+                                        ₹${highestBid}
+                                    </div>
+                                    ${listing.ai_suggested_price ? 
+                                        `<p style="margin-top:0.5rem;color:#10b981; font-weight: 600;">
+                                            AI Suggested: ₹${listing.ai_suggested_price}
+                                        </p>` : ''
+                                    }
+                                </div>
+                                
+                                <form id="bid-form" style="margin-top: 2rem;">
+                                    <h3 style="margin-bottom: 1rem;">🚀 Place Your Bid</h3>
+                                    <div id="bid-alert" class="alert" style="display: none;"></div>
+                                    <div style="display: flex; align-items: center; margin: 1rem 0;">
+                                        <span style="padding: 1rem; background: #e5e7eb; border: 2px solid #d1d5db; border-right: none; border-radius: 0.75rem 0 0 0.75rem;">₹</span>
+                                        <input type="number" id="bid-amount" step="0.01" placeholder="${highestBid}" required 
+                                               style="flex: 1; padding: 1rem; border: 2px solid #d1d5db; border-left: none; border-radius: 0 0.75rem 0.75rem 0;">
+                                    </div>
+                                    <button type="submit" id="bid-btn" class="btn">🎯 Place AI-Optimized Bid</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('bid-form').addEventListener('submit', (e) => handleBid(e, listing.id));
+                startCountdown(endsAt);
+            }
+
+            async function handleBid(e, listingId) {
+                e.preventDefault();
+                const bidBtn = document.getElementById('bid-btn');
+                const bidAlert = document.getElementById('bid-alert');
+                const bidAmount = document.getElementById('bid-amount').value;
+                
+                bidBtn.textContent = '🤖 AI Analyzing...';
+                bidBtn.disabled = true;
+                showAlert(bidAlert, '');
+                
+                try {
+                    const response = await fetch(`${API_BASE}/api/marketplace/bids/`, {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json', 
+                            'Authorization': `Token ${authToken}` 
+                        },
+                        body: JSON.stringify({ 
+                            listing: listingId, 
+                            amount: bidAmount 
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    if (!response.ok) throw new Error(data.detail || 'Bid failed.');
+                    
+                    showAlert(bidAlert, `🎉 AI-optimized bid placed: ₹${data.amount}!`, 'success');
+                    document.getElementById('bid-amount').value = '';
+                    
+                    // Get bidder username
+                    const bidderUsername = data.bidder_username || data.bidder || currentUser?.profile?.username || currentUser?.username || 'Unknown Buyer';
+                    
+                    // Create bid object
+                    const newBid = {
+                        amount: data.amount,
+                        bidder_username: bidderUsername,
+                        bidder: bidderUsername,
+                        created_at: data.created_at || new Date().toISOString(),
+                        timestamp: data.created_at || new Date().toISOString()
+                    };
+                    
+                    // Update listing in userListings
+                    const listingIndex = userListings.findIndex(l => l.id == listingId || l.pk == listingId);
+                    if (listingIndex !== -1) {
+                        if (!userListings[listingIndex].bids) {
+                            userListings[listingIndex].bids = [];
+                        }
+                        userListings[listingIndex].bids.push(newBid);
+                        saveUserListingsToStorage(); // Save to localStorage
+                    }
+                    
+                    // Update current listing detail if it exists
+                    if (window.currentListingDetail) {
+                        if (!window.currentListingDetail.bids) {
+                            window.currentListingDetail.bids = [];
+                        }
+                        window.currentListingDetail.bids.push(newBid);
+                    }
+                    
+                    // Update the bidding history immediately
+                    updateBiddingHistory(newBid, listingId);
+                    
+                    // Refresh seller listings if seller dashboard is visible
+                    if (views.sellerDashboard.style.display !== 'none') {
+                        loadSellerListings();
+                    }
+                    
+                    // Update the bidding history and listings
+                    setTimeout(() => {
+                        fetchListings();
+                    }, 1000);
+                    
+                } catch (error) {
+                    // Demo mode bidding
+                    console.log('Demo mode: Simulating bid placement');
+                    
+                    // Get current user's username
+                    const bidderUsername = currentUser?.profile?.username || currentUser?.username || 'Unknown Buyer';
+                    const newBid = {
+                        amount: bidAmount,
+                        bidder_username: bidderUsername,
+                        bidder: bidderUsername,
+                        created_at: new Date().toISOString(),
+                        timestamp: new Date().toISOString()
+                    };
+                    
+                    // Find and update the listing in userListings
+                    const listingIndex = userListings.findIndex(l => l.id == listingId || l.pk == listingId);
+                    if (listingIndex !== -1) {
+                        if (!userListings[listingIndex].bids) {
+                            userListings[listingIndex].bids = [];
+                        }
+                        userListings[listingIndex].bids.push(newBid);
+                        saveUserListingsToStorage(); // Save to localStorage
+                        console.log('Updated listing with new bid:', userListings[listingIndex]);
+                    }
+                    
+                    // Also update current listing detail if it exists
+                    if (window.currentListingDetail) {
+                        if (!window.currentListingDetail.bids) {
+                            window.currentListingDetail.bids = [];
+                        }
+                        window.currentListingDetail.bids.push(newBid);
+                    }
+                    
+                    // Simulate AI analysis
+                    setTimeout(() => {
+                        showAlert(bidAlert, `🎉 Bid placed: ₹${bidAmount}! AI confidence: 87%`, 'success');
+                        document.getElementById('bid-amount').value = '';
+                        
+                        // Update the UI to show the new bid
+                        updateBiddingHistory(newBid, listingId);
+                        
+                        // Update highest bid display
+                        const highestBidEl = document.getElementById('detail-highest-bid');
+                        if (highestBidEl) {
+                            highestBidEl.textContent = `₹${bidAmount}`;
+                            highestBidEl.style.animation = 'pulse 0.5s ease-out';
+                            setTimeout(() => {
+                                highestBidEl.style.animation = '';
+                            }, 500);
+                        }
+                        
+                        // Refresh seller listings if seller dashboard is visible
+                        if (views.sellerDashboard.style.display !== 'none') {
+                            loadSellerListings();
+                        }
+                        
+                        // Refresh buyer dashboard listings
+                        if (views.buyerDashboard.style.display !== 'none') {
+                            fetchListings();
+                        }
+                        
+                    }, 1500);
+                } finally {
+                    bidBtn.disabled = false;
+                    bidBtn.textContent = '🎯 Place AI-Optimized Bid';
+                }
+            }
+            
+            function updateBiddingHistory(newBid, listingId) {
+                const historyContainer = document.getElementById('bidding-history');
+                if (!historyContainer) return;
+                
+                // Add the new bid to the history
+                const newBidHtml = `
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: rgba(16, 185, 129, 0.2); border-radius: 0.5rem; margin-bottom: 0.5rem; border-left: 4px solid var(--success-color); animation: fadeInUp 0.5s ease-out;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="background: var(--primary-color); color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.8rem;">BUYER</span>
+                            <span style="font-weight: 600;">${newBid.bidder_username}</span>
+                            <span style="background: var(--success-color); color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.8rem;">NEW</span>
+                        </div>
+                        <div style="font-weight: 700; color: var(--success-color);">
+                            ₹${newBid.amount}
+                        </div>
+                    </div>
+                `;
+                
+                historyContainer.insertAdjacentHTML('afterbegin', newBidHtml);
+            }
+
+            async function handleCreateListing(e) {
+                e.preventDefault();
+                const alertEl = document.getElementById('seller-alert');
+                showAlert(alertEl, '');
+                
+                const btn = e.target.querySelector('button');
+                btn.disabled = true;
+                btn.textContent = '🤖 AI Optimizing...';
+                
+                try {
+                    const formData = new FormData();
+                    formData.append('commodity', document.getElementById('cl-commodity').value);
+                    formData.append('quantity_kg', document.getElementById('cl-quantity').value);
+                    
+                    const q = document.getElementById('cl-quality').value;
+                    if (q) formData.append('quality_score', q);
+                    
+                    const sp = document.getElementById('cl-starting').value;
+                    if (sp) formData.append('starting_price', sp);
+                    
+                    const endsRaw = document.getElementById('cl-ends').value;
+                    if (!endsRaw) throw new Error('Please choose an auction end time.');
+                    
+                    const endsIso = new Date(endsRaw).toISOString();
+                    formData.append('auction_ends_at', endsIso);
+                    
+                    const file = document.getElementById('cl-image').files[0];
+                    if (file) formData.append('image', file);
+                    
+                    const res = await fetch(`${API_BASE}/api/marketplace/listings/create/`, {
+                        method: 'POST', 
+                        headers: { 'Authorization': `Token ${authToken}` }, 
+                        body: formData
+                    });
+                    
+                    const data = await res.json();
+                    if (!res.ok) {
+                        let firstErr = null;
+                        if (data && typeof data === 'object') {
+                            const key = Object.keys(data)[0];
+                            const val = Array.isArray(data[key]) ? data[key][0] : (data.detail || JSON.stringify(data));
+                            firstErr = key ? `${key}: ${val}` : val;
+                        }
+                        throw new Error(firstErr || 'Failed to create listing');
+                    }
+                    
+                    showAlert(alertEl, `🎉 AI-optimized listing published: ${data.commodity_name} (${data.quantity_kg} kg)`, 'success');
+                    
+                    // Get the actual logged-in seller username - use same logic as loadSellerListings
+                    let sellerUsername = 'Unknown Seller';
+                    if (data.seller_username) {
+                        sellerUsername = data.seller_username;
+                    } else if (currentUser && currentUser.profile) {
+                        sellerUsername = currentUser.profile.username || currentUser.profile.user?.username || 'Unknown Seller';
+                    } else if (currentUser && currentUser.username) {
+                        sellerUsername = currentUser.username;
+                    }
+                    
+                    // Normalize username (same as in loadSellerListings)
+                    sellerUsername = sellerUsername.trim();
+                    
+                    console.log('Setting seller username for new listing:', sellerUsername);
+                    console.log('Current user object:', currentUser);
+                    
+                    // Add the new listing to userListings for immediate display in buyer dashboard
+                    const newListing = {
+                        id: data.id || Date.now(),
+                        commodity_name: data.commodity_name || data.commodity?.name || 'Unknown',
+                        quantity_kg: data.quantity_kg,
+                        starting_price: data.starting_price,
+                        quality_score: data.quality_score || 0.85,
+                        seller_username: sellerUsername,
+                        status: data.status || 'LIVE', // Ensure status is set
+                        bids: [],
+                        auction_ends_at: data.auction_ends_at,
+                        created_at: data.created_at || new Date().toISOString(), // CRITICAL: Add created_at timestamp
+                        ai_suggested_price: data.ai_suggested_price || (parseFloat(data.starting_price) * 1.1).toFixed(2),
+                        ai_competitiveness_score: data.ai_competitiveness_score || 0.75,
+                        time_remaining_seconds: Math.floor((new Date(data.auction_ends_at) - new Date()) / 1000),
+                        commodity: { market_price: parseFloat(data.starting_price) * 0.9 },
+                        image: data.image || data.image_url || null,
+                        image_url: data.image_url || data.image || null
+                    };
+                    
+                    userListings.push(newListing);
+                    saveUserListingsToStorage(); // Save to localStorage
+                    console.log('Listing added from API:', newListing);
+                    console.log('Seller username set to:', newListing.seller_username);
+                    console.log('Total userListings after adding:', userListings.length);
+                    
+                    document.getElementById('create-listing-form').reset();
+                    
+                    // Refresh seller listings to show the new one - use setTimeout to ensure listing is added
+                    if (views.sellerDashboard.style.display !== 'none') {
+                        setTimeout(() => {
+                            console.log('Refreshing seller listings after API success...');
+                            console.log('Verifying listing was added - checking userListings:', userListings.length);
+                            const found = userListings.find(l => l.id === newListing.id || l.commodity_name === newListing.commodity_name);
+                            console.log('Listing found in userListings?', !!found);
+                            if (found) {
+                                console.log('Found listing seller username:', found.seller_username);
+                            }
+                            loadSellerListings();
+                        }, 200);
+                    }
+                    
+                    // CRITICAL: Ensure seller stays in seller dashboard - NO REDIRECT
+                    if (views.sellerDashboard.style.display === 'none') {
+                        console.log('WARNING: Seller dashboard was hidden, restoring it...');
+                        showView('sellerDashboard');
+                    }
+                    
+                    // Verify we're still in seller dashboard
+                    console.log('Current view after listing creation:', {
+                        sellerDashboardVisible: views.sellerDashboard.style.display !== 'none',
+                        buyerDashboardVisible: views.buyerDashboard.style.display !== 'none'
+                    });
+                    
+                } catch (err) {
+                    // Demo mode fallback - create listing locally with ACTUAL form values
+                    console.log('Demo mode: Creating listing locally with actual form data');
+                    
+                    // Read values directly from form elements (not FormData which may not work in demo mode)
+                    const commoditySelect = document.getElementById('cl-commodity');
+                    const commodityName = commoditySelect.options[commoditySelect.selectedIndex]?.text || commoditySelect.value || 'Custom Material';
+                    const quantity = document.getElementById('cl-quantity').value || '100';
+                    const startingPrice = document.getElementById('cl-starting').value || '15.00';
+                    const qualityScore = parseFloat(document.getElementById('cl-quality').value) || 0.85;
+                    const endsRaw = document.getElementById('cl-ends').value;
+                    const imageFile = document.getElementById('cl-image').files[0];
+                    
+                    // Get the actual logged-in seller username - use same logic as loadSellerListings
+                    let sellerUsername = 'Unknown Seller';
+                    if (currentUser && currentUser.profile) {
+                        sellerUsername = currentUser.profile.username || currentUser.profile.user?.username || 'Unknown Seller';
+                    } else if (currentUser && currentUser.username) {
+                        sellerUsername = currentUser.username;
+                    }
+                    
+                    // Normalize username (same as in loadSellerListings)
+                    sellerUsername = sellerUsername.trim();
+                    
+                    // Debug logging
+                    console.log('Creating listing with data:', {
+                        commodityName,
+                        quantity,
+                        startingPrice,
+                        qualityScore,
+                        seller: sellerUsername,
+                        currentUser: currentUser,
+                        imageFile: imageFile ? imageFile.name : 'No image'
+                    });
+                    
+                    const auctionEndsAt = endsRaw ? new Date(endsRaw).toISOString() : new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+                    const timeRemaining = Math.floor((new Date(auctionEndsAt) - new Date()) / 1000);
+                    
+                    const listingId = Date.now();
+                    
+                    const newListing = {
+                        id: listingId,
+                        commodity_name: commodityName,
+                        quantity_kg: quantity,
+                        starting_price: startingPrice,
+                        quality_score: qualityScore,
+                        seller_username: sellerUsername,
+                        bids: [],
+                        auction_ends_at: auctionEndsAt,
+                        ai_suggested_price: (parseFloat(startingPrice) * 1.1).toFixed(2),
+                        ai_competitiveness_score: 0.75,
+                        time_remaining_seconds: timeRemaining,
+                        commodity: { market_price: parseFloat(startingPrice) * 0.9 },
+                        image: null,
+                        image_url: null
+                    };
+                    
+                    // Handle image - convert to data URL for display
+                    if (imageFile) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            const imageUrl = e.target.result;
+                            // Update the listing with image after it's loaded
+                            const listing = userListings.find(l => l.id === listingId);
+                            if (listing) {
+                                listing.image = imageUrl;
+                                listing.image_url = imageUrl;
+                                saveUserListingsToStorage(); // Save to localStorage
+                                // DO NOT refresh or redirect - seller stays in seller dashboard
+                            }
+                        };
+                        reader.readAsDataURL(imageFile);
+                    }
+                    
+                    userListings.push(newListing);
+                    saveUserListingsToStorage(); // Save to localStorage
+                    console.log('Listing added to userListings:', newListing);
+                    console.log('Total listings now:', userListings.length);
+                    console.log('Seller username set to:', newListing.seller_username);
+                    console.log('Current user for comparison:', currentUser);
+                    
+                    showAlert(alertEl, `✅ Listing created: ${newListing.commodity_name} (${newListing.quantity_kg} kg) - ₹${newListing.starting_price}/kg`, 'success');
+                    e.target.reset();
+                    
+                    // Refresh seller listings to show the new one - use setTimeout to ensure listing is added
+                    if (views.sellerDashboard.style.display !== 'none') {
+                        setTimeout(() => {
+                            console.log('Refreshing seller listings after demo mode creation...');
+                            console.log('Verifying listing was added - checking userListings:', userListings.length);
+                            const found = userListings.find(l => l.id === newListing.id || l.commodity_name === newListing.commodity_name);
+                            console.log('Listing found in userListings?', !!found);
+                            if (found) {
+                                console.log('Found listing seller username:', found.seller_username);
+                                console.log('Current user username:', currentUser?.profile?.username);
+                            }
+                            loadSellerListings();
+                        }, 200);
+                    }
+                    
+                    // CRITICAL: Ensure seller stays in seller dashboard - NO REDIRECT
+                    if (views.sellerDashboard.style.display === 'none') {
+                        console.log('WARNING: Seller dashboard was hidden, restoring it...');
+                        showView('sellerDashboard');
+                    }
+                    
+                    // Verify we're still in seller dashboard
+                    console.log('Current view after listing creation:', {
+                        sellerDashboardVisible: views.sellerDashboard.style.display !== 'none',
+                        buyerDashboardVisible: views.buyerDashboard.style.display !== 'none'
+                    });
+                } finally {
+                    btn.disabled = false;
+                    btn.textContent = '🚀 Publish AI-Optimized Listing';
+                }
+            }
+
+            async function loadCommodities() {
+                const sel = document.getElementById('cl-commodity');
+                sel.innerHTML = '<option disabled selected>🤖 AI Loading commodities...</option>';
+                
+                try {
+                    const res = await fetch(`${API_BASE}/api/marketplace/commodities/`, { 
+                        headers: { 'Authorization': `Token ${authToken}` } 
+                    });
+                    const list = await res.json();
+                    
+                    sel.innerHTML = '';
+                    list.forEach(c => {
+                        const opt = document.createElement('option');
+                        opt.value = c.id;
+                        opt.textContent = `${c.name} (AI Price: ₹${c.ai_suggested_price || c.market_price})`;
+                        sel.appendChild(opt);
+                    });
+                } catch (error) {
+                    console.error('Error loading commodities:', error);
+                    sel.innerHTML = '<option disabled>Failed to load commodities</option>';
+                }
+            }
+
+            async function loadPrices() {
+                try {
+                    const res = await fetch(`${API_BASE}/api/marketplace/commodities/`, { 
+                        headers: { 'Authorization': `Token ${authToken}` } 
+                    });
+                    const list = await res.json();
+                    const pricesDiv = document.getElementById('prices');
+                    
+                    pricesDiv.innerHTML = list.map(c => `
+                        <div class="ai-price-row">
+                            <div class="ai-price-main">
+                                <div class="ai-price-name">${c.name}</div>
+                                <div class="ai-price-meta">
+                                Trend: ${c.price_trend} | Demand: ${(c.demand_score * 100).toFixed(0)}%
+                                </div>
+                            </div>
+                            <div class="ai-price-value">
+                                ₹${c.ai_suggested_price || c.market_price || '—'}
+                            </div>
+                        </div>
+                    `).join('');
+                } catch (error) {
+                    console.error('Error loading prices:', error);
+                }
+            }
+
+            function handleLogout() {
+                authToken = null;
+                currentUser = null;
+                // Clear localStorage
+                localStorage.removeItem('currentUser');
+                // Note: We keep userListings in localStorage in case user logs back in
+                // They will be cleared when a new user logs in
+                document.getElementById('login-form').reset();
+                document.getElementById('signup-form').reset();
+                showView('login');
+            }
+
+            function showAlert(element, message, type = 'error') {
+                element.textContent = message;
+                element.className = `alert alert-${type}`;
+                element.style.display = message ? 'block' : 'none';
+            }
+
+            function connectWebSocket(listingId) {
+                if (webSocket) webSocket.close();
+                webSocket = new WebSocket(`${WS_BASE}/ws/bidding/${listingId}/`);
+                
+                webSocket.onopen = () => console.log('🤖 AI WebSocket Connected!');
+                webSocket.onmessage = (event) => {
+                    const data = JSON.parse(event.data);
+                    const newBid = data.bid || data;
+                    
+                    // Update highest bid display
+                    const highestBidEl = document.getElementById('detail-highest-bid');
+                    if (highestBidEl && parseFloat(newBid.amount) > parseFloat(highestBidEl.textContent.replace('₹',''))) {
+                        highestBidEl.textContent = `₹${newBid.amount}`;
+                        highestBidEl.style.animation = 'pulse 0.5s ease-out';
+                        setTimeout(() => {
+                            highestBidEl.style.animation = '';
+                        }, 500);
+                    }
+                    
+                    // Update bidding history in real-time
+                    const historyContainer = document.getElementById('bidding-history');
+                    if (historyContainer) {
+                        // Get current listing data
+                        const currentListing = userListings.find(l => l.id === listingId) || 
+                                             (window.currentListingDetail || {});
+                        
+                        // Add new bid to listing
+                        if (!currentListing.bids) currentListing.bids = [];
+                        currentListing.bids.push({
+                            amount: newBid.amount,
+                            bidder_username: newBid.bidder_username || newBid.bidder || 'Unknown Buyer',
+                            timestamp: new Date().toISOString()
+                        });
+                        
+                        // Re-render bidding history
+                        historyContainer.innerHTML = renderBiddingHistory(currentListing);
+                    }
+                    
+                    // Refresh seller listings if seller dashboard is open
+                    if (views.sellerDashboard.style.display !== 'none') {
+                        loadSellerListings();
+                    }
+                    
+                    // Refresh buyer dashboard listings
+                    if (views.buyerDashboard.style.display !== 'none') {
+                        fetchListings();
+                    }
+                };
+                
+                webSocket.onerror = (error) => {
+                    console.error('WebSocket error:', error);
+                };
+                
+                webSocket.onclose = () => {
+                    console.log('WebSocket disconnected');
+                };
+            }
+
+            function showNotifications() {
+                // This would open a notification modal
+                alert('🔔 Notification Center\n\nAI notifications:\n• Market insights available\n• New recommendations ready\n• Price alerts triggered');
+            }
+
+            let countdownTimer = null;
+            function startCountdown(endsAt) {
+                const el = document.getElementById('countdown');
+                if (countdownTimer) clearInterval(countdownTimer);
+                
+                const update = () => {
+                    const diff = endsAt - new Date();
+                    if (diff <= 0) {
+                        el.textContent = 'ended';
+                        clearInterval(countdownTimer);
+                        return;
+                    }
+                    
+                    const h = Math.floor(diff / 3600000);
+                    const m = Math.floor((diff % 3600000) / 60000);
+                    const s = Math.floor((diff % 60000) / 1000);
+                    el.textContent = `${h}h ${m}m ${s}s`;
+                };
+                
+                update();
+                countdownTimer = setInterval(update, 1000);
+            }
+        });
+    </script>
+</body>
+</html>

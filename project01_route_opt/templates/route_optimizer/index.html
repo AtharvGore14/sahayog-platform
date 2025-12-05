@@ -1,0 +1,287 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Sahayog Route Optimizer{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="fas fa-tachometer-alt me-2"></i>
+        Dashboard
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{% url 'route_optimizer:optimize_route' %}" class="btn btn-primary">
+            <i class="fas fa-route me-2"></i>
+            Optimize New Route
+        </a>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stats-card h-100">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-white-50 text-uppercase mb-1">
+                            Total Routes
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-white">{{ total_routes }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-route fa-2x text-white-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stats-card h-100">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-white-50 text-uppercase mb-1">
+                            Active Locations
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-white">{{ total_locations }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-map-marker-alt fa-2x text-white-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stats-card h-100">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-white-50 text-uppercase mb-1">
+                            Available Vehicles
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-white">{{ total_vehicles }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-truck fa-2x text-white-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stats-card h-100">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-white-50 text-uppercase mb-1">
+                            Optimization Score
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-white">
+                            {% if optimization_history %}
+                                {{ optimization_history.0.optimization_score|floatformat:1 }}%
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-chart-line fa-2x text-white-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Routes -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-route me-2"></i>
+                    Recent Routes
+                </h5>
+                <div class="ms-auto">
+                    <a href="{% url 'route_optimizer:import_route_json' %}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-file-import me-2"></i>Import Route (JSON)
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if recent_routes %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Route Name</th>
+                                    <th>Vehicle</th>
+                                    <th>Distance</th>
+                                    <th>Duration</th>
+                                    <th>Status</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for route in recent_routes %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ route.route_name }}</strong>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ route.vehicle.name }}</span>
+                                    </td>
+                                    <td>{{ route.total_distance|floatformat:2 }} km</td>
+                                    <td>{{ route.total_duration }} min</td>
+                                    <td>
+                                        {% if route.status == 'completed' %}
+                                            <span class="badge bg-success">Completed</span>
+                                        {% elif route.status == 'in_progress' %}
+                                            <span class="badge bg-warning">In Progress</span>
+                                        {% elif route.status == 'planned' %}
+                                            <span class="badge bg-primary">Planned</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">{{ route.get_status_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ route.created_at|date:"M d, Y" }}</td>
+                                    <td>
+                                        <a href="{% url 'route_optimizer:route_details' route.id %}" 
+                                           class="btn btn-sm btn-outline-primary me-1">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <button class="btn btn-sm btn-outline-danger btn-delete-route" data-route-id="{{ route.id }}">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="text-center mt-3">
+                        <a href="{% url 'route_optimizer:routes_list' %}" class="btn btn-outline-primary">
+                            View All Routes
+                        </a>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-route fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No routes created yet</h5>
+                        <p class="text-muted">Start by optimizing your first route!</p>
+                        <a href="{% url 'route_optimizer:optimize_route' %}" class="btn btn-primary">
+                            <i class="fas fa-route me-2"></i>
+                            Create First Route
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Optimization History -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-history me-2"></i>
+                    Recent Optimizations
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if optimization_history %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Session Name</th>
+                                    <th>Algorithm</th>
+                                    <th>Execution Time</th>
+                                    <th>Score</th>
+                                    <th>Created</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for session in optimization_history %}
+                                <tr>
+                                    <td>{{ session.session_name }}</td>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ session.algorithm_used }}</span>
+                                    </td>
+                                    <td>{{ session.execution_time|floatformat:3 }}s</td>
+                                    <td>
+                                        <div class="progress" style="height: 20px;">
+                                            <div class="progress-bar bg-success" 
+                                                 style="width: {{ session.optimization_score }}%">
+                                                {{ session.optimization_score|floatformat:1 }}%
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ session.created_at|date:"M d, Y H:i" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="text-center mt-3">
+                        <a href="{% url 'route_optimizer:optimization_history' %}" class="btn btn-outline-primary">
+                            View Full History
+                        </a>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No optimization history</h5>
+                        <p class="text-muted">Optimization sessions will appear here after you create routes.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Add some interactivity to the dashboard
+    $('.stats-card').hover(
+        function() {
+            $(this).css('transform', 'scale(1.05)');
+        },
+        function() {
+            $(this).css('transform', 'scale(1)');
+        }
+    );
+    
+    // Delete route (AJAX)
+    $(document).on('click', '.btn-delete-route', function() {
+        const btn = $(this);
+        const id = btn.data('route-id');
+        if (!confirm('Delete this route permanently?')) return;
+        btn.prop('disabled', true);
+        fetch(`/route-optimizer/api/route/${id}/delete/`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': (document.cookie.match(/csrftoken=([^;]+)/)||[])[1] || '' }
+        }).then(r=>r.json()).then(res=>{
+            if (res.success) {
+                btn.closest('tr').fadeOut(200, function(){ $(this).remove(); });
+            } else {
+                alert(res.error || 'Failed to delete route');
+                btn.prop('disabled', false);
+            }
+        }).catch(()=>{
+            alert('Failed to delete route');
+            btn.prop('disabled', false);
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,626 @@
+{% extends 'base.html' %}
+
+{% block title %}Enhanced Routes - Sahayog Route Optimizer{% endblock %}
+
+{% block extra_css %}
+<style>
+    .route-card {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+        border-left: 4px solid #667eea;
+    }
+    .route-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    .route-card.completed { border-left-color: #28a745; }
+    .route-card.in_progress { border-left-color: #ffc107; }
+    .route-card.planned { border-left-color: #6c757d; }
+    .route-card.cancelled { border-left-color: #dc3545; }
+    
+    .stats-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        text-align: center;
+    }
+    .comparison-widget {
+        background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    .analytics-widget {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        margin-bottom: 1.5rem;
+    }
+    .filter-panel {
+        background: #f8f9fa;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    .route-metrics {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+        gap: 1rem;
+        margin: 1rem 0;
+    }
+    .metric-item {
+        text-align: center;
+        padding: 0.5rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+    }
+    .metric-value {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: #667eea;
+    }
+    .metric-label {
+        font-size: 0.8rem;
+        color: #6c757d;
+    }
+    .status-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+    .status-completed { background: #d4edda; color: #155724; }
+    .status-in_progress { background: #fff3cd; color: #856404; }
+    .status-planned { background: #d1ecf1; color: #0c5460; }
+    .status-cancelled { background: #f8d7da; color: #721c24; }
+    
+    .route-actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    .action-btn {
+        padding: 0.25rem 0.75rem;
+        border-radius: 15px;
+        font-size: 0.8rem;
+        border: none;
+        transition: all 0.3s ease;
+    }
+    .action-btn:hover {
+        transform: translateY(-1px);
+    }
+    
+    .comparison-table {
+        background: rgba(255,255,255,0.1);
+        border-radius: 10px;
+        padding: 1rem;
+    }
+    .comparison-table th,
+    .comparison-table td {
+        border: none;
+        padding: 0.5rem;
+        color: white;
+    }
+    
+    .map-container {
+        height: 300px;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="fas fa-route me-2"></i>
+        Enhanced Routes
+        <span class="badge bg-primary ms-2">{{ total_routes }} Total</span>
+    </h1>
+    <div class="btn-toolbar">
+        <div class="btn-group me-2">
+            <button class="btn btn-outline-secondary" onclick="refreshRoutes()">
+                <i class="fas fa-sync-alt me-2"></i>Refresh
+            </button>
+        </div>
+        <div class="btn-group">
+            <a class="btn btn-primary" href="{% url 'route_optimizer:optimize_route' %}">
+                <i class="fas fa-plus me-2"></i>Create Route
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Row -->
+<div class="row mb-4">
+    <div class="col-lg-3 col-md-6">
+        <div class="stats-card">
+            <h3>{{ total_routes }}</h3>
+            <p class="mb-0">Total Routes</p>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="stats-card">
+            <h3>{{ completed_routes }}</h3>
+            <p class="mb-0">Completed</p>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="stats-card">
+            <h3>{{ in_progress_routes }}</h3>
+            <p class="mb-0">In Progress</p>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="stats-card">
+            <h3>{{ total_distance|floatformat:1 }} km</h3>
+            <p class="mb-0">Total Distance</p>
+        </div>
+    </div>
+</div>
+
+<!-- Filter Panel -->
+<div class="filter-panel">
+    <div class="row">
+        <div class="col-lg-3 col-md-6 mb-2">
+            <input class="form-control" id="searchInput" placeholder="Search routes..." onkeyup="filterRoutes()">
+        </div>
+        <div class="col-lg-2 col-md-6 mb-2">
+            <select class="form-select" id="statusFilter" onchange="filterRoutes()">
+                <option value="">All Status</option>
+                <option value="completed">Completed</option>
+                <option value="in_progress">In Progress</option>
+                <option value="planned">Planned</option>
+                <option value="cancelled">Cancelled</option>
+            </select>
+        </div>
+        <div class="col-lg-2 col-md-6 mb-2">
+            <select class="form-select" id="vehicleFilter" onchange="filterRoutes()">
+                <option value="">All Vehicles</option>
+                <option value="truck">Truck</option>
+                <option value="van">Van</option>
+                <option value="tractor">Tractor</option>
+            </select>
+        </div>
+        <div class="col-lg-2 col-md-6 mb-2">
+            <select class="form-select" id="sortFilter" onchange="sortRoutes()">
+                <option value="created_at">Sort by Date</option>
+                <option value="distance">Sort by Distance</option>
+                <option value="efficiency">Sort by Efficiency</option>
+                <option value="name">Sort by Name</option>
+            </select>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-2">
+            <div class="btn-group w-100">
+                <button class="btn btn-outline-primary" onclick="clearFilters()">
+                    <i class="fas fa-times me-1"></i>Clear
+                </button>
+                <button class="btn btn-primary" onclick="exportRoutes()">
+                    <i class="fas fa-download me-1"></i>Export
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Content Row -->
+<div class="row">
+    <!-- Routes List -->
+    <div class="col-lg-8">
+        <div class="analytics-widget">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0">
+                    <i class="fas fa-list me-2"></i>
+                    Routes Overview
+                </h5>
+                <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-primary active" onclick="setViewMode('grid')" id="gridViewBtn">
+                        <i class="fas fa-th"></i>
+                    </button>
+                    <button class="btn btn-outline-primary" onclick="setViewMode('list')" id="listViewBtn">
+                        <i class="fas fa-list"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Grid View -->
+            <div id="gridView">
+                {% for route in routes %}
+                <div class="route-card {{ route.status }}" data-route-id="{{ route.id }}">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h6 class="mb-1">{{ route.name }}</h6>
+                            <span class="status-badge status-{{ route.status }}">
+                                {{ route.status|title }}
+                            </span>
+                        </div>
+                        <div class="text-end">
+                            <small class="text-muted">{{ route.created_at|date:"M d, Y" }}</small>
+                        </div>
+                    </div>
+                    
+                    <div class="route-metrics">
+                        <div class="metric-item">
+                            <div class="metric-value">{{ route.total_distance|floatformat:1 }}</div>
+                            <div class="metric-label">km</div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-value">{{ route.total_duration }}</div>
+                            <div class="metric-label">min</div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-value">{{ route.estimated_fuel_consumption|floatformat:1 }}</div>
+                            <div class="metric-label">L</div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-value">{{ route.locations_count }}</div>
+                            <div class="metric-label">stops</div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <small class="text-muted">
+                                <i class="fas fa-truck me-1"></i>
+                                {{ route.vehicle.name }}
+                            </small>
+                        </div>
+                        <div class="route-actions">
+                            <button class="action-btn btn btn-outline-primary" onclick="viewRoute({{ route.id }})">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="action-btn btn btn-outline-secondary" onclick="editRoute({{ route.id }})">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="action-btn btn btn-outline-info" onclick="compareRoute({{ route.id }})">
+                                <i class="fas fa-balance-scale"></i>
+                            </button>
+                            <button class="action-btn btn btn-outline-success" onclick="shareRoute({{ route.id }})">
+                                <i class="fas fa-share"></i>
+                            </button>
+                            <button class="action-btn btn btn-outline-danger" onclick="deleteRoute({{ route.id }})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- List View -->
+            <div id="listView" class="d-none">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Route Name</th>
+                                <th>Status</th>
+                                <th>Vehicle</th>
+                                <th>Distance</th>
+                                <th>Duration</th>
+                                <th>Fuel</th>
+                                <th>Stops</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for route in routes %}
+                            <tr>
+                                <td>
+                                    <strong>{{ route.name }}</strong>
+                                    {% if route.optimization_score %}
+                                    <br><small class="text-success">Score: {{ route.optimization_score }}%</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="status-badge status-{{ route.status }}">
+                                        {{ route.status|title }}
+                                    </span>
+                                </td>
+                                <td>{{ route.vehicle.name }}</td>
+                                <td>{{ route.total_distance|floatformat:1 }} km</td>
+                                <td>{{ route.total_duration }} min</td>
+                                <td>{{ route.estimated_fuel_consumption|floatformat:1 }} L</td>
+                                <td>{{ route.locations_count }}</td>
+                                <td>{{ route.created_at|date:"M d, Y" }}</td>
+                                <td>
+                                    <div class="route-actions">
+                                        <button class="action-btn btn btn-outline-primary" onclick="viewRoute({{ route.id }})">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="action-btn btn btn-outline-secondary" onclick="editRoute({{ route.id }})">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="action-btn btn btn-outline-info" onclick="compareRoute({{ route.id }})">
+                                            <i class="fas fa-balance-scale"></i>
+                                        </button>
+                                        <button class="action-btn btn btn-outline-success" onclick="shareRoute({{ route.id }})">
+                                            <i class="fas fa-share"></i>
+                                        </button>
+                                        <button class="action-btn btn btn-outline-danger" onclick="deleteRoute({{ route.id }})">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Route Comparison -->
+        <div class="comparison-widget">
+            <h6 class="mb-3">
+                <i class="fas fa-balance-scale me-2"></i>
+                Route Comparison
+            </h6>
+            <div class="comparison-table">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Metric</th>
+                            <th>Route A</th>
+                            <th>Route B</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Distance</td>
+                            <td>12.5 km</td>
+                            <td>15.2 km</td>
+                        </tr>
+                        <tr>
+                            <td>Duration</td>
+                            <td>25 min</td>
+                            <td>32 min</td>
+                        </tr>
+                        <tr>
+                            <td>Fuel</td>
+                            <td>1.2 L</td>
+                            <td>1.5 L</td>
+                        </tr>
+                        <tr>
+                            <td>Efficiency</td>
+                            <td>92%</td>
+                            <td>85%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <button class="btn btn-light btn-sm w-100 mt-2">
+                <i class="fas fa-chart-bar me-1"></i>Compare Routes
+            </button>
+        </div>
+        
+        <!-- Route Analytics -->
+        <div class="analytics-widget">
+            <h6 class="mb-3">
+                <i class="fas fa-chart-pie me-2"></i>
+                Route Analytics
+            </h6>
+            <canvas id="routeChart" height="200"></canvas>
+        </div>
+        
+        <!-- Route Map Preview -->
+        <div class="analytics-widget">
+            <h6 class="mb-3">
+                <i class="fas fa-map me-2"></i>
+                Route Preview
+            </h6>
+            <div id="routePreviewMap" class="map-container"></div>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="analytics-widget">
+            <h6 class="mb-3">
+                <i class="fas fa-bolt me-2"></i>
+                Quick Actions
+            </h6>
+            <div class="d-grid gap-2">
+                <button class="btn btn-outline-primary btn-sm" onclick="duplicateRoute()">
+                    <i class="fas fa-copy me-1"></i>Duplicate Route
+                </button>
+                <button class="btn btn-outline-success btn-sm" onclick="optimizeAll()">
+                    <i class="fas fa-magic me-1"></i>Optimize All
+                </button>
+                <button class="btn btn-outline-info btn-sm" onclick="generateReport()">
+                    <i class="fas fa-file-alt me-1"></i>Generate Report
+                </button>
+                <button class="btn btn-outline-warning btn-sm" onclick="scheduleRoutes()">
+                    <i class="fas fa-calendar me-1"></i>Schedule Routes
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+let routeChart;
+let routePreviewMap;
+let currentViewMode = 'grid';
+
+// Route data
+const routes = {{ routes|safe }};
+
+$(document).ready(function() {
+    initializeChart();
+    initializeMap();
+    setupEventListeners();
+});
+
+function initializeChart() {
+    const ctx = document.getElementById('routeChart').getContext('2d');
+    routeChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Completed', 'In Progress', 'Planned', 'Cancelled'],
+            datasets: [{
+                data: [60, 25, 10, 5],
+                backgroundColor: ['#28a745', '#ffc107', '#6c757d', '#dc3545']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+}
+
+function initializeMap() {
+    routePreviewMap = L.map('routePreviewMap').setView([20.5937, 78.9629], 10);
+    
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(routePreviewMap);
+
+    // Add sample route
+    const routeCoords = [
+        [20.5937, 78.9629],
+        [20.6037, 78.9729],
+        [20.6137, 78.9829],
+        [20.6237, 78.9929]
+    ];
+    
+    L.polyline(routeCoords, { color: '#667eea', weight: 4 }).addTo(routePreviewMap);
+    
+    routeCoords.forEach((coord, index) => {
+        L.marker(coord).addTo(routePreviewMap)
+            .bindPopup(`Stop ${index + 1}`);
+    });
+}
+
+function setupEventListeners() {
+    // Add any event listeners here
+}
+
+function filterRoutes() {
+    const searchTerm = $('#searchInput').val().toLowerCase();
+    const statusFilter = $('#statusFilter').val();
+    const vehicleFilter = $('#vehicleFilter').val();
+    
+    $('.route-card').each(function() {
+        const card = $(this);
+        const name = card.find('h6').text().toLowerCase();
+        const status = card.attr('class').match(/status-(\w+)/)?.[1];
+        const vehicle = card.find('small').text().toLowerCase();
+        
+        let show = true;
+        
+        if (searchTerm && !name.includes(searchTerm)) show = false;
+        if (statusFilter && status !== statusFilter) show = false;
+        if (vehicleFilter && !vehicle.includes(vehicleFilter)) show = false;
+        
+        if (show) {
+            card.show();
+        } else {
+            card.hide();
+        }
+    });
+}
+
+function sortRoutes() {
+    const sortBy = $('#sortFilter').val();
+    // In real implementation, this would sort the routes
+    console.log('Sorting by:', sortBy);
+}
+
+function clearFilters() {
+    $('#searchInput').val('');
+    $('#statusFilter').val('');
+    $('#vehicleFilter').val('');
+    filterRoutes();
+}
+
+function setViewMode(mode) {
+    currentViewMode = mode;
+    
+    if (mode === 'grid') {
+        $('#gridView').removeClass('d-none');
+        $('#listView').addClass('d-none');
+        $('#gridViewBtn').addClass('active');
+        $('#listViewBtn').removeClass('active');
+    } else {
+        $('#gridView').addClass('d-none');
+        $('#listView').removeClass('d-none');
+        $('#gridViewBtn').removeClass('active');
+        $('#listViewBtn').addClass('active');
+    }
+}
+
+function viewRoute(id) {
+    window.location.href = `/route-optimizer/route/${id}/`;
+}
+
+function editRoute(id) {
+    // In real implementation, this would open an edit form
+    alert(`Edit route ${id}`);
+}
+
+function compareRoute(id) {
+    // In real implementation, this would open route comparison
+    alert(`Compare route ${id}`);
+}
+
+function shareRoute(id) {
+    // In real implementation, this would open sharing options
+    alert(`Share route ${id}`);
+}
+
+function deleteRoute(id) {
+    if (confirm('Are you sure you want to delete this route?')) {
+        // In real implementation, this would delete the route
+        alert(`Delete route ${id}`);
+    }
+}
+
+function refreshRoutes() {
+    location.reload();
+}
+
+function exportRoutes() {
+    // In real implementation, this would export routes to CSV/Excel
+    alert('Exporting routes...');
+}
+
+function duplicateRoute() {
+    // In real implementation, this would duplicate a selected route
+    alert('Duplicating route...');
+}
+
+function optimizeAll() {
+    // In real implementation, this would optimize all routes
+    alert('Optimizing all routes...');
+}
+
+function generateReport() {
+    // In real implementation, this would generate a route report
+    alert('Generating route report...');
+}
+
+function scheduleRoutes() {
+    // In real implementation, this would open route scheduling
+    alert('Opening route scheduler...');
+}
+</script>
+{% endblock %}

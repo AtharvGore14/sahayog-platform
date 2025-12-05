@@ -1,0 +1,242 @@
+{% extends 'base.html' %}
+{% block title %}Routes - Sahayog Route Optimizer{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-list me-2"></i>Routes</h1>
+</div>
+<form class="row g-2 mb-3">
+    <div class="col-md-6">
+        <input class="form-control" name="search" value="{{ search_query }}" placeholder="Search by route or vehicle" />
+    </div>
+    <div class="col-md-3">
+        <select class="form-select" name="status">
+            <option value="">All Status</option>
+            {% for value,label in status_choices %}
+            <option value="{{ value }}" {% if value == status_filter %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-3">
+        <button class="btn btn-outline-primary w-100" type="submit">Filter</button>
+    </div>
+</form>
+<div class="card">
+  <div class="card-body">
+    {% if page_obj.object_list %}
+    <div class="table-responsive">
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>Name</th><th>Vehicle</th><th>Distance (km)</th><th>Duration (min)</th><th>Status</th><th>Created</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for r in page_obj.object_list %}
+          <tr class="route-row" data-route-id="{{ r.id }}" style="cursor:pointer">
+            <td>
+              <a href="{% url 'route_optimizer:route_details' r.id %}">{{ r.route_name }}</a>
+              {% if r.status == 'in_progress' %}
+                <span class="badge bg-success ms-2">Live</span>
+              {% endif %}
+            </td>
+            <td>{{ r.vehicle.name }}</td>
+            <td>{{ r.total_distance|floatformat:2 }}</td>
+            <td>{{ r.total_duration }}</td>
+            <td>{{ r.get_status_display }}</td>
+            <td>
+              <div class="d-flex align-items-center gap-2">
+                <span class="text-nowrap">{{ r.created_at|date:"M d, Y H:i" }}</span>
+                <button class="btn btn-sm btn-outline-success btn-start" data-route-id="{{ r.id }}" data-stop="0" onclick="event.stopPropagation(); return startTracking({{ r.id }});" {% if r.status == 'in_progress' %}disabled{% endif %}>
+                  <i class="fas fa-play me-1"></i>Start Live
+                </button>
+                <button class="btn btn-sm btn-outline-danger btn-stop" data-route-id="{{ r.id }}" onclick="event.stopPropagation(); return stopTracking({{ r.id }});" {% if r.status != 'in_progress' %}disabled{% endif %}>
+                  <i class="fas fa-stop me-1"></i>Stop
+                </button>
+                <a href="{% url 'route_optimizer:real_time_tracking' %}"
+                   class="btn btn-sm btn-outline-primary d-inline-flex align-items-center justify-content-center px-0"
+                   style="width: 72px;"
+                   onclick="event.stopPropagation();"
+                   data-bs-toggle="tooltip"
+                   title="Live Tracking">
+                  <i class="fas fa-satellite-dish"></i><span class="visually-hidden">Live</span>
+                </a>
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <nav>
+      <ul class="pagination mb-0">
+        {% if page_obj.has_previous %}
+          <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&search={{ search_query }}&status={{ status_filter }}">Prev</a></li>
+        {% endif %}
+        <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
+        {% if page_obj.has_next %}
+          <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&search={{ search_query }}&status={{ status_filter }}">Next</a></li>
+        {% endif %}
+      </ul>
+    </nav>
+    {% else %}
+      <p class="mb-0 text-muted">No routes yet. Create one in Optimize Route.</p>
+    {% endif %}
+  </div>
+</div>
+
+<div class="row mt-4">
+  <div class="col-lg-7">
+    <div class="card">
+      <div class="card-header"><strong>Map Preview</strong></div>
+      <div class="card-body">
+        <div id="routesMap" style="height: 360px; width: 100%;"></div>
+        <small class="text-muted">Click a route row to preview its path here.</small>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-5">
+    <div class="card">
+      <div class="card-header"><strong>Selected Route Statistics</strong></div>
+      <div class="card-body">
+        <ul class="list-group list-group-flush" id="routeStats">
+          <li class="list-group-item d-flex justify-content-between"><span>Route</span><strong id="statName">-</strong></li>
+          <li class="list-group-item d-flex justify-content-between"><span>Vehicle</span><strong id="statVehicle">-</strong></li>
+          <li class="list-group-item d-flex justify-content-between"><span>Total Distance</span><strong id="statDistance">-</strong></li>
+          <li class="list-group-item d-flex justify-content-between"><span>Total Duration</span><strong id="statDuration">-</strong></li>
+          <li class="list-group-item d-flex justify-content-between"><span>Fuel</span><strong id="statFuel">-</strong></li>
+          <li class="list-group-item d-flex justify-content-between"><span>Locations</span><strong id="statCount">-</strong></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function(){
+  let map, polyline, markers = [];
+  function ensureMap(){
+    if(map) return;
+    map = L.map('routesMap');
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+    map.setView([20.0, 78.0], 5);
+  }
+  function clearMap(){
+    if(polyline){ map.removeLayer(polyline); polyline = null; }
+    markers.forEach(m => map.removeLayer(m));
+    markers = [];
+  }
+  function fitToCoords(coords){
+    if(!coords || !coords.length) return;
+    const bounds = L.latLngBounds(coords.map(([lat,lng]) => [lat,lng]));
+    map.fitBounds(bounds.pad(0.2));
+  }
+  async function loadRoute(routeId){
+    ensureMap();
+    clearMap();
+    try{
+      const urlTpl = '{% url "route_optimizer:api_route_statistics" 0 %}';
+      const url = urlTpl.replace('/0/','/'+routeId+'/');
+      const res = await fetch(url);
+      const json = await res.json();
+      if(!json.success) return;
+      const d = json.data;
+      document.getElementById('statName').textContent = d.route_name || '-';
+      document.getElementById('statVehicle').textContent = d.vehicle || '-';
+      document.getElementById('statDistance').textContent = (d.total_distance ?? '-') + ' km';
+      document.getElementById('statDuration').textContent = (d.total_duration ?? '-') + ' min';
+      document.getElementById('statFuel').textContent = (d.estimated_fuel_consumption ?? '-') + ' L';
+      document.getElementById('statCount').textContent = (d.locations_count ?? '-');
+      const coords = d.route_path_coords || [];
+      if(coords.length){
+        // Draw route polyline similar to Optimize view
+        polyline = L.polyline(coords, {color: '#0d6efd', weight: 4}).addTo(map);
+
+        // Start marker (green), end marker (red), mid markers numbered
+        const startIcon = L.divIcon({className: 'start-icon', html: '<div style="background:#28a745;color:#fff;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 0 4px rgba(0,0,0,.3)">S</div>', iconSize:[26,26], iconAnchor:[13,13]});
+        const endIcon = L.divIcon({className: 'end-icon', html: '<div style="background:#dc3545;color:#fff;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 0 4px rgba(0,0,0,.3)">E</div>', iconSize:[26,26], iconAnchor:[13,13]});
+        coords.forEach(([lat,lng], idx) => {
+          let icon = null;
+          if(idx === 0) icon = startIcon;
+          else if(idx === coords.length-1) icon = endIcon;
+          else icon = L.divIcon({className: 'stop-icon', html: `<div style="background:#0d6efd;color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 0 4px rgba(0,0,0,.3)">${idx}</div>`, iconSize:[24,24], iconAnchor:[12,12]});
+          const m = L.marker([lat,lng], {icon}).addTo(map);
+          markers.push(m);
+        });
+        fitToCoords(coords);
+      }
+    }catch(e){ /* ignore */ }
+  }
+  document.querySelectorAll('tr.route-row').forEach(tr => {
+    tr.addEventListener('click', () => loadRoute(tr.getAttribute('data-route-id')));
+  });
+
+  async function startTracking(routeId){
+    try{
+      const urlTpl = '{% url "route_optimizer:api_route_tracking_start" 0 %}';
+      const url = urlTpl.replace('/0/','/'+routeId+'/');
+      const res = await fetch(url, {method:'POST', headers:{'X-Requested-With':'XMLHttpRequest'}});
+      const json = await res.json();
+      if(json.success){
+        // Optimistic UI: enable/disable buttons
+        const row = document.querySelector(`tr.route-row[data-route-id="${routeId}"]`);
+        if(row){
+          row.querySelector('.btn-start')?.setAttribute('disabled','disabled');
+          row.querySelector('.btn-stop')?.removeAttribute('disabled');
+          // Add Live badge if not present
+          const nameCell = row.querySelector('td');
+          if(nameCell && !nameCell.querySelector('.badge')){
+            const span = document.createElement('span');
+            span.className = 'badge bg-success ms-2';
+            span.textContent = 'Live';
+            nameCell.appendChild(span);
+          }
+        }
+      } else {
+        alert(json.error || 'Failed to start tracking');
+      }
+    }catch(e){ alert('Failed to start tracking'); }
+    return false;
+  }
+
+  async function stopTracking(routeId){
+    try{
+      const urlTpl = '{% url "route_optimizer:api_route_tracking_stop" 0 %}';
+      const url = urlTpl.replace('/0/','/'+routeId+'/');
+      const res = await fetch(url, {method:'POST', headers:{'X-Requested-With':'XMLHttpRequest'}});
+      const json = await res.json();
+      if(json.success){
+        const row = document.querySelector(`tr.route-row[data-route-id="${routeId}"]`);
+        if(row){
+          row.querySelector('.btn-start')?.removeAttribute('disabled');
+          row.querySelector('.btn-stop')?.setAttribute('disabled','disabled');
+          // Remove Live badge
+          const badge = row.querySelector('.badge.bg-success');
+          if(badge) badge.remove();
+        }
+      } else {
+        alert(json.error || 'Failed to stop tracking');
+      }
+    }catch(e){ alert('Failed to stop tracking'); }
+    return false;
+  }
+
+  // Expose to global for inline onclick
+  window.startTracking = startTracking;
+  window.stopTracking = stopTracking;
+})();
+</script>
+<script>
+// Enable Bootstrap tooltips on this page
+document.addEventListener('DOMContentLoaded', function () {
+  const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+  tooltipTriggerList.forEach(function (tooltipTriggerEl) {
+    try { new bootstrap.Tooltip(tooltipTriggerEl); } catch (e) { /* ignore if BS not available */ }
+  })
+});
+</script>
+{% endblock %}

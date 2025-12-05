@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Waste Financial Ledger - Home</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px 30px;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .logo-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        .logo-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 25px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #2c3e50;
+            font-weight: 600;
+            padding: 8px 20px;
+            border-radius: 25px;
+            transition: all 0.3s;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .hero {
+            text-align: center;
+            color: white;
+            padding: 80px 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .hero h1 {
+            font-size: 56px;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .hero p {
+            font-size: 22px;
+            margin-bottom: 40px;
+            opacity: 0.95;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            max-width: 1400px;
+            margin: 60px auto;
+            padding: 0 20px;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            transition: transform 0.3s, box-shadow 0.3s;
+            text-align: center;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .feature-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .feature-card h3 {
+            color: #2c3e50;
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+
+        .feature-card p {
+            color: #7f8c8d;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .feature-card a {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 30px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+
+        .feature-card a:hover {
+            transform: scale(1.05);
+        }
+
+        .stats-section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 60px 20px;
+            margin: 60px 0;
+        }
+
+        .stats-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+            text-align: center;
+            color: white;
+        }
+
+        .stat-item h3 {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .stat-item p {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <div class="logo-icon">📊</div>
+                <div class="logo-text">Waste Financial Ledger</div>
+            </div>
+            <ul class="nav-links">
+                <li><a href="/">🏠 Master Portal</a></li>
+                <li><a href="home.html" class="active">🏠 Home</a></li>
+                <li><a href="index.html">📊 Dashboard</a></li>
+                <li><a href="waste_entry.html">📝 Data Entry</a></li>
+                <li><a href="analytics.html">📈 Analytics</a></li>
+                <li><a href="companies.html">🏢 Companies</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="hero">
+        <h1>Transform Waste into Financial Value</h1>
+        <p>Comprehensive waste management financial intelligence platform</p>
+        <div style="display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;">
+            <a href="index.html" style="background: white; color: #667eea; padding: 15px 40px; border-radius: 30px; text-decoration: none; font-weight: 600; font-size: 18px; box-shadow: 0 5px 20px rgba(0,0,0,0.2);">Get Started →</a>
+            <a href="waste_entry.html" style="background: rgba(255,255,255,0.2); color: white; padding: 15px 40px; border-radius: 30px; text-decoration: none; font-weight: 600; font-size: 18px; border: 2px solid white;">Enter Data</a>
+        </div>
+    </div>
+
+    <div class="features-grid">
+        <div class="feature-card">
+            <div class="feature-icon">📊</div>
+            <h3>Financial Dashboard</h3>
+            <p>Real-time financial reports with comprehensive analytics, revenue breakdowns, cost analysis, and Net Waste Value calculations.</p>
+            <a href="index.html">View Dashboard</a>
+        </div>
+
+        <div class="feature-card">
+            <div class="feature-icon">📝</div>
+            <h3>Data Entry</h3>
+            <p>Easy-to-use forms for entering waste transactions with automatic price calculation, quality scoring, and collection point tracking.</p>
+            <a href="waste_entry.html">Enter Transactions</a>
+        </div>
+
+        <div class="feature-card">
+            <div class="feature-icon">📈</div>
+            <h3>Advanced Analytics</h3>
+            <p>Predictive analytics, trend analysis, forecasting, and cost optimization recommendations based on historical data.</p>
+            <a href="analytics.html">View Analytics</a>
+        </div>
+
+        <div class="feature-card">
+            <div class="feature-icon">🏢</div>
+            <h3>Company Management</h3>
+            <p>Manage multiple companies, create collection points, track waste by location, and organize your operations efficiently.</p>
+            <a href="companies.html">Manage Companies</a>
+        </div>
+
+        <div class="feature-card">
+            <div class="feature-icon">💰</div>
+            <h3>Financial Intelligence</h3>
+            <p>Calculate Net Waste Value (NWV) by transforming waste data into actionable financial insights with market-based pricing.</p>
+            <a href="index.html">Generate Reports</a>
+        </div>
+
+        <div class="feature-card">
+            <div class="feature-icon">📄</div>
+            <h3>PDF Reports</h3>
+            <p>Download comprehensive financial reports in PDF format for sharing, compliance, and documentation purposes.</p>
+            <a href="index.html">Download PDF</a>
+        </div>
+    </div>
+
+    <div class="stats-section">
+        <div class="stats-container">
+            <div class="stat-item">
+                <h3>100%</h3>
+                <p>Data Accuracy</p>
+            </div>
+            <div class="stat-item">
+                <h3>Real-time</h3>
+                <p>Calculations</p>
+            </div>
+            <div class="stat-item">
+                <h3>Multi-material</h3>
+                <p>Support</p>
+            </div>
+            <div class="stat-item">
+                <h3>Enterprise</h3>
+                <p>Ready</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+

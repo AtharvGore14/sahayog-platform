@@ -1,0 +1,404 @@
+{% extends 'base.html' %}
+
+{% block title %}Notifications - Sahayog Route Optimizer{% endblock %}
+
+{% block extra_css %}
+<style>
+    .notif-item {
+        transition: all 0.3s ease;
+        border-left: 4px solid transparent;
+    }
+    .notif-item.unread { 
+        background-color: #f8f9ff;
+        border-left-color: #667eea;
+        box-shadow: 0 2px 4px rgba(102, 126, 234, 0.1);
+    }
+    .notif-item:not(.unread) {
+        background-color: #ffffff;
+        opacity: 0.7;
+        border-left-color: #e0e0e0;
+    }
+    .notif-item:not(.unread) .card-body {
+        opacity: 0.8;
+    }
+    .notif-item:not(.unread) h6 {
+        color: #6c757d;
+        font-weight: normal;
+    }
+    .notif-item:not(.unread) .text-muted {
+        color: #adb5bd !important;
+    }
+    .notif-type-badge { width: 8px; height: 8px; display: inline-block; border-radius: 50%; margin-right: 8px; }
+    .t-success { background:#28a745; } .t-warning { background:#ffc107; } .t-danger { background:#dc3545; } .t-info { background:#17a2b8; }
+    .tab-btn { cursor:pointer; transition: all 0.2s ease; }
+    .tab-btn.active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:#fff; }
+    .tab-btn:hover:not(.active) { background-color: #f0f0f0; }
+    .btn-mark-read, .btn-mark-unread {
+        transition: all 0.2s ease;
+    }
+    .notif-item.reading {
+        opacity: 0.5;
+        transform: scale(0.98);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2 mb-0">
+        <i class="fas fa-bell me-2"></i>
+        Notifications
+        <span id="page-unread-count" class="badge bg-danger ms-2 {% if unread_count == 0 %}d-none{% endif %}">{{ unread_count }}</span>
+    </h1>
+    <div class="d-flex gap-2">
+        <button class="btn btn-sm btn-outline-secondary" id="btn-mark-current">
+            <i class="fas fa-check-double me-1"></i>Mark Current Tab Read
+        </button>
+        <button class="btn btn-sm btn-outline-danger" id="btn-clear-all">
+            <i class="fas fa-trash me-1"></i>Clear All
+        </button>
+        <button class="btn btn-sm btn-primary" id="btn-refresh"><i class="fas fa-sync-alt me-1"></i>Refresh</button>
+    </div>
+    </div>
+
+<!-- Tabs -->
+<div class="mb-3 d-flex flex-wrap gap-2">
+    <button class="btn tab-btn active" data-filter="all">All <span class="text-muted">({{ total_count }})</span></button>
+    <button class="btn tab-btn" data-filter="unread">Unread <span id="count-unread" class="text-muted">({{ unread_count }})</span></button>
+    <button class="btn tab-btn" data-filter="success"><span class="notif-type-badge t-success"></span>Success <span class="text-muted">({{ type_counts.success }})</span></button>
+    <button class="btn tab-btn" data-filter="warning"><span class="notif-type-badge t-warning"></span>Warning <span class="text-muted">({{ type_counts.warning }})</span></button>
+    <button class="btn tab-btn" data-filter="danger"><span class="notif-type-badge t-danger"></span>Alert <span class="text-muted">({{ type_counts.danger }})</span></button>
+    <button class="btn tab-btn" data-filter="info"><span class="notif-type-badge t-info"></span>Info <span class="text-muted">({{ type_counts.info }})</span></button>
+</div>
+
+<div id="notif-list" class="vstack gap-2">
+    {% for n in notifications %}
+    <div class="card notif-item p-0 {% if not n.read %}unread{% endif %}" data-id="{{ n.id }}" data-type="{{ n.type }}" data-read="{{ n.read|yesno:'true,false' }}">
+        <div class="card-body d-flex align-items-start">
+            <div class="me-3 mt-1"><span class="notif-type-badge t-{{ n.type }}"></span></div>
+            <div class="flex-grow-1">
+                <div class="d-flex justify-content-between">
+                    <h6 class="mb-1">{{ n.title }}</h6>
+                    <small class="text-muted">{{ n.timestamp }}</small>
+                </div>
+                <div class="text-muted">{{ n.message }}</div>
+                <div class="mt-2">
+                    {% if not n.read %}
+                    <button class="btn btn-sm btn-outline-primary btn-mark-read">Mark Read</button>
+                    {% else %}
+                    <button class="btn btn-sm btn-outline-secondary btn-mark-unread">Mark Unread</button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="text-center py-5">
+        <i class="fas fa-bell-slash fa-3x text-muted mb-3"></i>
+        <h5 class="text-muted">No notifications</h5>
+        <p class="text-muted">You're all caught up! Check back later for updates.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentFilter = 'all';
+
+function csrfToken(){
+    const m = document.cookie.match(/csrftoken=([^;]+)/); return m?m[1]:'';
+}
+
+function updateBadges(){
+    const unread = document.querySelectorAll('#notif-list .notif-item.unread').length;
+    const sidebar = document.getElementById('sidebar-unread-count');
+    const page = document.getElementById('page-unread-count');
+    const countUnread = document.getElementById('count-unread');
+    
+    if(countUnread) {
+        countUnread.textContent = `(${unread})`;
+    }
+    
+    if(sidebar){ 
+        if(unread>0){ 
+            sidebar.textContent=unread; 
+            sidebar.classList.remove('d-none'); 
+        } else { 
+            sidebar.textContent='0'; 
+            sidebar.classList.add('d-none'); 
+        } 
+    }
+    if(page){ 
+        if(unread>0){ 
+            page.textContent=unread; 
+            page.classList.remove('d-none'); 
+        } else { 
+            page.textContent='0'; 
+            page.classList.add('d-none'); 
+        } 
+    }
+}
+
+function updateTabCounts(){
+    // Update counts for each filter tab
+    const allCount = document.querySelectorAll('#notif-list .notif-item').length;
+    const unreadCount = document.querySelectorAll('#notif-list .notif-item.unread').length;
+    const successCount = document.querySelectorAll('#notif-list .notif-item[data-type="success"]').length;
+    const warningCount = document.querySelectorAll('#notif-list .notif-item[data-type="warning"]').length;
+    const dangerCount = document.querySelectorAll('#notif-list .notif-item[data-type="danger"]').length;
+    const infoCount = document.querySelectorAll('#notif-list .notif-item[data-type="info"]').length;
+    
+    // Update tab labels
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        const filter = btn.getAttribute('data-filter');
+        const span = btn.querySelector('span.text-muted');
+        if(span) {
+            let count = 0;
+            if(filter === 'all') count = allCount;
+            else if(filter === 'unread') count = unreadCount;
+            else if(filter === 'success') count = successCount;
+            else if(filter === 'warning') count = warningCount;
+            else if(filter === 'danger') count = dangerCount;
+            else if(filter === 'info') count = infoCount;
+            span.textContent = `(${count})`;
+        }
+    });
+}
+
+function applyFilter(){
+    document.querySelectorAll('#notif-list .notif-item').forEach(card=>{
+        const type = card.getAttribute('data-type');
+        const isRead = card.getAttribute('data-read') === 'true';
+        let show = true;
+        if(currentFilter==='unread'){ show = !isRead; }
+        else if(currentFilter!=='all'){ show = type===currentFilter; }
+        card.style.display = show ? '' : 'none';
+    });
+}
+
+async function mark(id, makeRead){
+    const card = document.querySelector(`.notif-item[data-id='${id}']`);
+    if(!card) return;
+    
+    // Add reading state for visual feedback
+    if(makeRead) {
+        card.classList.add('reading');
+    }
+    
+    // Get base path from current URL
+    const basePath = window.location.pathname.split('/notifications')[0];
+    const url = makeRead ? `${basePath}/api/notifications/${id}/read/` : `${basePath}/api/notifications/${id}/unread/`;
+    
+    try {
+        const res = await fetch(url,{ method:'POST', headers:{ 'X-CSRFToken': csrfToken(), 'X-Requested-With': 'XMLHttpRequest' }});
+        if(!res.ok) {
+            console.error('Failed to mark notification:', res.status, res.statusText);
+            card.classList.remove('reading');
+            throw new Error('request failed');
+        }
+        
+        if(makeRead){
+            // Remove unread styling
+            card.classList.remove('unread', 'reading');
+            card.setAttribute('data-read','true');
+            
+            // Update button
+            const btnContainer = card.querySelector('.mt-2');
+            const oldBtn = card.querySelector('.btn-mark-read');
+            if(oldBtn) {
+                oldBtn.remove();
+            }
+            if(!card.querySelector('.btn-mark-unread')){
+                const btn = document.createElement('button'); 
+                btn.className='btn btn-sm btn-outline-secondary btn-mark-unread'; 
+                btn.textContent='Mark Unread';
+                btnContainer.appendChild(btn);
+            }
+            
+            // If viewing unread filter, hide with animation
+            if(currentFilter==='unread'){ 
+                setTimeout(() => {
+                    card.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                    card.style.opacity = '0';
+                    card.style.transform = 'translateX(-20px)';
+                    setTimeout(() => {
+                        card.style.display='none';
+                    }, 300);
+                }, 200);
+            } else {
+                // Move to bottom of visible list (read notifications go to bottom)
+                const notifList = document.getElementById('notif-list');
+                const unreadItems = Array.from(notifList.querySelectorAll('.notif-item.unread'));
+                if(unreadItems.length > 0) {
+                    // Insert after last unread item
+                    const lastUnread = unreadItems[unreadItems.length - 1];
+                    lastUnread.insertAdjacentElement('afterend', card);
+                } else {
+                    // No unread items, append to end
+                    notifList.appendChild(card);
+                }
+            }
+        }else{
+            // Mark as unread
+            card.classList.add('unread');
+            card.classList.remove('reading');
+            card.setAttribute('data-read','false');
+            
+            // Update button
+            const btnContainer = card.querySelector('.mt-2');
+            const oldBtn = card.querySelector('.btn-mark-unread');
+            if(oldBtn) {
+                oldBtn.remove();
+            }
+            if(!card.querySelector('.btn-mark-read')){
+                const btn = document.createElement('button'); 
+                btn.className='btn btn-sm btn-outline-primary btn-mark-read'; 
+                btn.textContent='Mark Read';
+                btnContainer.appendChild(btn);
+            }
+            
+            // Move to top of list (unread notifications go to top)
+            const notifList = document.getElementById('notif-list');
+            const unreadItems = Array.from(notifList.querySelectorAll('.notif-item.unread'));
+            if(unreadItems.length > 0) {
+                // Insert before first unread item
+                const firstUnread = unreadItems[0];
+                notifList.insertBefore(card, firstUnread);
+            } else {
+                // No unread items, prepend to start
+                notifList.insertBefore(card, notifList.firstChild);
+            }
+            
+            // Show if hidden
+            card.style.display = '';
+            card.style.opacity = '1';
+            card.style.transform = '';
+        }
+        
+        updateBadges();
+        updateTabCounts();
+    } catch(err) {
+        card.classList.remove('reading');
+        console.error('Error marking notification:', err);
+    }
+}
+
+async function markCurrentTab(){
+    const basePath = window.location.pathname.split('/notifications')[0];
+    
+    if(currentFilter==='all'){
+        // Mark all unread notifications as read
+        const unreadCards = Array.from(document.querySelectorAll('#notif-list .notif-item.unread'));
+        if(unreadCards.length === 0) {
+            return; // Nothing to mark
+        }
+        
+        const res = await fetch(`${basePath}/api/notifications/read-all/`,{ method:'POST', headers:{ 'X-CSRFToken': csrfToken(), 'X-Requested-With': 'XMLHttpRequest' }});
+        if(!res.ok) {
+            console.error('Failed to mark all as read:', res.status, res.statusText);
+            alert('Failed to mark all as read. Please try again.');
+            return;
+        }
+        
+        // Update all cards with animation
+        unreadCards.forEach((card, index) => {
+            setTimeout(() => {
+                card.classList.remove('unread');
+                card.setAttribute('data-read','true');
+                card.style.display='';
+                
+                // Update button
+                const btnContainer = card.querySelector('.mt-2');
+                const oldBtn = card.querySelector('.btn-mark-read');
+                if(oldBtn) oldBtn.remove();
+                if(!card.querySelector('.btn-mark-unread')){
+                    const btn = document.createElement('button'); 
+                    btn.className='btn btn-sm btn-outline-secondary btn-mark-unread'; 
+                    btn.textContent='Mark Unread';
+                    btnContainer.appendChild(btn);
+                }
+                
+                // Move to bottom
+                const notifList = document.getElementById('notif-list');
+                notifList.appendChild(card);
+            }, index * 50); // Stagger animations
+        });
+    } else if(currentFilter==='unread'){
+        // Mark only currently visible unread as read
+        const visibleUnread = Array.from(document.querySelectorAll('#notif-list .notif-item.unread')).filter(c=>c.style.display!== 'none');
+        for(let i = 0; i < visibleUnread.length; i++) {
+            await mark(visibleUnread[i].getAttribute('data-id'), true);
+            await new Promise(resolve => setTimeout(resolve, 100)); // Small delay between marks
+        }
+    } else {
+        // Mark all of this type as read
+        const cards = Array.from(document.querySelectorAll(`#notif-list .notif-item[data-type='${currentFilter}']`)).filter(c => c.getAttribute('data-read') === 'false');
+        for(let i = 0; i < cards.length; i++) {
+            await mark(cards[i].getAttribute('data-id'), true);
+            await new Promise(resolve => setTimeout(resolve, 100)); // Small delay between marks
+        }
+    }
+    
+    applyFilter();
+    updateBadges();
+    updateTabCounts();
+}
+
+document.addEventListener('click', async (e)=>{
+    const t = e.target;
+    if(t.classList.contains('tab-btn')){
+        document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+        t.classList.add('active');
+        currentFilter = t.getAttribute('data-filter');
+        applyFilter();
+        return;
+    }
+    if(t.classList.contains('btn-mark-read')){
+        const id = t.closest('.notif-item').getAttribute('data-id');
+        try{ await mark(id,true);}catch{}
+        return;
+    }
+    if(t.classList.contains('btn-mark-unread')){
+        const id = t.closest('.notif-item').getAttribute('data-id');
+        try{ await mark(id,false);}catch{}
+        return;
+    }
+    if(t.id==='btn-mark-current'){
+        try{ await markCurrentTab(); }catch{}
+        return;
+    }
+    if(t.id==='btn-refresh'){
+        // Add loading state
+        t.disabled = true;
+        t.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Refreshing...';
+        location.reload();
+        return;
+    }
+    if(t.id==='btn-clear-all'){
+        if(confirm('Clear all notifications? This cannot be undone.')){
+            try{
+                const basePath = window.location.pathname.split('/notifications')[0];
+                const res = await fetch(`${basePath}/api/notifications/clear-all/`, { method:'POST', headers:{ 'X-CSRFToken': csrfToken(), 'X-Requested-With':'XMLHttpRequest' }});
+                if(!res.ok) {
+                    console.error('Failed to clear all:', res.status, res.statusText);
+                    alert('Failed to clear notifications. Please try again.');
+                    return;
+                }
+                document.querySelectorAll('#notif-list .notif-item').forEach(n=>n.remove());
+                updateBadges();
+            }catch(err){
+                console.error('Error clearing notifications:', err);
+                alert('An error occurred. Please try again.');
+            }
+        }
+        return;
+    }
+});
+
+// Initialize
+applyFilter();
+updateBadges();
+updateTabCounts();
+</script>
+{% endblock %}

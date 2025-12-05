@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block title %}Import Locations - Sahayog Route Optimizer{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
+  <h1 class="h2"><i class="fas fa-file-upload me-2"></i>Import Locations</h1>
+  <a href="{% url 'route_optimizer:locations' %}" class="btn btn-outline-secondary">Back</a>
+  </div>
+<div class="card">
+  <div class="card-body">
+    <form method="post" enctype="multipart/form-data">{% csrf_token %}
+      <div class="mb-3">
+        <label class="form-label">JSON File</label>
+        <input class="form-control" type="file" name="file" accept="application/json" required />
+        <div class="form-text">Upload a JSON array of locations with keys: name, address, latitude, longitude, location_type, priority, estimated_waste_volume. <strong>Route data (with stops or path) will automatically create an optimized route.</strong></div>
+      </div>
+      <button class="btn btn-primary" type="submit">Import</button>
+    </form>
+    <hr/>
+    <p class="mb-1"><strong>Sample JSON</strong></p>
+<pre class="bg-light p-3 rounded small mb-0">[
+  {
+    "name": "Central Market Bin",
+    "address": "123 Main Street, Downtown",
+    "latitude": 23.0245,
+    "longitude": 72.5714,
+    "location_type": "waste_bin",
+    "priority": "high",
+    "estimated_waste_volume": 150
+  }
+]</pre>
+  </div>
+</div>
+{% endblock %}
+
+
