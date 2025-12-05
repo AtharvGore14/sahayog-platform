@@ -86,9 +86,16 @@ class SubprocessProxyApplication:
         self.frontend_dir = frontend_dir
         self.session = requests.Session()
         self.process: subprocess.Popen | None = None
+        self.startup_error: str | None = None
 
-        self._start_subprocess()
-        atexit.register(self._shutdown)
+        try:
+            self._start_subprocess()
+            atexit.register(self._shutdown)
+        except Exception as e:
+            self.startup_error = str(e)
+            print(f"Warning: Could not start {self.name} subprocess: {e}")
+            print(f"  Command: {' '.join(self.command)}")
+            print(f"  {self.name} routes will return 503 errors until dependencies are installed.")
 
     def _start_subprocess(self) -> None:
         if self.process and self.process.poll() is None:
@@ -129,8 +136,16 @@ class SubprocessProxyApplication:
                 self.process.kill()
 
     def __call__(self, environ, start_response):
+        if self.startup_error:
+            start_response('503 Service Unavailable', [('Content-Type', 'text/plain')])
+            return [f"{self.name} service unavailable: {self.startup_error}".encode('utf-8')]
+        
         if not self.process or self.process.poll() is not None:
-            self._start_subprocess()
+            try:
+                self._start_subprocess()
+            except Exception as e:
+                start_response('503 Service Unavailable', [('Content-Type', 'text/plain')])
+                return [f"{self.name} service unavailable: {e}".encode('utf-8')]
 
         content_length = environ.get('CONTENT_LENGTH')
         try:
@@ -1263,7 +1278,7 @@ def create_landing_app() -> Flask:
                 "12–15% lift in on-time collection performance for critical accounts.",
                 "Verified 9% decrease in fuel spend through optimized dispatching.",
             ],
-            "launch_url": "/django/",
+            "launch_url": "/django/route-optimizer/",
             "accent": "#7c5cff",
             "accent_soft": "rgba(124, 92, 255, 0.2)",
         },

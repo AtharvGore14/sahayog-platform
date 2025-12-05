@@ -1,11 +1,19 @@
 """
 Waste management models for Sahayog project.
 """
-from django.contrib.gis.db import models
-from django.contrib.gis.geos import Point
+from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
 from users.models import User
+
+# Try to import GIS models, fallback to regular models if GDAL is not available
+try:
+    from django.contrib.gis.db import models as gis_models
+    from django.contrib.gis.geos import Point
+    HAS_GDAL = True
+except Exception:
+    HAS_GDAL = False
+    gis_models = models
 
 
 class WasteBin(models.Model):
@@ -29,7 +37,8 @@ class WasteBin(models.Model):
     
     bin_id = models.CharField(max_length=50, unique=True)
     bin_type = models.CharField(max_length=20, choices=BIN_TYPE_CHOICES)
-    location = models.PointField(srid=4326)
+    location_lat = models.DecimalField(max_digits=9, decimal_places=6, help_text="Latitude")
+    location_lng = models.DecimalField(max_digits=9, decimal_places=6, help_text="Longitude")
     address = models.TextField()
     zone = models.CharField(max_length=100)
     capacity = models.DecimalField(max_digits=8, decimal_places=2)  # in liters
@@ -80,7 +89,8 @@ class WasteReport(models.Model):
     bin = models.ForeignKey(WasteBin, on_delete=models.CASCADE, related_name='reports')
     report_type = models.CharField(max_length=20, choices=REPORT_TYPE_CHOICES)
     description = models.TextField()
-    location = models.PointField(srid=4326)
+    location_lat = models.DecimalField(max_digits=9, decimal_places=6, help_text="Latitude")
+    location_lng = models.DecimalField(max_digits=9, decimal_places=6, help_text="Longitude")
     photo = models.ImageField(upload_to='waste_reports/', blank=True, null=True)
     fill_level = models.DecimalField(
         max_digits=5, 
@@ -220,7 +230,8 @@ class CollectionVehicle(models.Model):
     capacity = models.DecimalField(max_digits=8, decimal_places=2)  # in liters
     fuel_type = models.CharField(max_length=20)
     fuel_efficiency = models.DecimalField(max_digits=5, decimal_places=2)  # km/l
-    current_location = models.PointField(srid=4326, blank=True, null=True)
+    current_location_lat = models.DecimalField(max_digits=9, decimal_places=6, blank=True, null=True, help_text="Latitude")
+    current_location_lng = models.DecimalField(max_digits=9, decimal_places=6, blank=True, null=True, help_text="Longitude")
     is_available = models.BooleanField(default=True)
     last_maintenance = models.DateField(blank=True, null=True)
     next_maintenance = models.DateField(blank=True, null=True)

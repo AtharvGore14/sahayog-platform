@@ -2,10 +2,18 @@
 User models for Sahayog project.
 """
 from django.contrib.auth.models import AbstractUser
-from django.contrib.gis.db import models
-from django.contrib.gis.geos import Point
+from django.db import models
 from django.core.validators import RegexValidator
 from django.utils import timezone
+
+# Try to import GIS models, fallback to regular models if GDAL is not available
+try:
+    from django.contrib.gis.db import models as gis_models
+    from django.contrib.gis.geos import Point
+    HAS_GDAL = True
+except Exception:
+    HAS_GDAL = False
+    gis_models = models
 
 
 class User(AbstractUser):
@@ -28,7 +36,8 @@ class User(AbstractUser):
         null=True
     )
     address = models.TextField(blank=True)
-    location = models.PointField(blank=True, null=True, srid=4326)
+    location_lat = models.DecimalField(max_digits=9, decimal_places=6, blank=True, null=True, help_text="Latitude")
+    location_lng = models.DecimalField(max_digits=9, decimal_places=6, blank=True, null=True, help_text="Longitude")
     profile_picture = models.ImageField(upload_to='profile_pictures/', blank=True, null=True)
     is_verified = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
