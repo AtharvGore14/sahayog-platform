@@ -46,6 +46,9 @@ for path in (PROJECT01_PATH, PROJECT02_PATH, PROJECT03_PATH, PROJECT04_PATH):
 # Configure Django settings before importing the WSGI application
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'sahayog.settings')
 os.environ.setdefault('FASTAPI_ROOT_PATH', '/ledger')
+# Set FORCE_SCRIPT_NAME for Django app when mounted at /django
+if 'FORCE_SCRIPT_NAME' not in os.environ:
+    os.environ.setdefault('FORCE_SCRIPT_NAME', '/django')
 
 
 # Import Django WSGI application

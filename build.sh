@@ -18,6 +18,9 @@ pip install -r requirements.txt
 echo "📁 Collecting static files for project01..."
 cd "${PROJECT_ROOT}/project01_route_opt"
 export DJANGO_SETTINGS_MODULE="sahayog.settings"
+export FORCE_SCRIPT_NAME="/django"
+# Ensure STATIC_ROOT directory exists
+mkdir -p staticfiles
 python manage.py collectstatic --noinput || echo "⚠️  Warning: collectstatic failed for project01"
 cd "${PROJECT_ROOT}"
 

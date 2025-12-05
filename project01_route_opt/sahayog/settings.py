@@ -59,6 +59,10 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+# Proxy settings for Render deployment
+USE_X_FORWARDED_HOST = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
 ROOT_URLCONF = 'sahayog.urls'
 
 TEMPLATES = [
@@ -161,6 +165,17 @@ REST_FRAMEWORK = {
 CORS_ALLOW_ALL_ORIGINS = True
 _cors_env = config('CORS_ALLOWED_ORIGINS', default='')
 CORS_ALLOWED_ORIGINS = [o.strip() for o in _cors_env.split(',') if o.strip().startswith(('http://', 'https://'))]
+
+# CSRF settings for Render deployment
+CSRF_TRUSTED_ORIGINS = [
+    'https://sahayog-platform.onrender.com',
+    'https://sahayog-platform-1.onrender.com',
+    'https://*.onrender.com',
+]
+# Add any additional trusted origins from environment
+_csrf_env = config('CSRF_TRUSTED_ORIGINS', default='')
+if _csrf_env:
+    CSRF_TRUSTED_ORIGINS.extend([origin.strip() for origin in _csrf_env.split(',') if origin.strip()])
 
 ## Channels/Celery disabled for this focused app
 
