@@ -8,6 +8,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from django.db.models import Q
 from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
 from datetime import timedelta
 from .models import (
     SupplyListing, Bid, UserProfile, Commodity,
@@ -33,6 +34,7 @@ class UserCreateView(generics.CreateAPIView):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@csrf_exempt
 def custom_token_auth(request):
     """Custom token authentication endpoint that accepts JSON"""
     username = request.data.get('username')

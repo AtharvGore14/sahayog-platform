@@ -1067,8 +1067,12 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const API_BASE = 'http://127.0.0.1:8000';
-            const WS_BASE = 'ws://127.0.0.1:8000';
+            // Detect API base URL - use current origin for production (Render), fallback to localhost for dev
+            // Detect API base URL - use current origin for production (Render), fallback to localhost for dev
+            const API_BASE = window.location.origin || 'http://127.0.0.1:8000';
+            // WebSocket base - use wss:// for HTTPS (production), ws:// for HTTP (dev)
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const WS_BASE = `${protocol}//${window.location.host}`;
             let authToken = null;
             let webSocket = null;
             let currentUser = null;
