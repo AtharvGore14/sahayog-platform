@@ -29,13 +29,21 @@ def index(request):
     try:
         # Seed demo data if database is empty (for initial setup/demo)
         # Check locations and vehicles separately to ensure both are seeded
+        from django.db import OperationalError, DatabaseError
         try:
             locations_count = Location.objects.count()
             vehicles_count = Vehicle.objects.count()
-        except Exception as db_error:
+        except (OperationalError, DatabaseError) as db_error:
             # Database might not be ready or table doesn't exist
             import traceback
             print(f"Database query error in index view: {db_error}", file=sys.stderr)
+            print(traceback.format_exc(), file=sys.stderr)
+            locations_count = 0
+            vehicles_count = 0
+        except Exception as db_error:
+            # Catch any other database-related errors
+            import traceback
+            print(f"Unexpected database error in index view: {db_error}", file=sys.stderr)
             print(traceback.format_exc(), file=sys.stderr)
             locations_count = 0
             vehicles_count = 0
@@ -112,8 +120,11 @@ def index(request):
                 Vehicle.objects.get_or_create(name=veh_data['name'], defaults=veh_data)
     
         # Get recent routes
+        from django.db import OperationalError, DatabaseError
         try:
             recent_routes = OptimizedRoute.objects.all().order_by('-created_at')[:5]
+        except (OperationalError, DatabaseError):
+            recent_routes = []
         except Exception:
             recent_routes = []
         
@@ -122,6 +133,10 @@ def index(request):
             total_routes = OptimizedRoute.objects.count()
             total_locations = Location.objects.filter(is_active=True).count()
             total_vehicles = Vehicle.objects.filter(is_available=True).count()
+        except (OperationalError, DatabaseError):
+            total_routes = 0
+            total_locations = locations_count
+            total_vehicles = vehicles_count
         except Exception:
             total_routes = 0
             total_locations = locations_count
@@ -130,6 +145,8 @@ def index(request):
         # Get optimization history (use ORM objects so template date filter works)
         try:
             optimization_history = RouteOptimizationSession.objects.all().order_by('-created_at')[:5]
+        except (OperationalError, DatabaseError):
+            optimization_history = []
         except Exception:
             optimization_history = []
         

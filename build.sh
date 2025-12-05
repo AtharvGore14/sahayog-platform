@@ -39,12 +39,18 @@ echo "🗄️ Running migrations for project01..."
 cd "${PROJECT_ROOT}/project01_route_opt"
 export DJANGO_SETTINGS_MODULE="sahayog.settings"
 export FORCE_SCRIPT_NAME="/django"
-# Run migrations - this is critical, so we continue even if it fails
-# The app will handle missing tables gracefully
-python manage.py migrate --noinput 2>&1 || {
-    echo "⚠️  Warning: migrations failed for project01, but continuing..."
-    echo "This might be due to database connection issues. The app will handle this gracefully."
-}
+# Run migrations - CRITICAL: Must succeed for app to work
+# Check if DATABASE_URL is set (PostgreSQL), if not migrations might fail
+if [ -z "$DATABASE_URL" ]; then
+    echo "⚠️  Warning: DATABASE_URL not set, using SQLite (ephemeral on Render)"
+    echo "⚠️  Note: SQLite databases are reset on each deploy on Render"
+fi
+# Try migrations - if they fail, log but continue (app handles gracefully)
+if ! python manage.py migrate --noinput 2>&1; then
+    echo "⚠️  Warning: migrations failed for project01"
+    echo "⚠️  The app will handle missing tables gracefully, but some features may not work"
+    echo "⚠️  Check DATABASE_URL and ensure PostgreSQL is configured correctly"
+fi
 cd "${PROJECT_ROOT}"
 
 echo "🗄️ Running migrations for project03..."
