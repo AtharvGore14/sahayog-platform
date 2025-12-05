@@ -26,12 +26,21 @@ def logout_view(request):
 
 def index(request):
     """Main dashboard view."""
-    # Seed demo data if database is empty (for initial setup/demo)
-    # Check locations and vehicles separately to ensure both are seeded
-    locations_count = Location.objects.count()
-    vehicles_count = Vehicle.objects.count()
-    
-    if locations_count == 0 or vehicles_count == 0:
+    try:
+        # Seed demo data if database is empty (for initial setup/demo)
+        # Check locations and vehicles separately to ensure both are seeded
+        try:
+            locations_count = Location.objects.count()
+            vehicles_count = Vehicle.objects.count()
+        except Exception as db_error:
+            # Database might not be ready or table doesn't exist
+            import traceback
+            print(f"Database query error in index view: {db_error}", file=sys.stderr)
+            print(traceback.format_exc(), file=sys.stderr)
+            locations_count = 0
+            vehicles_count = 0
+        
+        if locations_count == 0 or vehicles_count == 0:
         # Create demo locations - scattered across a wider geographic area
         demo_locations = [
             # Downtown/Central Area
@@ -102,26 +111,47 @@ def index(request):
             for veh_data in demo_vehicles:
                 Vehicle.objects.get_or_create(name=veh_data['name'], defaults=veh_data)
     
-    # Get recent routes
-    recent_routes = OptimizedRoute.objects.all().order_by('-created_at')[:5]
-    
-    # Get statistics
-    total_routes = OptimizedRoute.objects.count()
-    total_locations = Location.objects.filter(is_active=True).count()
-    total_vehicles = Vehicle.objects.filter(is_available=True).count()
-    
-    # Get optimization history (use ORM objects so template date filter works)
-    optimization_history = RouteOptimizationSession.objects.all().order_by('-created_at')[:5]
-    
-    context = {
-        'recent_routes': recent_routes,
-        'total_routes': total_routes,
-        'total_locations': total_locations,
-        'total_vehicles': total_vehicles,
-        'optimization_history': optimization_history,
-    }
-    
-    return render(request, 'route_optimizer/index.html', context)
+        # Get recent routes
+        try:
+            recent_routes = OptimizedRoute.objects.all().order_by('-created_at')[:5]
+        except Exception:
+            recent_routes = []
+        
+        # Get statistics
+        try:
+            total_routes = OptimizedRoute.objects.count()
+            total_locations = Location.objects.filter(is_active=True).count()
+            total_vehicles = Vehicle.objects.filter(is_available=True).count()
+        except Exception:
+            total_routes = 0
+            total_locations = locations_count
+            total_vehicles = vehicles_count
+        
+        # Get optimization history (use ORM objects so template date filter works)
+        try:
+            optimization_history = RouteOptimizationSession.objects.all().order_by('-created_at')[:5]
+        except Exception:
+            optimization_history = []
+        
+        context = {
+            'recent_routes': recent_routes,
+            'total_routes': total_routes,
+            'total_locations': total_locations,
+            'total_vehicles': total_vehicles,
+            'optimization_history': optimization_history,
+        }
+        
+        return render(request, 'route_optimizer/index.html', context)
+    except Exception as e:
+        # Log the full error for debugging
+        import traceback
+        error_trace = traceback.format_exc()
+        print(f"Error in index view: {e}", file=sys.stderr)
+        print(error_trace, file=sys.stderr)
+        
+        # Return a simple error page or redirect
+        from django.http import HttpResponseServerError
+        return HttpResponseServerError(f"Server Error: {str(e)}. Please check server logs.")
 
 
 def locations(request):
