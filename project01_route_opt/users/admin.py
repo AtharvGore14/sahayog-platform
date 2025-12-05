@@ -77,5 +77,9 @@ class UserDeviceAdmin(admin.ModelAdmin):
 
 
 # Register the custom User model
-admin.site.unregister(User)
+# Only unregister if it's already registered (in case of custom User model)
+try:
+    admin.site.unregister(User)
+except admin.sites.NotRegistered:
+    pass  # User model not registered yet, which is fine
 admin.site.register(User, UserAdmin)
