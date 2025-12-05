@@ -31,7 +31,7 @@ services:
       - key: SECRET_KEY
         generateValue: true
       - key: ALLOWED_HOSTS
-        value: sahayog-platform.onrender.com,*.onrender.com
+        value: sahayog-platform.onrender.com,sahayog-platform-1.onrender.com,*.onrender.com
 
   # PostgreSQL Database
   - type: pspg
