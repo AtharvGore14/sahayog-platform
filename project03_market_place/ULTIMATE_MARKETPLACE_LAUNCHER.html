@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sahayog AI Marketplace - ULTIMATE LAUNCHER</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛒</text></svg>">
+    <link rel="shortcut icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛒</text></svg>">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            overflow-x: hidden;
+        }
+        
+        .ultimate-container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            padding: 4rem;
+            border-radius: 2rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            max-width: 1000px;
+            animation: fadeInUp 0.8s ease-out;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        h1 {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, #fff, #f0f0f0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .subtitle {
+            font-size: 1.5rem;
+            margin-bottom: 3rem;
+            opacity: 0.9;
+        }
+        
+        .feature-highlight {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 2rem;
+            border-radius: 1rem;
+            margin: 2rem 0;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .launch-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+        
+        .launch-btn {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1.5rem 2rem;
+            border-radius: 1rem;
+            text-decoration: none;
+            font-size: 1.2rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .launch-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .launch-btn:hover::before {
+            left: 100%;
+        }
+        
+        .launch-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin: 3rem 0;
+        }
+        
+        .feature {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2rem;
+            border-radius: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s ease;
+        }
+        
+        .feature:hover {
+            transform: translateY(-10px);
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        .feature h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .status-panel {
+            background: rgba(16, 185, 129, 0.2);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 1rem;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+        
+        .demo-accounts {
+            background: rgba(245, 158, 11, 0.2);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-radius: 1rem;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+        
+        .demo-accounts h3 {
+            margin-bottom: 1rem;
+        }
+        
+        .account-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+        
+        .account {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            font-family: monospace;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+        }
+        
+        .status-online { background: #10b981; }
+        .status-offline { background: #ef4444; }
+        
+        .pulse-animation {
+            animation: pulse-dot 2s infinite;
+        }
+        
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .new-features {
+            background: rgba(99, 102, 241, 0.2);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 1rem;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+        
+        .new-features h3 {
+            color: #10b981;
+            margin-bottom: 1rem;
+        }
+        
+        .feature-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .feature-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            text-align: left;
+        }
+        
+        .feature-item strong {
+            color: #10b981;
+        }
+    </style>
+</head>
+<body>
+    <div class="ultimate-container">
+        <h1>🤖 SAHAYOG AI MARKETPLACE</h1>
+        <p class="subtitle">The Ultimate AI-Powered Circular Economy Platform</p>
+        
+        <div class="feature-highlight">
+            <h2>🎉 NEW ENHANCED FEATURES</h2>
+            <p style="font-size: 1.2rem; margin-top: 1rem;">
+                Complete AI-monitored buying & selling with advanced bidding system
+            </p>
+        </div>
+        
+        <div class="new-features">
+            <h3>✨ LATEST ENHANCEMENTS</h3>
+            <div class="feature-list">
+                <div class="feature-item">
+                    <strong>🎯 AI Bid Recommendations:</strong><br>
+                    Smart pricing based on quality, market analysis, and competition
+                </div>
+                <div class="feature-item">
+                    <strong>📊 Complete Bidding History:</strong><br>
+                    See all bids including seller bids with real-time updates
+                </div>
+                <div class="feature-item">
+                    <strong>🤖 AI Strategy Analysis:</strong><br>
+                    Conservative, optimal, and aggressive bid suggestions
+                </div>
+                <div class="feature-item">
+                    <strong>⚡ Real-time Bidding:</strong><br>
+                    Live bid updates with instant AI confidence scores
+                </div>
+                <div class="feature-item">
+                    <strong>📈 Market Intelligence:</strong><br>
+                    Quality scores, competition analysis, and urgency factors
+                </div>
+                <div class="feature-item">
+                    <strong>🎭 Demo Mode:</strong><br>
+                    Fully functional marketplace with sample data
+                </div>
+            </div>
+        </div>
+        
+        <div class="status-panel">
+            <h3>🟢 SYSTEM STATUS</h3>
+            <div style="display: flex; justify-content: center; gap: 2rem; margin-top: 1rem;">
+                <div>
+                    <span class="status-indicator status-online pulse-animation"></span>
+                    <strong>Frontend:</strong> Ready
+                </div>
+                <div>
+                    <span class="status-indicator status-offline"></span>
+                    <strong>Backend:</strong> Demo Mode
+                </div>
+                <div>
+                    <span class="status-indicator status-online pulse-animation"></span>
+                    <strong>AI Engine:</strong> Active
+                </div>
+                <div>
+                    <span class="status-indicator status-online pulse-animation"></span>
+                    <strong>Bidding System:</strong> Enhanced
+                </div>
+            </div>
+        </div>
+        
+        <div class="launch-buttons">
+            <a href="ai_enhanced_frontend.html" class="launch-btn" target="_blank">
+                🚀 Launch Enhanced Marketplace
+                <br><small>AI-Powered Bidding & Analytics</small>
+            </a>
+            
+            <a href="http://127.0.0.1:8000" class="launch-btn" target="_blank">
+                🔧 Admin Panel
+                <br><small>Django Backend</small>
+            </a>
+        </div>
+        
+        <div class="demo-accounts">
+            <h3>🔑 Demo Accounts</h3>
+            <div class="account-grid">
+                <div class="account">
+                    <strong>Admin:</strong><br>
+                    admin / admin123
+                </div>
+                <div class="account">
+                    <strong>Seller:</strong><br>
+                    eco_seller / demo123
+                </div>
+                <div class="account">
+                    <strong>Buyer:</strong><br>
+                    green_recycler / demo123
+                </div>
+                <div class="account">
+                    <strong>Seller:</strong><br>
+                    waste_warrior / demo123
+                </div>
+                <div class="account">
+                    <strong>Buyer:</strong><br>
+                    circular_buyer / demo123
+                </div>
+                <div class="account">
+                    <strong>Seller:</strong><br>
+                    sustainable_seller / demo123
+                </div>
+            </div>
+        </div>
+        
+        <div class="features">
+            <div class="feature">
+                <h3>🤖 AI-Powered</h3>
+                <p>Smart recommendations, quality analysis, market predictions, and fraud detection</p>
+            </div>
+            <div class="feature">
+                <h3>⚡ Real-time</h3>
+                <p>Live bidding with WebSocket integration and instant notifications</p>
+            </div>
+            <div class="feature">
+                <h3>📊 Analytics</h3>
+                <p>Advanced market analytics, user insights, and performance metrics</p>
+            </div>
+            <div class="feature">
+                <h3>🎯 Professional</h3>
+                <p>Modern UI/UX with glassmorphism design and smooth animations</p>
+            </div>
+            <div class="feature">
+                <h3>🔒 Secure</h3>
+                <p>Advanced authentication, user trust scoring, and secure transactions</p>
+            </div>
+            <div class="feature">
+                <h3>📱 Responsive</h3>
+                <p>Perfect experience on desktop, tablet, and mobile devices</p>
+            </div>
+        </div>
+        
+        <div style="margin-top: 3rem; font-size: 0.9rem; opacity: 0.8;">
+            <p>🎭 <strong>Demo Mode:</strong> All features work with sample data including AI bidding</p>
+            <p>🔧 <strong>Full Mode:</strong> Start Django server for real backend integration</p>
+            <p>🤖 <strong>AI Features:</strong> Bid recommendations, quality analysis, and market insights</p>
+        </div>
+    </div>
+    
+    <script>
+        // Add some interactive effects
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if backend is available
+            fetch('http://127.0.0.1:8000/api/marketplace/commodities/')
+                .then(response => {
+                    if (response.ok) {
+                        document.querySelector('.status-panel').innerHTML = `
+                            <h3>🟢 SYSTEM STATUS - FULL MODE</h3>
+                            <div style="display: flex; justify-content: center; gap: 2rem; margin-top: 1rem;">
+                                <div>
+                                    <span class="status-indicator status-online pulse-animation"></span>
+                                    <strong>Frontend:</strong> Ready
+                                </div>
+                                <div>
+                                    <span class="status-indicator status-online pulse-animation"></span>
+                                    <strong>Backend:</strong> Connected
+                                </div>
+                                <div>
+                                    <span class="status-indicator status-online pulse-animation"></span>
+                                    <strong>AI Engine:</strong> Active
+                                </div>
+                                <div>
+                                    <span class="status-indicator status-online pulse-animation"></span>
+                                    <strong>Bidding System:</strong> Enhanced
+                                </div>
+                            </div>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    console.log('Backend not available, using demo mode');
+                });
+        });
+    </script>
+</body>
+</html>

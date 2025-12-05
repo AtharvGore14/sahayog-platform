@@ -1,0 +1,2811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sahayog AI Marketplace</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛒</text></svg>">
+    <link rel="shortcut icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛒</text></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛒</text></svg>">
+    <style>
+        :root {
+            color-scheme: light;
+            font-family: "Inter", "Segoe UI", Roboto, sans-serif;
+            --primary-color: #4f46e5;
+            --secondary-color: #111827;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --light-gray: #f5f7ff;
+            --text-color: #1f2937;
+            --text-muted: #6b7280;
+            --white: #ffffff;
+            --ai-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            --ai-gradient-soft: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(139, 92, 246, 0.16));
+            --card-border: rgba(99, 102, 241, 0.18);
+            --card-shadow: 0 28px 48px rgba(79, 70, 229, 0.16);
+            --card-shadow-hover: 0 35px 60px rgba(79, 70, 229, 0.22);
+            --card-background: rgba(255, 255, 255, 0.86);
+            --background-gradient: linear-gradient(160deg, #eef2ff 0%, #f8fafc 45%, #fff7ed 100%);
+            --background-overlay: radial-gradient(1100px at 18% 12%, rgba(99, 102, 241, 0.14), transparent 62%),
+                                  radial-gradient(900px at 82% 88%, rgba(236, 72, 153, 0.14), transparent 58%);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: "Inter", "Segoe UI", sans-serif;
+            background: var(--background-gradient);
+            background-image: var(--background-overlay);
+            color: var(--text-color);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        .app-container { max-width: 1400px; margin: 0 auto; padding: 1rem; }
+        .dashboard-surface {
+            background: var(--card-background);
+            backdrop-filter: blur(16px);
+            border-radius: 1.8rem;
+            padding: clamp(2rem, 5vw, 3rem);
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--card-border);
+            margin: 2rem auto;
+        }
+        .section-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin: 2rem 0 1rem;
+        }
+        .section-subtitle {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+        }
+        .view { display: none; } 
+        .view.active { display: block; }
+        
+        /* Login View */
+        #login-view { 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+            position: relative;
+        }
+        .login-card {
+            background: var(--card-background);
+            padding: clamp(2.5rem, 4vw, 3.2rem);
+            border-radius: 1.75rem;
+            box-shadow: var(--card-shadow);
+            width: 100%;
+            max-width: 480px;
+            text-align: center;
+            backdrop-filter: blur(14px);
+            border: 1px solid var(--card-border);
+            position: relative;
+            overflow: hidden;
+        }
+        .login-card::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: var(--ai-gradient-soft);
+            opacity: 0.55;
+            pointer-events: none;
+        }
+        .login-card > * {
+            position: relative;
+            z-index: 1;
+        }
+        .login-card h2 {
+            font-size: clamp(2.2rem, 4vw, 2.6rem);
+            font-weight: 800;
+            background: var(--ai-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+        .ai-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            background: var(--ai-gradient);
+            color: white;
+            padding: 0.55rem 1.2rem;
+            border-radius: 999px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 2rem;
+            letter-spacing: 0.04em;
+            box-shadow: 0 14px 24px rgba(99, 102, 241, 0.28);
+            animation: pulse 2.8s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .form input, .form select {
+            width: 100%;
+            padding: 1rem 1.2rem;
+            border: 1.5px solid var(--card-border);
+            border-radius: 0.9rem;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            transition: all 0.25s ease;
+            background-color: rgba(255, 255, 255, 0.92);
+            color: var(--text-color);
+            box-shadow: 0 14px 28px rgba(15, 23, 42, 0.04);
+        }
+        .form input:focus, .form select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.18);
+            background-color: #ffffff;
+        }
+        .login-card p {
+            color: var(--text-muted);
+        }
+        .form-toggle-link {
+            margin-top: 1.5rem;
+            color: var(--primary-color);
+            cursor: pointer;
+            font-weight: 600;
+            transition: color 0.2s ease, transform 0.2s ease;
+        }
+        .form-toggle-link:hover {
+            color: var(--primary-color);
+            transform: translateY(-1px);
+        }
+        .btn {
+            display: inline-block;
+            width: 100%;
+            padding: 1rem 1.25rem;
+            border: none;
+            border-radius: 0.9rem;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--white);
+            background: var(--ai-gradient);
+            cursor: pointer;
+            transition: transform 0.25s ease, box-shadow 0.25s ease, filter 0.25s ease;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 18px 32px rgba(99, 102, 241, 0.35);
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 24px 40px rgba(99, 102, 241, 0.38);
+            filter: brightness(1.02);
+        }
+        .btn:active {
+            transform: translateY(0);
+            box-shadow: 0 12px 24px rgba(99, 102, 241, 0.3);
+        }
+        .btn:disabled {
+            background: rgba(99, 102, 241, 0.35);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .btn.btn-logout {
+            background: rgba(79, 70, 229, 0.12);
+            color: var(--primary-color);
+            box-shadow: none;
+        }
+        .btn.btn-logout:hover {
+            background: rgba(79, 70, 229, 0.18);
+            color: var(--primary-color);
+        }
+        .btn.btn-back {
+            background: rgba(79, 70, 229, 0.12);
+            color: var(--primary-color);
+            box-shadow: none;
+            border: 1px solid rgba(79, 70, 229, 0.2);
+        }
+        .btn.btn-back:hover {
+            background: rgba(79, 70, 229, 0.2);
+            color: var(--primary-color);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.15);
+        }
+        
+        /* Header */
+        .app-header {
+            background: var(--card-background);
+            backdrop-filter: blur(12px);
+            padding: 1.15rem 2.25rem;
+            box-shadow: 0 18px 32px rgba(15, 23, 42, 0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2.4rem;
+            border-radius: 1.25rem;
+            border: 1px solid var(--card-border);
+        }
+        .app-header h1 { 
+            font-size: 1.75rem; 
+            font-weight: 800;
+            background: var(--ai-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .marketplace-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .marketplace-logo-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--ai-gradient);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            box-shadow: 0 8px 16px rgba(99, 102, 241, 0.3);
+            flex-shrink: 0;
+        }
+        .marketplace-logo-text {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .marketplace-logo-text h1,
+        .marketplace-logo-text h2 {
+            margin: 0 !important;
+            padding: 0 !important;
+            font-size: 1.75rem !important;
+            font-weight: 800 !important;
+            background: var(--ai-gradient) !important;
+            -webkit-background-clip: text !important;
+            -webkit-text-fill-color: transparent !important;
+            background-clip: text !important;
+            line-height: 1.2 !important;
+        }
+        .marketplace-logo-text .subtitle {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 0.15rem;
+            line-height: 1.2;
+        }
+        
+        /* AI Dashboard */
+        .ai-dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .insight-panel {
+            margin-top: 1.5rem;
+            display: grid;
+            gap: 1rem;
+        }
+        .insight-card {
+            background: rgba(99, 102, 241, 0.08);
+            border: 1px solid var(--card-border);
+            border-radius: 1rem;
+            padding: 1rem 1.25rem;
+            color: var(--text-main);
+            box-shadow: 0 12px 24px rgba(79, 70, 229, 0.08);
+        }
+        .insight-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            margin-bottom: 0.35rem;
+        }
+        .insight-card-meta {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+        .market-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+            gap: 2rem;
+        }
+        .listing-meta {
+            display: grid;
+            gap: 0.75rem;
+            font-size: 0.95rem;
+            color: var(--text-muted);
+        }
+        .listing-meta-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .listing-meta-row span:last-child {
+            font-weight: 600;
+            color: var(--text-main);
+        }
+        .seller-board {
+            margin-top: 2rem;
+        }
+        .seller-board h3 {
+            margin-bottom: 1rem;
+            color: var(--text-main);
+        }
+        #seller-listings {
+            display: grid;
+            gap: 1rem;
+        }
+        .listing-row {
+            background: rgba(255, 255, 255, 0.82);
+            border: 1px solid var(--card-border);
+            border-radius: 1rem;
+            padding: 1rem 1.25rem;
+            display: grid;
+            grid-template-columns: 120px 1fr 160px;
+            gap: 1.25rem;
+            align-items: center;
+            box-shadow: 0 18px 32px rgba(79, 70, 229, 0.12);
+        }
+        .listing-row img {
+            width: 100%;
+            height: 90px;
+            object-fit: cover;
+            border-radius: 0.75rem;
+        }
+        .listing-row-info {
+            display: grid;
+            gap: 0.35rem;
+        }
+        .listing-row-info .title {
+            font-weight: 700;
+            color: var(--text-main);
+        }
+        .listing-row-info .meta {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+        .listing-row-price {
+            text-align: right;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+        .empty-state {
+            padding: 2.5rem;
+            text-align: center;
+            border: 1px dashed var(--card-border);
+            border-radius: 1.25rem;
+            background: rgba(79, 70, 229, 0.06);
+            color: var(--text-muted);
+        }
+        .ai-card {
+            background: var(--card-background);
+            backdrop-filter: blur(12px);
+            padding: 1.65rem;
+            border-radius: 1.15rem;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--card-border);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .ai-card:hover {
+            transform: translateY(-6px);
+            box-shadow: var(--card-shadow-hover);
+        }
+        .listings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+        .spinner {
+            display: grid;
+            place-items: center;
+            padding: 2rem;
+            color: var(--text-muted);
+        }
+        .ai-card h3 {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            color: var(--primary-color);
+        }
+        
+        /* Listings Grid */
+        .listings-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); 
+            gap: 2rem; 
+        }
+        .listing-card {
+            background: var(--card-background);
+            backdrop-filter: blur(12px);
+            border-radius: 1.6rem;
+            box-shadow: var(--card-shadow);
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid var(--card-border);
+        }
+        .listing-card:hover {
+            transform: translateY(-12px) scale(1.02);
+            box-shadow: var(--card-shadow-hover);
+        }
+        .listing-card__media {
+            position: relative;
+            overflow: hidden;
+            border-radius: 1.6rem 1.6rem 0 0;
+        }
+        .listing-card__image {
+            width: 100%;
+            height: 220px;
+            object-fit: cover;
+        }
+        .listing-card__fallback {
+            height: 220px;
+            display: grid;
+            place-items: center;
+            font-weight: 700;
+            background: var(--ai-gradient);
+            color: white;
+        }
+        .quality-chip {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            padding: 0.35rem 0.8rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: rgba(17, 24, 39, 0.65);
+            color: white;
+        }
+        .listing-card__body {
+            padding: 1.75rem;
+            display: grid;
+            gap: 1.1rem;
+        }
+        .listing-card__header h3 {
+            margin: 0;
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+        .listing-card__chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .listing-chip {
+            background: rgba(99, 102, 241, 0.12);
+            color: var(--primary-color);
+            border-radius: 999px;
+            padding: 0.35rem 0.75rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .listing-card__metrics {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 1rem;
+        }
+        .metric {
+            background: rgba(255, 255, 255, 0.75);
+            border: 1px solid var(--card-border);
+            border-radius: 1rem;
+            padding: 0.9rem;
+            display: grid;
+            gap: 0.35rem;
+        }
+        .metric span:first-child {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .metric strong {
+            font-size: 1.1rem;
+            color: var(--text-main);
+        }
+        .listing-card__pricing {
+            background: rgba(99, 102, 241, 0.1);
+            border-radius: 1.1rem;
+            padding: 1rem 1.25rem;
+            display: grid;
+            gap: 0.35rem;
+        }
+        .listing-card__pricing span {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+        .listing-card__price {
+            font-size: 2.1rem;
+            font-weight: 800;
+            color: var(--primary-color);
+        }
+        .listing-card__note {
+            font-size: 0.85rem;
+            color: var(--success-color);
+        }
+        .listing-card__footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        .listing-card__seller {
+            font-weight: 600;
+            color: var(--text-main);
+        }
+        .listing-card__time {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+        .quality-chip--excellent {
+            background: rgba(16, 185, 129, 0.9);
+        }
+        .quality-chip--good {
+            background: rgba(245, 158, 11, 0.9);
+        }
+        .quality-chip--fair {
+            background: rgba(239, 68, 68, 0.9);
+        }
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 2rem;
+        }
+        .detail-panel {
+            background: rgba(255, 255, 255, 0.88);
+            border: 1px solid var(--card-border);
+            border-radius: 1.5rem;
+            padding: clamp(1.75rem, 4vw, 2.5rem);
+            box-shadow: var(--card-shadow);
+        }
+        .detail-panel--bid {
+            display: grid;
+            gap: 1.5rem;
+        }
+        .detail-summary h2 {
+            margin: 0 0 1rem;
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--text-main);
+        }
+        .detail-stats {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: grid;
+            gap: 0.5rem;
+        }
+        .detail-stats li {
+            display: flex;
+            justify-content: space-between;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+        .detail-stats li span:last-child {
+            font-weight: 600;
+            color: var(--text-main);
+        }
+        .detail-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        .detail-badge {
+            padding: 0.45rem 0.75rem;
+            border-radius: 999px;
+            background: rgba(99, 102, 241, 0.12);
+            color: var(--primary-color);
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .detail-pricing {
+            background: rgba(99, 102, 241, 0.08);
+            border-radius: 1.25rem;
+            padding: 1.5rem;
+            display: grid;
+            gap: 0.45rem;
+            border: 1px solid var(--card-border);
+        }
+        .detail-pricing h4 {
+            margin: 0;
+            font-size: 1rem;
+            color: var(--text-muted);
+        }
+        .detail-pricing .price {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: var(--primary-color);
+        }
+        .detail-pricing .subtle {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+        .listing-card .image-placeholder { 
+            height: 200px; 
+            background: var(--ai-gradient);
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            font-size: 1.2rem; 
+            font-weight: 600; 
+            color: white;
+            position: relative;
+        }
+        .quality-badge {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .quality-excellent { color: var(--success-color); }
+        .quality-good { color: var(--warning-color); }
+        .quality-poor { color: var(--danger-color); }
+        
+        .listing-card .card-content { padding: 1.5rem; }
+        .listing-card h3 { font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; }
+        .ai-insights {
+            display: flex;
+            gap: 1rem;
+            margin: 1rem 0;
+            flex-wrap: wrap;
+        }
+        .ai-insight {
+            background: rgba(99, 102, 241, 0.1);
+            padding: 0.5rem 1rem;
+            border-radius: 1rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+        .current-bid { 
+            font-size: 2rem; 
+            font-weight: 900; 
+            color: var(--primary-color); 
+            margin-top: 1rem; 
+        }
+        
+        /* AI Bid Assistant */
+        .ai-bid-assistant {
+            background: var(--card-background);
+            backdrop-filter: blur(12px);
+            padding: 2rem;
+            border-radius: 1.2rem;
+            margin-bottom: 2.2rem;
+            border: 1px solid var(--card-border);
+            box-shadow: var(--card-shadow);
+        }
+        .bid-guidance {
+            margin-top: 0.5rem;
+            font-size: 0.95rem;
+            color: var(--text-muted);
+        }
+        .ai-suggestion {
+            background: linear-gradient(135deg, #6366f1 0%, #ec4899 100%);
+            color: white;
+            padding: 1.1rem;
+            border-radius: 0.95rem;
+            margin: 1.1rem 0;
+            box-shadow: 0 18px 32px rgba(99, 102, 241, 0.35);
+        }
+        .confidence-meter {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin: 0.5rem 0;
+        }
+        .confidence-bar {
+            flex: 1;
+            height: 0.5rem;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 0.25rem;
+            overflow: hidden;
+        }
+        .confidence-fill {
+            height: 100%;
+            background: white;
+            border-radius: 0.25rem;
+            transition: width 0.3s ease;
+        }
+        
+        /* Notifications */
+        .notification-bell {
+            position: relative;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            transition: background-color 0.3s ease;
+        }
+        .notification-bell:hover {
+            background-color: rgba(99, 102, 241, 0.1);
+        }
+        .notification-count {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: var(--danger-color);
+            color: white;
+            border-radius: 50%;
+            width: 1.2rem;
+            height: 1.2rem;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+        
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .fade-in-up {
+            animation: fadeInUp 0.6s ease-out;
+        }
+        .form-label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 0.4rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .ai-dashboard {
+                grid-template-columns: 1fr;
+            }
+            .listings-grid {
+                grid-template-columns: 1fr;
+            }
+            .app-header {
+                padding: 1rem;
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+
+        /* === Marketplace Visual Refresh Overrides === */
+        :root {
+            --surface-primary: #ffffff;
+            --surface-muted: rgba(255, 255, 255, 0.88);
+            --surface-glass: rgba(255, 255, 255, 0.2);
+            --border-strong: rgba(79, 70, 229, 0.2);
+            --border-soft: rgba(79, 70, 229, 0.12);
+            --shadow-soft: 0 26px 60px rgba(79, 70, 229, 0.16);
+            --shadow-hover: 0 36px 70px rgba(79, 70, 229, 0.22);
+            --primary-gradient: linear-gradient(135deg, #5740f7 0%, #8a33ff 100%);
+            --accent-gradient: linear-gradient(135deg, #6366f1 0%, #ec4899 100%);
+        }
+
+        body {
+            background: linear-gradient(180deg, #eef2ff 0%, #f8fafc 55%, #fff1f2 100%);
+            background-image: radial-gradient(900px at 15% 20%, rgba(99, 102, 241, 0.16), transparent 65%),
+                              radial-gradient(700px at 85% 80%, rgba(236, 72, 153, 0.14), transparent 60%);
+        }
+
+        #app {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .dashboard-surface {
+            background: var(--surface-muted);
+            border: 1px solid var(--border-strong);
+            border-radius: 2rem;
+            box-shadow: var(--shadow-soft);
+            padding: clamp(2rem, 5vw, 3.25rem);
+        }
+
+        .app-header {
+            background: var(--surface-muted);
+            border-radius: 1.6rem;
+            border: 1px solid var(--border-strong);
+            box-shadow: var(--shadow-soft);
+        }
+
+        .app-header h1 {
+            background: var(--primary-gradient);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            color: transparent;
+        }
+
+        .ai-dashboard {
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .ai-card {
+            background: var(--surface-primary);
+            border: 1px solid var(--border-strong);
+            border-radius: 1.2rem;
+            padding: 1.8rem;
+            box-shadow: var(--shadow-soft);
+        }
+
+        .insight-panel {
+            display: grid;
+            gap: 1rem;
+            margin-top: 1.25rem;
+        }
+
+        .insight-card {
+            background: rgba(79, 70, 229, 0.08);
+            border: 1px solid var(--border-strong);
+            border-radius: 1rem;
+            padding: 1rem 1.25rem;
+            box-shadow: 0 16px 28px rgba(79, 70, 229, 0.16);
+        }
+
+        .insight-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+        }
+
+        .insight-card-meta {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .listings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .listing-card {
+            background: var(--surface-primary);
+            border-radius: 1.6rem;
+            border: 1px solid var(--border-strong);
+            box-shadow: var(--shadow-soft);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        .listing-card:hover {
+            transform: translateY(-10px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .listing-card__media {
+            position: relative;
+            height: 220px;
+            background: var(--surface-glass);
+        }
+
+        .listing-card__image,
+        .listing-card__fallback {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-bottom: 1px solid var(--border-soft);
+        }
+
+        .listing-card__fallback {
+            display: grid;
+            place-items: center;
+            color: #fff;
+            font-weight: 600;
+            font-size: 1.05rem;
+            background: var(--primary-gradient);
+        }
+
+        .quality-chip {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            padding: 0.35rem 0.75rem;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.92);
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+        }
+
+        .quality-chip.quality-excellent { color: var(--success-color); }
+        .quality-chip.quality-good { color: var(--warning-color); }
+        .quality-chip.quality-poor { color: var(--danger-color); }
+
+        .listing-card__body {
+            padding: 1.6rem 1.8rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.4rem;
+        }
+
+        .listing-card__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .listing-card__header h3 {
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-color);
+        }
+
+        .listing-card__chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .listing-chip {
+            padding: 0.4rem 0.85rem;
+            border-radius: 999px;
+            background: rgba(79, 70, 229, 0.12);
+            color: var(--primary-color);
+            font-weight: 600;
+            font-size: 0.75rem;
+        }
+
+        .listing-card__metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1rem;
+        }
+
+        .metric {
+            display: grid;
+            gap: 0.15rem;
+            font-size: 0.86rem;
+            color: var(--text-muted);
+        }
+
+        .metric strong {
+            font-size: 1.05rem;
+            color: var(--text-color);
+        }
+
+        .listing-card__pricing {
+            display: grid;
+            gap: 0.3rem;
+        }
+
+        .listing-card__price {
+            font-size: 1.45rem;
+            font-weight: 800;
+            color: var(--primary-color);
+        }
+        .listing-card__pricing span {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+        .listing-card__note {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .listing-card__footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            gap: 0.6rem;
+            flex-wrap: wrap;
+        }
+        .listing-card__footer span {
+            font-weight: 500;
+        }
+        .listing-card__seller {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .listing-card__time {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .ai-bid-assistant {
+            background: var(--surface-primary);
+            border-radius: 1.4rem;
+            border: 1px solid var(--border-strong);
+            padding: 1.8rem;
+            box-shadow: var(--shadow-soft);
+        }
+
+        .bid-guidance {
+            font-size: 0.94rem;
+            color: var(--text-muted);
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: clamp(1.5rem, 4vw, 2.5rem);
+        }
+
+        .detail-panel {
+            background: var(--surface-primary);
+            border-radius: 1.4rem;
+            border: 1px solid var(--border-strong);
+            padding: clamp(1.8rem, 4vw, 2.5rem);
+            box-shadow: var(--shadow-soft);
+        }
+
+        .detail-panel--bid {
+            background: rgba(79, 70, 229, 0.08);
+            border: 1px solid rgba(79, 70, 229, 0.2);
+        }
+
+        .detail-summary h2 {
+            font-size: clamp(1.9rem, 4vw, 2.2rem);
+            font-weight: 800;
+            margin: 1rem 0;
+        }
+
+        .detail-stats {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: grid;
+            gap: 0.6rem;
+        }
+
+        .detail-stats li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(79, 70, 229, 0.08);
+            padding: 0.65rem 0.9rem;
+            border-radius: 0.9rem;
+            font-weight: 600;
+        }
+
+        .detail-badges {
+            margin-top: 1.25rem;
+            display: flex;
+            gap: 0.6rem;
+            flex-wrap: wrap;
+        }
+
+        .detail-badge {
+            padding: 0.45rem 0.9rem;
+            border-radius: 999px;
+            background: rgba(79, 70, 229, 0.12);
+            color: var(--primary-color);
+            font-weight: 600;
+            font-size: 0.8rem;
+        }
+
+        .detail-pricing {
+            display: grid;
+            gap: 0.7rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .detail-pricing h4 {
+            margin: 0;
+            font-size: 0.9rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+
+        .detail-pricing .price {
+            font-size: clamp(2.4rem, 5vw, 3rem);
+            font-weight: 900;
+            color: var(--primary-color);
+        }
+
+        .notification-bell {
+            padding: 0.6rem;
+            border-radius: 0.9rem;
+        }
+
+        .notification-count {
+            width: 1.2rem;
+            height: 1.2rem;
+            font-size: 0.68rem;
+        }
+
+        @media (max-width: 900px) {
+            .app-header {
+                flex-direction: column;
+                text-align: center;
+                gap: 1rem;
+            }
+            .marketplace-logo {
+                justify-content: center;
+            }
+            .marketplace-logo-text h1,
+            .marketplace-logo-text h2 {
+                font-size: 1.5rem;
+            }
+        }
+        
+        @media (max-width: 640px) {
+            .login-card .btn.btn-back {
+                font-size: 0.8rem;
+                padding: 0.4rem 0.8rem;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .listing-card__metrics {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- Login View -->
+        <div id="login-view" class="view active">
+            <div class="login-card fade-in-up">
+                <div style="position: absolute; top: 1.25rem; right: 1.25rem; z-index: 100;">
+                    <a href="/" class="btn btn-back" style="width: auto; padding: 0.5rem 1rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; white-space: nowrap;">
+                        <span>🏠</span> Master Portal
+                    </a>
+                </div>
+                <div id="login-form-container" class="form-container active">
+                    <div class="marketplace-logo" style="justify-content: center; margin-bottom: 1.5rem;">
+                        <div class="marketplace-logo-icon">🛒</div>
+                        <div class="marketplace-logo-text">
+                            <h2 style="font-size: 2rem;">Sahayog AI</h2>
+                            <span class="subtitle">Marketplace</span>
+                        </div>
+                    </div>
+                    <div class="ai-badge">Powered by Advanced AI</div>
+                    <p>Sign in to access AI-powered marketplace intelligence</p>
+                    <form id="login-form" class="form">
+                        <div id="login-alert" class="alert alert-error"></div>
+                        <input type="text" id="username" placeholder="Username" required>
+                        <input type="password" id="password" placeholder="Password" required>
+                        <button type="submit" class="btn">🚀 Sign In</button>
+                    </form>
+                    <p class="form-toggle-link" id="show-signup">Don't have an account? Sign Up</p>
+                </div>
+                <div id="signup-form-container" class="form-container">
+                    <div class="marketplace-logo" style="justify-content: center; margin-bottom: 1.5rem;">
+                        <div class="marketplace-logo-icon">🛒</div>
+                        <div class="marketplace-logo-text">
+                            <h2 style="font-size: 2rem;">Join AI Marketplace</h2>
+                            <span class="subtitle">Sahayog Platform</span>
+                        </div>
+                    </div>
+                    <div class="ai-badge">AI-Enhanced Trading</div>
+                    <p>Experience the future of circular economy trading</p>
+                    <form id="signup-form" class="form">
+                        <div id="signup-alert" class="alert"></div>
+                        <input type="text" id="signup-username" placeholder="Username" required>
+                        <input type="password" id="signup-password" placeholder="Password" required>
+                        <select id="user-type" required>
+                            <option value="" disabled selected>Select your role...</option>
+                            <option value="seller">Waste Generator (Seller)</option>
+                            <option value="buyer">Recycler (Buyer)</option>
+                        </select>
+                        <button type="submit" class="btn">✨ Create Account</button>
+                    </form>
+                    <p class="form-toggle-link" id="show-login">Already have an account? Sign In</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Buyer Dashboard -->
+        <div id="buyer-dashboard-view" class="view">
+            <header class="app-header">
+                <div class="marketplace-logo">
+                    <div class="marketplace-logo-icon">🛒</div>
+                    <div class="marketplace-logo-text">
+                        <h1>AI Buyer Dashboard</h1>
+                        <span class="subtitle">Sahayog Marketplace</span>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <a href="/" class="btn btn-back" style="width: auto; padding: 0.5rem 1rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem;">
+                        <span>🏠</span> Master Portal
+                    </a>
+                    <div class="notification-bell" id="notification-bell">
+                        🔔
+                        <div class="notification-count" id="notification-count">0</div>
+                    </div>
+                    <button class="btn btn-logout" style="width: auto; padding: 0.5rem 1rem;">Logout</button>
+                </div>
+            </header>
+            
+            <main class="app-container dashboard-surface">
+                <!-- AI Dashboard -->
+                <div class="ai-dashboard">
+                    <div class="ai-card">
+                        <h3>🎯 AI Recommendations</h3>
+                        <div id="ai-recommendations">Loading AI insights...</div>
+                    </div>
+                    <div class="ai-card">
+                        <h3>📊 Market Analytics</h3>
+                        <div id="market-analytics">Loading market data...</div>
+                    </div>
+                    <div class="ai-card">
+                        <h3>💰 Top Opportunities</h3>
+                        <div id="top-opportunities">Finding best deals...</div>
+                    </div>
+                </div>
+
+                <!-- Live Listings -->
+                <h2 class="section-title">🔥 Live Auctions</h2>
+                <div id="listings-grid" class="listings-grid"></div>
+                <div id="listings-spinner" class="spinner" style="display: none;"></div>
+            </main>
+        </div>
+
+        <!-- Seller Dashboard -->
+        <div id="seller-dashboard-view" class="view">
+            <header class="app-header">
+                <div class="marketplace-logo">
+                    <div class="marketplace-logo-icon">🛒</div>
+                    <div class="marketplace-logo-text">
+                        <h1>AI Seller Dashboard</h1>
+                        <span class="subtitle">Sahayog Marketplace</span>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <a href="/" class="btn btn-back" style="width: auto; padding: 0.5rem 1rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem;">
+                        <span>🏠</span> Master Portal
+                    </a>
+                    <div class="notification-bell" id="seller-notification-bell">
+                        🔔
+                        <div class="notification-count" id="seller-notification-count">0</div>
+                    </div>
+                    <button class="btn btn-logout" style="width: auto; padding: 0.5rem 1rem;">Logout</button>
+                </div>
+            </header>
+            
+            <main class="app-container dashboard-surface">
+                <div class="ai-dashboard">
+                    <div class="ai-card">
+                        <h3>📈 Performance Analytics</h3>
+                        <div id="seller-analytics">Loading your performance...</div>
+                    </div>
+                    <div class="ai-card">
+                        <h3>🎯 Market Insights</h3>
+                        <div id="seller-market-insights">Analyzing market trends...</div>
+                    </div>
+                </div>
+
+                <h2 class="section-title">✨ Create AI-Optimized Listing</h2>
+                <div id="seller-alert" class="alert"></div>
+                <form id="create-listing-form" class="form" enctype="multipart/form-data" style="max-width:640px; margin-top:1rem;">
+                    <select id="cl-commodity" required></select>
+                    <input type="number" id="cl-quantity" step="0.01" placeholder="Quantity (kg)" required>
+                    <input type="number" id="cl-quality" step="0.01" min="0" max="1" placeholder="Quality score (0-1, AI will analyze if not provided)">
+                    <input type="number" id="cl-starting" step="0.01" min="0" placeholder="Starting price (₹ per kg, AI will suggest if not provided)">
+                    <label class="form-label" for="cl-ends">Auction ends at</label>
+                    <input type="datetime-local" id="cl-ends" required>
+                    <input type="file" id="cl-image" accept="image/*">
+                    <button type="submit" class="btn">🚀 Publish AI-Optimized Listing</button>
+                </form>
+                
+                <div class="seller-board">
+                    <h3 class="section-title" style="margin-top:0;">🛍️ Your Live Listings</h3>
+                    <div id="seller-listings" class="insight-panel"></div>
+                </div>
+
+                <div style="margin-top:2.5rem;">
+                    <h3 class="section-title" style="margin-top:0;">📊 AI Market Intelligence</h3>
+                    <div id="prices" class="insight-panel"></div>
+                </div>
+            </main>
+        </div>
+
+        <!-- Listing Detail with AI Assistant -->
+        <div id="detail-view" class="view">
+            <main class="app-container dashboard-surface">
+                <div style="display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap;">
+                    <button id="back-btn" class="btn btn-back" style="width: auto; background: rgba(255,255,255,0.2); color: white;">&larr; Back to Listings</button>
+                    <a href="/" class="btn btn-back" style="width: auto; padding: 0.5rem 1rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem;">
+                        <span>🏠</span> Master Portal
+                    </a>
+                </div>
+                
+                <!-- AI Bid Assistant -->
+                <div class="ai-bid-assistant" id="ai-bid-assistant" style="display: none;">
+                    <h3>🤖 AI Bid Assistant</h3>
+                    <div id="ai-bid-suggestions">Loading AI analysis...</div>
+                </div>
+                
+                <div id="detail-card" class="detail-card"></div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const marketplacePrefixMatch = window.location.pathname.match(/^\/marketplace(\/|$)/);
+            const API_PREFIX = marketplacePrefixMatch ? '/marketplace' : '';
+            const API_BASE = `${window.location.origin}${API_PREFIX}`;
+            const WS_BASE = `${window.location.protocol === 'https:' ? 'wss://' : 'ws://'}${window.location.host}${API_PREFIX}`;
+            let authToken = null;
+            let webSocket = null;
+            let currentUser = null;
+            let userListings = []; // Store user's created listings (offline/demo fallback)
+            let marketplaceListings = [];
+            let commodityPriceMap = {};
+            let commodityMeta = {};
+            
+            const views = { 
+                login: document.getElementById('login-view'), 
+                buyerDashboard: document.getElementById('buyer-dashboard-view'), 
+                sellerDashboard: document.getElementById('seller-dashboard-view'), 
+                detail: document.getElementById('detail-view') 
+            };
+            
+            class ApiError extends Error {
+                constructor(message, status, payload) {
+                    super(message);
+                    this.name = 'ApiError';
+                    this.status = status;
+                    this.payload = payload;
+                }
+            }
+            const formatCurrency = (value) => {
+                const numeric = Number(value);
+                if (!Number.isFinite(numeric)) {
+                    return '0.00';
+                }
+                return numeric.toFixed(2);
+            };
+            const resolveImageUrl = (path) => {
+                if (!path) return null;
+                if (/^https?:/i.test(path)) return path;
+                const normalized = path.startsWith('/') ? path : `/${path}`;
+                return `${API_BASE}${normalized}`;
+            };
+            const formatTimeRemaining = (seconds) => {
+                const total = Number(seconds);
+                if (!Number.isFinite(total) || total <= 0) return 'Ended';
+                const days = Math.floor(total / 86400);
+                const hours = Math.floor((total % 86400) / 3600);
+                const minutes = Math.floor((total % 3600) / 60);
+                if (days > 0) return `${days}d ${hours}h`;
+                if (hours > 0) return `${hours}h ${minutes}m`;
+                return `${minutes}m left`;
+            };
+            let currentBidRecommendation = null;
+            function applyBidRecommendation(range = {}) {
+                const input = document.getElementById('bid-amount');
+                const guidance = document.getElementById('bid-guidance');
+                if (!input) {
+                    if (guidance) guidance.textContent = '';
+                    return;
+                }
+
+                const recommendedRaw = range.recommended ?? range.recommended_bid ?? range.value;
+                const minRaw = range.min ?? range.minimum;
+                const maxRaw = range.max ?? range.maximum;
+
+                const highestText = document.getElementById('detail-highest-bid')?.textContent || '';
+                const highestNumeric = Number(highestText.replace(/[^0-9.]/g, ''));
+
+                let recommended = Number(recommendedRaw);
+                if (Number.isFinite(highestNumeric) && (!Number.isFinite(recommended) || recommended <= highestNumeric)) {
+                    recommended = highestNumeric + 0.02;
+                }
+
+                let min = Number(minRaw ?? recommended);
+                if (!Number.isFinite(min)) {
+                    min = recommended;
+                }
+                if (Number.isFinite(highestNumeric)) {
+                    min = Math.max(min, highestNumeric + 0.01);
+                }
+
+                let max = Number(maxRaw);
+                if (!Number.isFinite(max)) {
+                    max = recommended + Math.max(recommended * 0.05, 1);
+                }
+
+                input.setAttribute('step', '0.01');
+
+                if (Number.isFinite(recommended) && recommended > 0) {
+                    const formattedRecommended = formatCurrency(recommended);
+                    input.value = formattedRecommended;
+                    input.placeholder = formattedRecommended;
+                    if (Number.isFinite(min) && min > 0) {
+                        input.min = formatCurrency(min);
+                    } else {
+                        input.removeAttribute('min');
+                    }
+                    if (guidance) {
+                        let rangeText = '';
+                        if (Number.isFinite(max) && max >= min) {
+                            rangeText = ` (range ₹${formatCurrency(min)} – ₹${formatCurrency(max)})`;
+                        }
+                        guidance.textContent = `AI suggests bidding around ₹${formattedRecommended}${rangeText}.`;
+                    }
+                    currentBidRecommendation = { recommended, min, max };
+                } else {
+                    input.placeholder = input.placeholder || '';
+                    if (guidance) {
+                        guidance.textContent = '';
+                    }
+                    currentBidRecommendation = null;
+                }
+            }
+
+            async function apiRequest(path, options = {}) {
+                const opts = { ...options };
+                opts.headers = {
+                    Accept: 'application/json',
+                    ...(options.headers || {})
+                };
+
+                if (opts.body && !(opts.body instanceof FormData)) {
+                    if (typeof opts.body !== 'string') {
+                        opts.body = JSON.stringify(opts.body);
+                    }
+                    if (!opts.headers['Content-Type']) {
+                        opts.headers['Content-Type'] = 'application/json';
+                    }
+                }
+
+                const requestUrl = path.startsWith('http') ? path : `${API_BASE}${path}`;
+
+                let response;
+                try {
+                    response = await fetch(requestUrl, opts);
+                } catch (networkError) {
+                    throw new ApiError(
+                        'Unable to reach the marketplace service. Please ensure it is running.',
+                        0,
+                        { detail: networkError.message }
+                    );
+                }
+
+                const contentType = response.headers.get('content-type') || '';
+                let payload = null;
+
+                if (contentType.includes('application/json')) {
+                    try {
+                        payload = await response.json();
+                    } catch (parseError) {
+                        payload = null;
+                    }
+                } else if (contentType.includes('text/')) {
+                    payload = await response.text();
+                }
+
+                if (!response.ok) {
+                    const message =
+                        (payload && typeof payload === 'object'
+                            ? payload.detail ||
+                              Object.values(payload)[0]?.[0] ||
+                              Object.values(payload)[0] ||
+                              JSON.stringify(payload)
+                            : payload) || `Request failed with status ${response.status}`;
+                    throw new ApiError(message, response.status, payload);
+                }
+
+                return payload;
+            }
+
+            // Initialize
+            initializeEventListeners();
+            showView('login');
+
+            function initializeEventListeners() {
+                document.getElementById('show-signup').addEventListener('click', () => {
+                    document.getElementById('login-form-container').classList.remove('active');
+                    document.getElementById('signup-form-container').classList.add('active');
+                });
+                
+                document.getElementById('show-login').addEventListener('click', () => {
+                    document.getElementById('signup-form-container').classList.remove('active');
+                    document.getElementById('login-form-container').classList.add('active');
+                });
+                
+                document.getElementById('login-form').addEventListener('submit', handleLogin);
+                document.getElementById('signup-form').addEventListener('submit', handleSignup);
+                
+                document.querySelectorAll('.btn-logout').forEach(btn => 
+                    btn.addEventListener('click', handleLogout)
+                );
+                
+                document.getElementById('back-btn').addEventListener('click', () => {
+                    if (currentUser?.profile?.user_type === 'seller') {
+                        showView('sellerDashboard');
+                    } else {
+                        showView('buyerDashboard');
+                    }
+                });
+                
+                document.getElementById('create-listing-form').addEventListener('submit', handleCreateListing);
+                
+                // Notification bells
+                document.getElementById('notification-bell').addEventListener('click', showNotifications);
+                document.getElementById('seller-notification-bell').addEventListener('click', showNotifications);
+
+                const startingInput = document.getElementById('cl-starting');
+                if (startingInput) {
+                    startingInput.addEventListener('input', () => {
+                        startingInput.dataset.userEdited = 'true';
+                    });
+                }
+            }
+
+            function showView(viewName) {
+                Object.values(views).forEach(view => {
+                    view.style.display = 'none';
+                    view.classList.remove('active');
+                });
+                
+                if (views[viewName]) {
+                    views[viewName].style.display = 'block';
+                    views[viewName].classList.add('active');
+                    
+                    if (viewName === 'login') {
+                        views[viewName].style.display = 'flex';
+                    }
+                }
+                
+                // Load view-specific data
+                if (viewName === 'buyerDashboard') {
+                    loadBuyerDashboard();
+                } else if (viewName === 'sellerDashboard') {
+                    loadSellerDashboard();
+                }
+            }
+
+            async function handleLogin(e) {
+                e.preventDefault();
+                const btn = e.target.querySelector('button');
+                const alertEl = document.getElementById('login-alert');
+
+                btn.disabled = true;
+                btn.textContent = '🤖 AI Authenticating...';
+                showAlert(alertEl, '');
+
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+
+                let fallbackToDemo = false;
+                try {
+                    const tokenData = await apiRequest('/api-token-auth/', {
+                        method: 'POST',
+                        body: { username, password }
+                    });
+                    authToken = tokenData.token;
+
+                    const profileData = await apiRequest('/api/marketplace/me/profile/', {
+                        headers: { Authorization: `Token ${authToken}` }
+                    });
+
+                    currentUser = { profile: { ...profileData, username } };
+                    currentUser.username = username;
+
+                    if (profileData.user_type === 'seller') {
+                        showView('sellerDashboard');
+                    } else {
+                        showView('buyerDashboard');
+                    }
+
+                    showAlert(alertEl, '✅ Successfully authenticated!', 'success');
+                    return;
+
+                } catch (error) {
+                    if (error instanceof ApiError) {
+                        if (error.status === 0) {
+                            fallbackToDemo = true;
+                        } else if (error.status === 400 || error.status === 401) {
+                            showAlert(alertEl, 'Invalid username or password.', 'error');
+                            return;
+                        } else {
+                            showAlert(alertEl, error.message, 'error');
+                            return;
+                        }
+                    } else {
+                        showAlert(alertEl, 'Unexpected error occurred. Please try again.', 'error');
+                        return;
+                    }
+                } finally {
+                    btn.disabled = false;
+                    btn.textContent = '🚀 Sign In';
+                }
+
+                if (!fallbackToDemo) {
+                    return;
+                }
+
+                // Demo mode login (only if API unreachable)
+                console.warn('Marketplace API unreachable. Falling back to demo mode.');
+                authToken = 'demo-token';
+                
+                const demoUsers = {
+                    'admin': { user_type: 'buyer', username: 'admin' },
+                    'eco_seller': { user_type: 'seller', username: 'eco_seller' },
+                    'green_recycler': { user_type: 'buyer', username: 'green_recycler' },
+                    'waste_warrior': { user_type: 'seller', username: 'waste_warrior' },
+                    'circular_buyer': { user_type: 'buyer', username: 'circular_buyer' },
+                    'sustainable_seller': { user_type: 'seller', username: 'sustainable_seller' },
+                    'DemoS': { user_type: 'seller', username: 'DemoS' },
+                    'DemoB': { user_type: 'buyer', username: 'DemoB' }
+                };
+                
+                if (demoUsers[username]) {
+                    currentUser = { profile: demoUsers[username] };
+                    
+                    if (demoUsers[username].user_type === 'seller') {
+                        showView('sellerDashboard');
+                    } else {
+                        showView('buyerDashboard');
+                    }
+                    
+                    showAlert(alertEl, '🎭 Demo Mode: Successfully logged in!', 'success');
+                } else {
+                    showAlert(alertEl, 'Invalid credentials. Try: admin, eco_seller, green_recycler, DemoS, DemoB', 'error');
+                }
+            }
+
+            async function handleSignup(e) {
+                e.preventDefault();
+                const btn = e.target.querySelector('button');
+                const alertEl = document.getElementById('signup-alert');
+
+                btn.disabled = true;
+                btn.textContent = '✨ Creating AI Profile...';
+                showAlert(alertEl, '');
+
+                try {
+                    const usernameValue = document.getElementById('signup-username').value;
+                    const passwordValue = document.getElementById('signup-password').value;
+                    const userTypeValue = document.getElementById('user-type').value;
+
+                    if (!userTypeValue) {
+                        throw new ApiError('Please choose whether you are signing up as a seller or buyer.', 400);
+                    }
+
+                    await apiRequest('/api/marketplace/users/', {
+                        method: 'POST',
+                        body: {
+                            username: usernameValue,
+                            password: passwordValue,
+                            user_type: userTypeValue
+                        }
+                    });
+
+                    showAlert(alertEl, '🎉 Account created! Please sign in.', 'success');
+                    document.getElementById('signup-form').reset();
+                    document.getElementById('show-login').click();
+
+                } catch (error) {
+                    if (error instanceof ApiError) {
+                        showAlert(alertEl, error.message, 'error');
+                    } else {
+                        showAlert(alertEl, 'Could not complete sign up. Please retry.', 'error');
+                    }
+                } finally {
+                    btn.disabled = false;
+                    btn.textContent = '✨ Create Account';
+                }
+            }
+
+            async function loadBuyerDashboard() {
+                await Promise.all([
+                    loadAIRecommendations(),
+                    loadMarketAnalytics(),
+                    loadTopOpportunities(),
+                    loadNotifications(),
+                    fetchListings()
+                ]);
+            }
+
+            async function loadSellerDashboard() {
+                await Promise.all([
+                    loadCommodities(),
+                    loadPrices(),
+                    loadSellerAnalytics(),
+                    loadSellerMarketInsights(),
+                    loadNotifications()
+                ]);
+                await fetchListings({ skipViewSwitch: true }).catch(() => {});
+                renderSellerListings();
+            }
+
+            async function loadAIRecommendations() {
+                try {
+                    const response = await fetch(`${API_BASE}/api/marketplace/ai/recommendations/`, {
+                        headers: { 'Authorization': `Token ${authToken}` }
+                    });
+                    
+                    if (response.ok) {
+                        const recommendations = await response.json();
+                        const container = document.getElementById('ai-recommendations');
+                        
+                        if (recommendations.length > 0) {
+                            container.innerHTML = recommendations.slice(0, 3).map(rec => `
+                                <div class="ai-suggestion">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                        <strong>${rec.listing_title}</strong>
+                                        <span style="background: rgba(255,255,255,0.2); padding: 0.25rem 0.5rem; border-radius: 0.5rem; font-size: 0.8rem;">
+                                            ${(rec.confidence_score * 100).toFixed(0)}% confidence
+                                        </span>
+                                    </div>
+                                    <div class="confidence-meter">
+                                        <span>Confidence:</span>
+                                        <div class="confidence-bar">
+                                            <div class="confidence-fill" style="width: ${rec.confidence_score * 100}%"></div>
+                                        </div>
+                                    </div>
+                                    <p style="font-size: 0.9rem; margin-top: 0.5rem;">${rec.reason}</p>
+                                </div>
+                            `).join('');
+                        } else {
+                            container.innerHTML = '<p style="color: #6b7280;">No AI recommendations available yet. Create some listings to get personalized suggestions!</p>';
+                        }
+                    } else {
+                        console.error('AI Recommendations API Error:', response.status);
+                        document.getElementById('ai-recommendations').innerHTML = '<p style="color: #6b7280;">AI recommendations will be available once you start bidding!</p>';
+                    }
+                } catch (error) {
+                    console.error('Error loading AI recommendations:', error);
+                    // Show demo AI recommendations
+                    document.getElementById('ai-recommendations').innerHTML = `
+                        <div class="ai-suggestion">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                <strong>High-Quality Cardboard</strong>
+                                <span style="background: rgba(255,255,255,0.2); padding: 0.25rem 0.5rem; border-radius: 0.5rem; font-size: 0.8rem;">
+                                    92% confidence
+                                </span>
+                            </div>
+                            <div class="confidence-meter">
+                                <span>Confidence:</span>
+                                <div class="confidence-bar">
+                                    <div class="confidence-fill" style="width: 92%"></div>
+                                </div>
+                            </div>
+                            <p style="font-size: 0.9rem; margin-top: 0.5rem;">Excellent quality at competitive price. Market demand is high.</p>
+                        </div>
+                        <div class="ai-suggestion">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                <strong>Recycled Plastic</strong>
+                                <span style="background: rgba(255,255,255,0.2); padding: 0.25rem 0.5rem; border-radius: 0.5rem; font-size: 0.8rem;">
+                                    88% confidence
+                                </span>
+                            </div>
+                            <div class="confidence-meter">
+                                <span>Confidence:</span>
+                                <div class="confidence-bar">
+                                    <div class="confidence-fill" style="width: 88%"></div>
+                                </div>
+                            </div>
+                            <p style="font-size: 0.9rem; margin-top: 0.5rem;">Premium quality with high market value. Limited time remaining!</p>
+                        </div>
+                    `;
+                }
+            }
+
+            async function loadMarketAnalytics() {
+                try {
+                    const response = await fetch(`${API_BASE}/api/marketplace/ai/market-analytics/`, {
+                        headers: { 'Authorization': `Token ${authToken}` }
+                    });
+                    
+                    if (response.ok) {
+                        const analytics = await response.json();
+                        const container = document.getElementById('market-analytics');
+                        
+                        container.innerHTML = analytics.slice(0, 3).map(anal => `
+                            <div style="margin-bottom: 1rem; padding: 0.75rem; background: rgba(99, 102, 241, 0.1); border-radius: 0.5rem;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <strong>${anal.commodity_name}</strong>
+                                    <span style="font-size: 0.8rem; color: #6b7280;">${anal.date}</span>
+                                </div>
+                                <div style="margin-top: 0.5rem;">
+                                    <div>Trend: <span style="color: var(--primary-color); font-weight: 600;">${anal.demand_trend}</span></div>
+                                    <div>Sentiment: <span style="color: var(--primary-color); font-weight: 600;">${anal.market_sentiment}</span></div>
+                                    <div>7-day Prediction: ₹${anal.predicted_price_7d}</div>
+                                </div>
+                            </div>
+                        `).join('');
+                    }
+                } catch (error) {
+                    console.error('Error loading market analytics:', error);
+                    document.getElementById('market-analytics').innerHTML = `
+                        <div style="text-align: center; padding: 2rem; color: #6b7280;">
+                            <div style="font-size: 2rem; margin-bottom: 1rem;">📊</div>
+                            <p>Market analytics will be available with real data.</p>
+                            <p style="font-size: 0.9rem; margin-top: 0.5rem;">Start the Django server for AI insights.</p>
+                        </div>
+                    `;
+                }
+            }
+
+            async function loadTopOpportunities() {
+                try {
+                    const response = await fetch(`${API_BASE}/api/marketplace/ai/market-insights/`, {
+                        headers: { 'Authorization': `Token ${authToken}` }
+                    });
+                    
+                    if (response.ok) {
+                        const insights = await response.json();
+                        const container = document.getElementById('top-opportunities');
+                        
+                        if (insights.top_opportunities && insights.top_opportunities.length > 0) {
+                            container.innerHTML = insights.top_opportunities.slice(0, 3).map(opp => `
+                                <div style="margin-bottom: 1rem; padding: 0.75rem; background: rgba(16, 185, 129, 0.1); border-radius: 0.5rem; border-left: 4px solid var(--success-color);">
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <strong>${opp.commodity}</strong>
+                                        <span style="color: var(--success-color); font-weight: 600;">${opp.price_advantage}% off</span>
+                                    </div>
+                                    <div style="margin-top: 0.5rem; font-size: 0.9rem;">
+                                        <div>Quality: ${(opp.quality_score * 100).toFixed(0)}%</div>
+                                        <div>Time left: ${Math.floor(opp.time_remaining / 3600)}h</div>
+                                    </div>
+                                </div>
+                            `).join('');
+                        } else {
+                            container.innerHTML = '<p style="color: #6b7280;">No top opportunities found at the moment.</p>';
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error loading top opportunities:', error);
+                    document.getElementById('top-opportunities').innerHTML = `
+                        <div style="text-align: center; padding: 2rem; color: #6b7280;">
+                            <div style="font-size: 2rem; margin-bottom: 1rem;">🎯</div>
+                            <p>Top opportunities will be available with real listings.</p>
+                            <p style="font-size: 0.9rem; margin-top: 0.5rem;">Create listings to see AI-identified deals.</p>
+                        </div>
+                    `;
+                }
+            }
+
+            async function loadSellerAnalytics() {
+                try {
+                    const container = document.getElementById('seller-analytics');
+                    container.innerHTML = `
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1rem;">
+                            <div style="text-align: center; padding: 1rem; background: rgba(99, 102, 241, 0.1); border-radius: 0.5rem;">
+                                <div style="font-size: 2rem; font-weight: 900; color: var(--primary-color);">0</div>
+                                <div style="font-size: 0.9rem; color: #6b7280;">Active Listings</div>
+                            </div>
+                            <div style="text-align: center; padding: 1rem; background: rgba(16, 185, 129, 0.1); border-radius: 0.5rem;">
+                                <div style="font-size: 2rem; font-weight: 900; color: var(--success-color);">₹0</div>
+                                <div style="font-size: 0.9rem; color: #6b7280;">Total Sales</div>
+                            </div>
+                            <div style="text-align: center; padding: 1rem; background: rgba(245, 158, 11, 0.1); border-radius: 0.5rem;">
+                                <div style="font-size: 2rem; font-weight: 900; color: var(--warning-color);">0%</div>
+                                <div style="font-size: 0.9rem; color: #6b7280;">Success Rate</div>
+                            </div>
+                        </div>
+                    `;
+                } catch (error) {
+                    console.error('Error loading seller analytics:', error);
+                }
+            }
+
+            async function loadSellerMarketInsights() {
+                try {
+                    const container = document.getElementById('seller-market-insights');
+                    container.innerHTML = `
+                        <div style="color: #6b7280;">
+                            <p>🤖 AI is analyzing market trends...</p>
+                            <p>📊 Optimizing your listing strategy...</p>
+                            <p>🎯 Identifying best-selling commodities...</p>
+                        </div>
+                    `;
+                } catch (error) {
+                    console.error('Error loading seller market insights:', error);
+                }
+            }
+
+            async function loadNotifications() {
+                try {
+                    const response = await fetch(`${API_BASE}/api/marketplace/notifications/`, {
+                        headers: { 'Authorization': `Token ${authToken}` }
+                    });
+                    
+                    if (response.ok) {
+                        const notifications = await response.json();
+                        const unreadCount = notifications.filter(n => !n.is_read).length;
+                        
+                        document.getElementById('notification-count').textContent = unreadCount;
+                        document.getElementById('seller-notification-count').textContent = unreadCount;
+                    }
+                } catch (error) {
+                    console.error('Error loading notifications:', error);
+                }
+            }
+
+            async function fetchListings(options = {}) {
+                const { skipViewSwitch = false } = options;
+                const spinner = document.getElementById('listings-spinner');
+                const grid = document.getElementById('listings-grid');
+                
+                if (!skipViewSwitch && spinner) {
+                    spinner.style.display = 'block';
+                }
+                if (!skipViewSwitch && grid) {
+                    grid.innerHTML = '';
+                }
+                
+                try {
+                    const response = await fetch(`${API_BASE}/api/marketplace/listings/`, {
+                        headers: { 'Authorization': `Token ${authToken}` }
+                    });
+                    
+                    if (!response.ok) {
+                        console.error('API Error:', response.status, response.statusText);
+                        throw new Error(`Server error: ${response.status}. Make sure Django server is running on port 8000.`);
+                    }
+                    
+                    const listings = await response.json();
+                    marketplaceListings = Array.isArray(listings) ? listings : [];
+                    renderListings(marketplaceListings);
+                    renderSellerListings();
+                    
+                } catch (error) {
+                    console.error('Fetch error:', error);
+                    
+                    // Show only user listings when server is not available
+                    marketplaceListings = [];
+                    if (!skipViewSwitch && grid) {
+                        grid.innerHTML = `
+                            <div style="text-align: center; padding: 3rem; color: var(--text-muted);">
+                                <div style="font-size: 3rem; margin-bottom: 1rem;">📦</div>
+                                <h3 style="margin: 0; font-weight: 700; color: var(--text-color);">No Live Listings</h3>
+                                <p style="margin-top: 1rem;">We couldn’t reach the marketplace server. Please ensure the backend is running.</p>
+                                <p style="font-size: 0.9rem; margin-top: 0.5rem; color: var(--warning-color);">
+                                    ${error.message}
+                                </p>
+                            </div>
+                        `;
+                    }
+                    if (userListings.length) {
+                        renderListings(userListings);
+                        renderSellerListings();
+                    }
+                } finally {
+                    if (!skipViewSwitch && spinner) {
+                        spinner.style.display = 'none';
+                    }
+                }
+            }
+
+            function renderBiddingHistory(listing) {
+                const bids = listing.bids || [];
+                const sortedBids = [...bids].sort((a, b) => parseFloat(b.amount) - parseFloat(a.amount));
+                
+                if (sortedBids.length === 0) {
+                    return `
+                        <div style="text-align: center; padding: 2rem; color: #6b7280;">
+                            <div style="font-size: 2rem; margin-bottom: 1rem;">📝</div>
+                            <p>No bids placed yet</p>
+                            <p style="font-size: 0.9rem; margin-top: 0.5rem;">Be the first to bid!</p>
+                        </div>
+                    `;
+                }
+                
+                let historyHtml = '';
+                
+                // Add starting price
+                historyHtml += `
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: rgba(99, 102, 241, 0.1); border-radius: 0.5rem; margin-bottom: 0.5rem;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="background: var(--primary-color); color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.8rem;">START</span>
+                            <span style="font-weight: 600;">Starting Price</span>
+                        </div>
+                        <div style="font-weight: 700; color: var(--primary-color);">₹${formatCurrency(listing.starting_price)}</div>
+                    </div>
+                `;
+                
+                // Add all bids
+                sortedBids.forEach((bid, index) => {
+                    const isHighest = index === 0;
+                    const bidderType = bid.bidder_username === listing.seller_username ? 'SELLER' : 'BUYER';
+                    const bidderClass = bid.bidder_username === listing.seller_username ? 'seller-bid' : 'buyer-bid';
+                    
+                    historyHtml += `
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: ${isHighest ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.1)'}; border-radius: 0.5rem; margin-bottom: 0.5rem; border-left: 4px solid ${isHighest ? 'var(--success-color)' : 'var(--primary-color)'};">
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <span style="background: ${bidderType === 'SELLER' ? 'var(--warning-color)' : 'var(--primary-color)'}; color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.8rem;">${bidderType}</span>
+                                <span style="font-weight: 600;">${bid.bidder_username}</span>
+                                ${isHighest ? '<span style="background: var(--success-color); color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.8rem;">WINNING</span>' : ''}
+                            </div>
+                            <div style="font-weight: 700; color: ${isHighest ? 'var(--success-color)' : 'var(--primary-color)'};">
+                                ₹${formatCurrency(bid.amount)}
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                return historyHtml;
+            }
+
+            function renderListings(listings) {
+                const listingsGrid = document.getElementById('listings-grid');
+                listingsGrid.innerHTML = '';
+                
+                if (listings.length === 0) {
+                    listingsGrid.innerHTML = `
+                        <div style="text-align:center;padding:2.5rem;color:var(--text-muted);">
+                            <div style="font-size:2.5rem;margin-bottom:0.75rem;">📭</div>
+                            <p style="margin:0;font-weight:600;color:var(--text-color);">No listings available yet.</p>
+                            <p style="margin-top:0.5rem;font-size:0.9rem;">Be the first to publish an AI-optimized listing.</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                marketplaceListings = listings.map(listing => ({
+                    ...listing
+                }));
+                marketplaceListings.forEach(listing => {
+                const highestBidAmount = Number(
+                    listing.highest_bid_amount ??
+                    (listing.bids?.length ? [...listing.bids].sort((a,b)=>parseFloat(b.amount)-parseFloat(a.amount))[0]?.amount : listing.starting_price) ??
+                    listing.starting_price ??
+                    0
+                );
+                const highestBid = formatCurrency(highestBidAmount);
+                const startingPrice = formatCurrency(listing.starting_price ?? highestBidAmount);
+                const aiSuggestedPrice = listing.ai_suggested_price ? formatCurrency(listing.ai_suggested_price) : null;
+                    const totalBids = listing.bids?.length || 0;
+                    const bidLabel = totalBids === 1 ? 'bid' : 'bids';
+                    const quantityNumeric = Number(listing.quantity_kg);
+                    const formattedQuantity = Number.isFinite(quantityNumeric)
+                        ? quantityNumeric.toLocaleString('en-IN', { maximumFractionDigits: 2 })
+                        : listing.quantity_kg;
+                    const timeRemaining = formatTimeRemaining(listing.time_remaining_seconds);
+                    const qualityScore = Number(listing.quality_score) || 0;
+                    const qualityClass = qualityScore > 0.8
+                        ? 'quality-chip--excellent'
+                        : qualityScore > 0.6
+                            ? 'quality-chip--good'
+                            : 'quality-chip--fair';
+                    const qualityText = qualityScore > 0.8 ? 'Excellent' : qualityScore > 0.6 ? 'Good' : 'Fair';
+
+                const commodityName =
+                    listing.commodity_name ||
+                    listing.commodity_details?.name ||
+                    commodityMeta[listing.commodity]?.name ||
+                    listing.commodity ||
+                    'Material';
+
+                    const insights = [];
+                    if (aiSuggestedPrice && aiSuggestedPrice !== startingPrice) insights.push(`AI target ₹${aiSuggestedPrice}`);
+                    if (listing.ai_competitiveness_score > 0.7) insights.push('High demand');
+                    if (listing.urgency_factor > 1.1) insights.push('Urgent');
+
+                const imageUrl = resolveImageUrl(listing.primary_image_url || listing.image);
+                    const chipsHtml = insights.length
+                        ? `<div class="listing-card__chips">${insights.map(text => `<span class="listing-chip">${text}</span>`).join('')}</div>`
+                        : '';
+
+                    const card = document.createElement('div');
+                    card.className = 'listing-card fade-in-up';
+                    card.innerHTML = `
+                        <div class="listing-card__media">
+                            ${imageUrl
+                                ? `<img src="${imageUrl}" alt="${commodityName}" class="listing-card__image">`
+                                : `<div class="listing-card__fallback">${commodityName}</div>`}
+                            <span class="quality-chip ${qualityClass}">${qualityText}</span>
+                        </div>
+                        <div class="listing-card__body">
+                            <div class="listing-card__header">
+                                <h3>${commodityName}</h3>
+                            </div>
+                            ${chipsHtml}
+                            <div class="listing-card__metrics">
+                                <div class="metric">
+                                    <span>Quantity</span>
+                                    <strong>${formattedQuantity}</strong>
+                                </div>
+                                <div class="metric">
+                                    <span>Seller Ask</span>
+                                    <strong>₹${startingPrice}</strong>
+                                </div>
+                                <div class="metric">
+                                    <span>${totalBids ? 'Top Bid' : 'First Bid Target'}</span>
+                                    <strong>₹${highestBid}</strong>
+                                </div>
+                            </div>
+                            <div class="listing-card__pricing">
+                                <span>${totalBids ? 'Current highest offer' : 'Opening price guidance'}</span>
+                                <div class="listing-card__price">₹${highestBid}</div>
+                                ${aiSuggestedPrice ? `<span class="listing-card__note">AI recommends around ₹${aiSuggestedPrice}</span>` : ''}
+                            </div>
+                            <div class="listing-card__footer">
+                                <span class="listing-card__seller">Seller: ${listing.seller_username}</span>
+                                <span>${totalBids} ${bidLabel}</span>
+                                <span class="listing-card__time">⏳ ${timeRemaining}</span>
+                            </div>
+                        </div>
+                    `;
+
+                    card.addEventListener('click', () => showDetailView(listing));
+                    listingsGrid.appendChild(card);
+                });
+            }
+
+            function renderSellerListings() {
+                const container = document.getElementById('seller-listings');
+                if (!container) return;
+
+                const combined = marketplaceListings.length ? marketplaceListings : userListings;
+                const sellerName = currentUser?.profile?.username;
+                const mine = sellerName
+                    ? combined.filter(listing => listing.seller_username === sellerName)
+                    : [];
+
+                if (!mine.length) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div style="font-size:2rem;margin-bottom:0.5rem;">🛍️</div>
+                            <p style="margin:0;font-weight:600;">No listings found</p>
+                            <p style="margin-top:0.5rem;font-size:0.9rem;">
+                                Publish a listing above to start receiving bids.
+                            </p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = mine
+                    .map(listing => {
+                        const imageUrl = resolveImageUrl(listing.primary_image_url || listing.image);
+                        const commodityName =
+                            listing.commodity_name ||
+                            listing.commodity_details?.name ||
+                            commodityMeta[listing.commodity]?.name ||
+                            listing.commodity ||
+                            'Material';
+                        const quantity = Number(listing.quantity_kg);
+                        const formattedQuantity = Number.isFinite(quantity)
+                            ? `${quantity.toLocaleString('en-IN', { maximumFractionDigits: 2 })} kg`
+                            : `${listing.quantity_kg} kg`;
+                        const totalBids = listing.bids?.length || 0;
+                        const highestBidAmount = listing.bids?.length
+                            ? [...listing.bids].sort((a, b) => parseFloat(b.amount) - parseFloat(a.amount))[0].amount
+                            : null;
+                        return `
+                            <div class="listing-row">
+                                <div>
+                                    ${
+                                        imageUrl
+                                            ? `<img src="${imageUrl}" alt="${commodityName}">`
+                                            : `<div class="image-placeholder" style="height:90px;display:grid;place-items:center;font-weight:600;">${commodityName}</div>`
+                                    }
+                                </div>
+                                <div class="listing-row-info">
+                                    <span class="title">${commodityName}</span>
+                                    <span class="meta">Quantity: ${formattedQuantity}</span>
+                                    <span class="meta">Starting price: ₹${formatCurrency(listing.starting_price)}</span>
+                                    <span class="meta">Bids: ${totalBids}</span>
+                                </div>
+                                <div class="listing-row-price">
+                                    ₹${formatCurrency(highestBidAmount ?? listing.starting_price)}
+                                </div>
+                            </div>
+                        `;
+                    })
+                    .join('');
+            }
+
+            function showDetailView(listing) {
+                renderDetail(listing);
+                loadAIBidSuggestions(listing.id, listing);
+                connectWebSocket(listing.id);
+                showView('detail');
+            }
+
+            async function loadAIBidSuggestions(listingId, listing) {
+                try {
+                    const response = await fetch(`${API_BASE}/api/marketplace/ai/bid-suggestions/${listingId}/`, {
+                        headers: { 'Authorization': `Token ${authToken}` }
+                    });
+                    
+                    if (response.ok) {
+                        const suggestions = await response.json();
+                        const assistant = document.getElementById('ai-bid-assistant');
+                        const container = document.getElementById('ai-bid-suggestions');
+                        
+                        assistant.style.display = 'block';
+                        const serverRange = suggestions.optimal_range || {};
+                        const recommendedDisplay = formatCurrency(serverRange.recommended);
+                        const minDisplay = formatCurrency(serverRange.min);
+                        const maxDisplay = formatCurrency(serverRange.max);
+                        container.innerHTML = `
+                            <div class="ai-suggestion">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                    <strong>🎯 AI Bid Recommendation</strong>
+                                    <span style="background: rgba(255,255,255,0.2); padding: 0.25rem 0.5rem; border-radius: 0.5rem; font-size: 0.8rem;">
+                                        Optimal Range
+                                    </span>
+                                </div>
+                                <div style="margin-bottom: 1rem;">
+                                    <div><strong>Recommended Bid:</strong> ₹${recommendedDisplay}</div>
+                                    <div><strong>Range:</strong> ₹${minDisplay} - ₹${maxDisplay}</div>
+                                </div>
+                                <div style="margin-bottom: 1rem;">
+                                    <div><strong>Market Conditions:</strong> ${suggestions.market_conditions.trend}</div>
+                                    <div><strong>Quality Score:</strong> ${(suggestions.listing_analysis.quality_score * 100).toFixed(0)}%</div>
+                                    <div><strong>Urgency Factor:</strong> ${suggestions.listing_analysis.urgency_factor}x</div>
+                                </div>
+                                <div class="confidence-meter">
+                                    <span>AI Confidence:</span>
+                                    <div class="confidence-bar">
+                                        <div class="confidence-fill" style="width: 85%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        applyBidRecommendation({
+                            recommended: Number(serverRange.recommended),
+                            min: Number(serverRange.min),
+                            max: Number(serverRange.max)
+                        });
+                    } else {
+                        throw new Error('API not available');
+                    }
+                } catch (error) {
+                    console.error('Error loading AI bid suggestions:', error);
+                    
+                    // Generate AI recommendations based on listing data
+                    const assistant = document.getElementById('ai-bid-assistant');
+                    const container = document.getElementById('ai-bid-suggestions');
+                    
+                    assistant.style.display = 'block';
+                    
+                    // AI calculation based on quality, market price, and competition
+                    const currentBid = listing.bids
+                        ? [...listing.bids].sort((a, b) => parseFloat(b.amount) - parseFloat(a.amount))[0]?.amount
+                        : null;
+                    const basePrice = Number(currentBid ?? listing.starting_price ?? 0);
+                    const qualityScore = listing.quality_score || 0.5;
+                    const marketPrice = listing.commodity?.market_price || 15;
+                    
+                    // AI calculations
+                    const qualityMultiplier = 0.8 + (qualityScore * 0.4); // 0.8-1.2
+                    const competitionFactor = 1.1; // Assume some competition
+                    const urgencyFactor = listing.time_remaining_seconds < 3600 ? 1.2 : 1.0;
+                    
+                    const recommendedBidValue = basePrice * qualityMultiplier * competitionFactor;
+                    const minBidValue = basePrice * 1.05;
+                    const maxBidValue = recommendedBidValue * urgencyFactor * 1.15;
+                    const recommendedBid = formatCurrency(recommendedBidValue);
+                    const minBid = formatCurrency(minBidValue);
+                    const maxBid = formatCurrency(maxBidValue);
+                    
+                    const confidence = Math.min(95, (qualityScore * 100) + 20);
+                    
+                    container.innerHTML = `
+                        <div class="ai-suggestion">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                <strong>🤖 AI Bid Strategy</strong>
+                                <span style="background: rgba(255,255,255,0.2); padding: 0.25rem 0.5rem; border-radius: 0.5rem; font-size: 0.8rem;">
+                                    ${confidence.toFixed(0)}% confidence
+                                </span>
+                            </div>
+                            
+                            <div style="margin-bottom: 1rem; padding: 1rem; background: rgba(16, 185, 129, 0.2); border-radius: 0.5rem;">
+                                <div style="font-size: 1.5rem; font-weight: 900; color: var(--success-color);">
+                                    ₹${recommendedBid}
+                                </div>
+                                <div style="font-size: 0.9rem; margin-top: 0.5rem;">AI Recommended Bid</div>
+                            </div>
+                            
+                            <div style="margin-bottom: 1rem;">
+                                <div><strong>📊 Analysis:</strong></div>
+                                <div>• Quality Score: ${(qualityScore * 100).toFixed(0)}% (${qualityScore > 0.8 ? 'Excellent' : qualityScore > 0.6 ? 'Good' : 'Fair'})</div>
+                                <div>• Market Position: ${basePrice < marketPrice ? 'Below Market' : 'At/Above Market'}</div>
+                                <div>• Competition Level: ${listing.bids?.length > 2 ? 'High' : listing.bids?.length > 0 ? 'Medium' : 'Low'}</div>
+                                <div>• Time Pressure: ${urgencyFactor > 1.1 ? 'High' : 'Normal'}</div>
+                            </div>
+                            
+                            <div style="margin-bottom: 1rem;">
+                                <div><strong>🎯 Bid Range:</strong></div>
+                                <div>• Conservative: ₹${minBid}</div>
+                                <div>• Optimal: ₹${recommendedBid}</div>
+                                <div>• Aggressive: ₹${maxBid}</div>
+                            </div>
+                            
+                            <div style="margin-bottom: 1rem;">
+                                <div><strong>💡 AI Strategy:</strong></div>
+                                <div>${qualityScore > 0.8 ? 'High quality item - bid competitively' : qualityScore > 0.6 ? 'Good quality - moderate bid' : 'Fair quality - conservative bid'}</div>
+                                <div>${listing.time_remaining_seconds < 3600 ? '⏰ Time sensitive - consider higher bid' : '⏳ Normal timing - strategic bidding'}</div>
+                            </div>
+                            
+                            <div class="confidence-meter">
+                                <span>AI Confidence:</span>
+                                <div class="confidence-bar">
+                                    <div class="confidence-fill" style="width: ${confidence}%"></div>
+                                </div>
+                            </div>
+                            
+                            <div style="margin-top: 1rem; padding: 0.75rem; background: rgba(99, 102, 241, 0.1); border-radius: 0.5rem; font-size: 0.9rem;">
+                                <strong>🔮 AI Prediction:</strong> ${confidence > 80 ? 'High chance of winning with recommended bid' : confidence > 60 ? 'Good chance with strategic bidding' : 'Consider market conditions carefully'}
+                            </div>
+                        </div>
+                    `;
+                    applyBidRecommendation({
+                        recommended: recommendedBidValue,
+                        min: minBidValue,
+                        max: maxBidValue
+                    });
+                }
+            }
+
+            async function renderDetail(listing) {
+                const highestBidAmount = (() => {
+                    if (listing.bids?.length) {
+                        const sorted = [...listing.bids].sort((a, b) => parseFloat(b.amount) - parseFloat(a.amount));
+                        return Number(sorted[0]?.amount) || 0;
+                    }
+                    return Number(listing.starting_price ?? 0);
+                })();
+                const highestBid = formatCurrency(highestBidAmount);
+                const minBidAllowed = formatCurrency(highestBidAmount + 0.01);
+                const startingPrice = formatCurrency(listing.starting_price ?? highestBidAmount);
+                const aiSuggestedPrice = listing.ai_suggested_price ? formatCurrency(listing.ai_suggested_price) : null;
+                const quantityNumeric = Number(listing.quantity_kg);
+                const formattedQuantity = Number.isFinite(quantityNumeric)
+                    ? quantityNumeric.toLocaleString('en-IN', { maximumFractionDigits: 2 })
+                    : listing.quantity_kg;
+                const commodityName =
+                    listing.commodity_name ||
+                    commodityMeta[listing.commodity]?.name ||
+                    listing.commodity ||
+                    'Material';
+
+                const endsAt = new Date(listing.auction_ends_at);
+                const detailImgSrc = resolveImageUrl(listing.image);
+                const imgHtml = detailImgSrc
+                    ? `<img src="${detailImgSrc}" alt="${commodityName}" class="listing-card__image" style="border-radius:1rem;margin-bottom:1.5rem;max-height:320px;object-fit:cover;">`
+                    : `<div class="listing-card__fallback" style="height:240px;border-radius:1rem;margin-bottom:1.5rem;">${commodityName}</div>`;
+
+                const qualityScore = Number(listing.quality_score) || 0;
+                const qualityLabel = `${(qualityScore * 100).toFixed(0)}%`;
+                const badgeEntries = [];
+                badgeEntries.push(`Quality ${qualityLabel}`);
+                badgeEntries.push(`${formattedQuantity} kg`);
+                if (aiSuggestedPrice) badgeEntries.push(`AI target ₹${aiSuggestedPrice}`);
+
+                document.getElementById('detail-card').innerHTML = `
+                    <div class="detail-grid">
+                        <section class="detail-panel">
+                            ${imgHtml}
+                            <div class="detail-summary">
+                                <h2>${commodityName}</h2>
+                                <ul class="detail-stats">
+                                    <li><span>Seller</span><span>${listing.seller_username}</span></li>
+                                    <li><span>Quantity</span><span>${formattedQuantity} kg</span></li>
+                                    <li><span>Seller Ask</span><span>₹${startingPrice}</span></li>
+                                    <li><span>Quality Score</span><span>${qualityLabel}</span></li>
+                                </ul>
+                                <div class="detail-badges">
+                                    ${badgeEntries.map(text => `<span class="detail-badge">${text}</span>`).join('')}
+                                    <span class="detail-badge">Ends in <strong id="countdown"></strong></span>
+                                </div>
+                            </div>
+                            <div style="margin-top:2.5rem;">
+                                <h3 class="section-title" style="margin:0 0 1rem;">📊 Bidding History</h3>
+                                <div id="bidding-history" style="max-height:320px;overflow-y:auto;">
+                                    ${renderBiddingHistory(listing)}
+                                </div>
+                            </div>
+                        </section>
+                        <section class="detail-panel detail-panel--bid">
+                            <div class="detail-pricing">
+                                <h4>${listing.bids?.length ? 'Current highest bid' : 'Starting price'}</h4>
+                                <div class="price" id="detail-highest-bid">₹${highestBid}</div>
+                                <span class="subtle">Seller ask: ₹${startingPrice}</span>
+                                ${aiSuggestedPrice ? `<span class="subtle">AI suggests around ₹${aiSuggestedPrice}</span>` : ''}
+                            </div>
+                            <form id="bid-form" style="margin-top:1.5rem;">
+                                <h3 style="margin-bottom:1rem;">🚀 Place Your Bid</h3>
+                                <div id="bid-alert" class="alert" style="display:none;"></div>
+                                <p id="bid-guidance" class="bid-guidance"></p>
+                                <div style="display:flex;align-items:center;margin:1rem 0;">
+                                    <span style="padding:1rem;background:rgba(99,102,241,0.15);border:1px solid var(--card-border);border-right:none;border-radius:0.9rem 0 0 0.9rem;">₹</span>
+                                    <input type="number" id="bid-amount" step="0.01" placeholder="${highestBid}" required
+                                           min="${minBidAllowed}"
+                                           style="flex:1;padding:1rem;border:1px solid var(--card-border);border-left:none;border-radius:0 0.9rem 0.9rem 0;">
+                                </div>
+                                <button type="submit" id="bid-btn" class="btn">🎯 Place AI-Optimized Bid</button>
+                            </form>
+                        </section>
+                    </div>
+                `;
+
+                document.getElementById('bid-form').addEventListener('submit', (e) => handleBid(e, listing.id));
+                startCountdown(endsAt);
+                const fallbackRecommendation = highestBidAmount + Math.max(highestBidAmount * 0.02, 1);
+                applyBidRecommendation({
+                    recommended: fallbackRecommendation,
+                    min: highestBidAmount + 0.01,
+                    max: fallbackRecommendation * 1.1
+                });
+            }
+
+            async function handleBid(e, listingId) {
+                e.preventDefault();
+                const bidBtn = document.getElementById('bid-btn');
+                const bidAlert = document.getElementById('bid-alert');
+                const bidField = document.getElementById('bid-amount');
+                const bidAmount = bidField.value;
+                const bidNumeric = Number(bidAmount);
+                const minAllowed = Number(bidField.min || 0);
+                
+                bidBtn.textContent = '🤖 AI Analyzing...';
+                bidBtn.disabled = true;
+                showAlert(bidAlert, '');
+
+                if (!Number.isFinite(bidNumeric) || bidNumeric <= 0) {
+                    showAlert(bidAlert, 'Enter a valid bid amount.', 'error');
+                    bidBtn.disabled = false;
+                    bidBtn.textContent = '🎯 Place AI-Optimized Bid';
+                    return;
+                }
+                if (Number.isFinite(minAllowed) && minAllowed > 0 && bidNumeric < minAllowed) {
+                    showAlert(bidAlert, `Bid must be at least ₹${formatCurrency(minAllowed)}.`, 'error');
+                    bidBtn.disabled = false;
+                    bidBtn.textContent = '🎯 Place AI-Optimized Bid';
+                    return;
+                }
+                const bidAmountFormatted = formatCurrency(bidNumeric);
+                
+                try {
+                    const response = await fetch(`${API_BASE}/api/marketplace/bids/`, {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json', 
+                            'Authorization': `Token ${authToken}` 
+                        },
+                        body: JSON.stringify({
+                            listing: listingId,
+                            amount: bidAmountFormatted
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    if (!response.ok) throw new Error(data.detail || 'Bid failed.');
+                    
+                    showAlert(bidAlert, `🎉 AI-optimized bid placed: ₹${formatCurrency(data.amount)}!`, 'success');
+                    document.getElementById('bid-amount').value = '';
+                    
+                    // Refresh marketplace data and detail view
+                    setTimeout(() => {
+                        fetchListings({ skipViewSwitch: true })
+                            .then(() => {
+                                const refreshed = marketplaceListings.find(item => item.id === listingId);
+                                if (refreshed) {
+                                    renderDetail(refreshed);
+                                }
+                                renderSellerListings();
+                            })
+                            .catch(() => {});
+                    }, 750);
+                    
+                } catch (error) {
+                    // Demo mode bidding
+                    console.log('Demo mode: Simulating bid placement');
+                    
+                    const currentUser = authToken ? 'green_recycler' : 'demo_user';
+                    const newBid = {
+                        amount: bidAmountFormatted,
+                        bidder_username: currentUser,
+                        timestamp: new Date().toISOString()
+                    };
+                    
+                    // Simulate AI analysis
+                    setTimeout(() => {
+                        showAlert(bidAlert, `🎉 Demo bid placed: ₹${bidAmountFormatted}! AI confidence: 87%`, 'success');
+                        document.getElementById('bid-amount').value = '';
+                        
+                        // Update the UI to show the new bid
+                        updateBiddingHistory(newBid, listingId);
+                        const highestBidEl = document.getElementById('detail-highest-bid');
+                        if (highestBidEl) {
+                            highestBidEl.textContent = `₹${bidAmountFormatted}`;
+                            highestBidEl.style.animation = 'pulse 0.5s ease-out';
+                            setTimeout(() => {
+                                highestBidEl.style.animation = '';
+                            }, 500);
+                        }
+                        renderSellerListings();
+                    }, 1500);
+                } finally {
+                    bidBtn.disabled = false;
+                    bidBtn.textContent = '🎯 Place AI-Optimized Bid';
+                }
+            }
+            
+            function updateBiddingHistory(newBid, listingId) {
+                const historyContainer = document.getElementById('bidding-history');
+                if (!historyContainer) return;
+                
+                // Add the new bid to the history
+                const newBidHtml = `
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: rgba(16, 185, 129, 0.2); border-radius: 0.5rem; margin-bottom: 0.5rem; border-left: 4px solid var(--success-color); animation: fadeInUp 0.5s ease-out;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="background: var(--primary-color); color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.8rem;">BUYER</span>
+                            <span style="font-weight: 600;">${newBid.bidder_username}</span>
+                            <span style="background: var(--success-color); color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.8rem;">NEW</span>
+                        </div>
+                        <div style="font-weight: 700; color: var(--success-color);">
+                            ₹${formatCurrency(newBid.amount)}
+                        </div>
+                    </div>
+                `;
+                
+                historyContainer.insertAdjacentHTML('afterbegin', newBidHtml);
+            }
+
+            async function handleCreateListing(e) {
+                e.preventDefault();
+                const alertEl = document.getElementById('seller-alert');
+                showAlert(alertEl, '');
+                
+                const btn = e.target.querySelector('button');
+                btn.disabled = true;
+                btn.textContent = '🤖 AI Optimizing...';
+                
+                try {
+                    const formData = new FormData();
+                    formData.append('commodity', document.getElementById('cl-commodity').value);
+                    formData.append('quantity_kg', document.getElementById('cl-quantity').value);
+                    
+                    const q = document.getElementById('cl-quality').value;
+                    if (q) formData.append('quality_score', q);
+                    
+                    const sp = document.getElementById('cl-starting').value;
+                    if (sp) formData.append('starting_price', sp);
+                    
+                    const endsRaw = document.getElementById('cl-ends').value;
+                    if (!endsRaw) throw new Error('Please choose an auction end time.');
+                    
+                    const endsIso = new Date(endsRaw).toISOString();
+                    formData.append('auction_ends_at', endsIso);
+                    
+                    const file = document.getElementById('cl-image').files[0];
+                    if (file) formData.append('image', file);
+                    
+                    const res = await fetch(`${API_BASE}/api/marketplace/listings/create/`, {
+                        method: 'POST', 
+                        headers: { 'Authorization': `Token ${authToken}` }, 
+                        body: formData
+                    });
+                    
+                    const data = await res.json();
+                    if (!res.ok) {
+                        let firstErr = null;
+                        if (data && typeof data === 'object') {
+                            const key = Object.keys(data)[0];
+                            const val = Array.isArray(data[key]) ? data[key][0] : (data.detail || JSON.stringify(data));
+                            firstErr = key ? `${key}: ${val}` : val;
+                        }
+                        throw new Error(firstErr || 'Failed to create listing');
+                    }
+                    
+                    showAlert(alertEl, `🎉 AI-optimized listing published: ${data.commodity_name} (${data.quantity_kg} kg) • ₹${formatCurrency(data.starting_price)} per kg`, 'success');
+                        await fetchListings({ skipViewSwitch: true });
+                        renderSellerListings();
+                    
+                    document.getElementById('create-listing-form').reset();
+                    const startingInput = document.getElementById('cl-starting');
+                    if (startingInput) {
+                        startingInput.dataset.userEdited = 'false';
+                    }
+                    updateStartingPriceHint(true);
+                    
+                } catch (err) {
+                    // Demo mode fallback - create listing locally
+                    console.log('Demo mode: Creating listing locally');
+                    
+                    const formData = new FormData(e.target);
+                    const commodityId = formData.get('commodity');
+                    const commodityInfo = commodityMeta[commodityId] || {};
+                    const commodityName = commodityInfo.name || commodityId || 'Custom Material';
+                    const quantity = formData.get('quantity_kg') || '100';
+                    const startingPrice = formData.get('starting_price') || '15.00';
+                    const qualityScore = parseFloat(formData.get('quality_score')) || 0.85;
+                    
+                    const newListing = {
+                        id: Date.now(),
+                        commodity_name: commodityName,
+                        commodity: commodityId,
+                        quantity_kg: quantity,
+                        starting_price: startingPrice,
+                        quality_score: qualityScore,
+                        seller_username: currentUser.profile.username,
+                        bids: [],
+                        auction_ends_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+                        ai_suggested_price: (parseFloat(startingPrice) * 1.1).toFixed(2),
+                        ai_competitiveness_score: 0.75,
+                        time_remaining_seconds: 86400,
+                        commodity: { market_price: parseFloat(startingPrice) * 0.9 }
+                    };
+                    
+                    userListings.push(newListing);
+                    marketplaceListings = [newListing, ...marketplaceListings];
+                    renderListings(marketplaceListings);
+                    renderSellerListings();
+                    showAlert(alertEl, `✅ Listing created: ${newListing.commodity_name} (${newListing.quantity_kg} kg) - ₹${formatCurrency(newListing.starting_price)}/kg`, 'success');
+                    e.target.reset();
+                    const startingInput = document.getElementById('cl-starting');
+                    if (startingInput) {
+                        startingInput.dataset.userEdited = 'false';
+                    }
+                    updateStartingPriceHint(true);
+                } finally {
+                    btn.disabled = false;
+                    btn.textContent = '🚀 Publish AI-Optimized Listing';
+                }
+            }
+
+            async function loadCommodities() {
+                const sel = document.getElementById('cl-commodity');
+                sel.innerHTML = '<option disabled selected>🤖 AI Loading commodities...</option>';
+                
+                try {
+                    const res = await fetch(`${API_BASE}/api/marketplace/commodities/`, { 
+                        headers: { 'Authorization': `Token ${authToken}` } 
+                    });
+                    const list = await res.json();
+                    
+                    sel.innerHTML = '';
+                    commodityPriceMap = {};
+                    commodityMeta = {};
+                    list.forEach(c => {
+                        const aiPrice = Number(c.ai_suggested_price || c.market_price || 0);
+                        commodityPriceMap[c.id] = aiPrice;
+                        commodityMeta[c.id] = {
+                            name: c.name,
+                            aiPrice
+                        };
+                        const opt = document.createElement('option');
+                        opt.value = c.id;
+                        opt.textContent = `${c.name} (AI Price: ₹${formatCurrency(aiPrice)})`;
+                        sel.appendChild(opt);
+                    });
+                    if (sel.options.length > 0) {
+                        sel.selectedIndex = 0;
+                    }
+                    sel.onchange = () => updateStartingPriceHint(false);
+                    updateStartingPriceHint(true);
+                } catch (error) {
+                    console.error('Error loading commodities:', error);
+                    sel.innerHTML = '<option disabled>Failed to load commodities</option>';
+                }
+            }
+
+            function updateStartingPriceHint(forceFill = false) {
+                const select = document.getElementById('cl-commodity');
+                const startingInput = document.getElementById('cl-starting');
+                if (!select || !startingInput) return;
+                const aiPrice = commodityPriceMap[select.value];
+                if (aiPrice === undefined) {
+                    startingInput.placeholder = 'Starting price (₹ per kg, AI will suggest if not provided)';
+                    return;
+                }
+                startingInput.placeholder = `Suggested start price ₹${formatCurrency(aiPrice)} (override if needed)`;
+                if (forceFill || startingInput.dataset.userEdited !== 'true') {
+                    startingInput.value = formatCurrency(aiPrice);
+                    startingInput.dataset.userEdited = 'false';
+                }
+            }
+
+            async function loadPrices() {
+                try {
+                    const res = await fetch(`${API_BASE}/api/marketplace/commodities/`, { 
+                        headers: { 'Authorization': `Token ${authToken}` } 
+                    });
+                    const list = await res.json();
+                    const pricesDiv = document.getElementById('prices');
+                    
+                    pricesDiv.innerHTML = list.map(c => `
+                        <div class="insight-card">
+                            <div class="insight-card-header">
+                                <span>${c.name}</span>
+                                <span style="color: var(--success-color); font-weight: 600;">₹${formatCurrency(c.ai_suggested_price || c.market_price || 0)}</span>
+                            </div>
+                            <div class="insight-card-meta">
+                                Trend: ${c.price_trend} • Demand: ${(c.demand_score * 100).toFixed(0)}% • Supply: ${(c.supply_score * 100).toFixed(0)}%
+                            </div>
+                        </div>
+                    `).join('');
+                } catch (error) {
+                    console.error('Error loading prices:', error);
+                }
+            }
+
+            function handleLogout() {
+                authToken = null;
+                currentUser = null;
+                document.getElementById('login-form').reset();
+                document.getElementById('signup-form').reset();
+                showView('login');
+            }
+
+            function showAlert(element, message, type = 'error') {
+                element.textContent = message;
+                element.className = `alert alert-${type}`;
+                element.style.display = message ? 'block' : 'none';
+            }
+
+            function connectWebSocket(listingId) {
+                if (webSocket) webSocket.close();
+                webSocket = new WebSocket(`${WS_BASE}/ws/bidding/${listingId}/`);
+                
+                webSocket.onopen = () => console.log('🤖 AI WebSocket Connected!');
+                webSocket.onmessage = (event) => {
+                    const newBid = JSON.parse(event.data);
+                    const highestBidEl = document.getElementById('detail-highest-bid');
+                    
+                    if (highestBidEl && parseFloat(newBid.amount) > parseFloat(highestBidEl.textContent.replace('₹',''))) {
+                        highestBidEl.textContent = `₹${newBid.amount}`;
+                        
+                        // Add AI animation
+                        highestBidEl.style.animation = 'pulse 0.5s ease-out';
+                        setTimeout(() => {
+                            highestBidEl.style.animation = '';
+                        }, 500);
+                    }
+                };
+            }
+
+            function showNotifications() {
+                // This would open a notification modal
+                alert('🔔 Notification Center\n\nAI notifications:\n• Market insights available\n• New recommendations ready\n• Price alerts triggered');
+            }
+
+            let countdownTimer = null;
+            function startCountdown(endsAt) {
+                const el = document.getElementById('countdown');
+                if (countdownTimer) clearInterval(countdownTimer);
+                
+                const update = () => {
+                    const diff = endsAt - new Date();
+                    if (diff <= 0) {
+                        el.textContent = 'ended';
+                        clearInterval(countdownTimer);
+                        return;
+                    }
+                    
+                    const h = Math.floor(diff / 3600000);
+                    const m = Math.floor((diff % 3600000) / 60000);
+                    const s = Math.floor((diff % 60000) / 1000);
+                    el.textContent = `${h}h ${m}m ${s}s`;
+                };
+                
+                update();
+                countdownTimer = setInterval(update, 1000);
+            }
+        });
+    </script>
+</body>
+</html>
