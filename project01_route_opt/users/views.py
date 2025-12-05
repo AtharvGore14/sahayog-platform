@@ -26,6 +26,7 @@ class UserRegistrationView(generics.CreateAPIView):
 class UserLoginView(APIView):
     """User login endpoint."""
     permission_classes = [permissions.AllowAny]
+    authentication_classes = []  # Allow unauthenticated access for login
     
     def post(self, request):
         serializer = LoginSerializer(data=request.data)

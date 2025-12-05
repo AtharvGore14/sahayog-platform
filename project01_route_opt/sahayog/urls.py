@@ -9,6 +9,7 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('users/', include('users.urls')),  # User authentication endpoints
     path('route-optimizer/', include('route_optimizer.urls')),
     # Redirect root to route optimizer index - use relative path since DispatcherMiddleware handles prefix
     path('', RedirectView.as_view(url='route-optimizer/', permanent=False), name='root'),
